@@ -31,7 +31,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mb-8 text-center">
         <EggIcon className="h-16 w-16 text-primary mx-auto mb-4" />
-        <h1 className="text-3xl font-bold text-primary">HatchWise</h1>
+        <h1 className="text-3xl font-bold text-primary">HatchWise©</h1>
         <p className="text-muted-foreground">Your Smart Incubation Companion</p>
       </div>
       <LoginForm />
