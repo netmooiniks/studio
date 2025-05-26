@@ -31,7 +31,7 @@ export default function AppNavigation() {
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-sidebar-foreground">
           <EggIcon className="h-8 w-8 text-primary" />
-          <span className="group-data-[collapsible=icon]:hidden">HatchWise©</span>
+          <span className="group-data-[collapsible=icon]:hidden">HatchWise<sup className="text-xs font-normal align-super">©</sup></span>
         </Link>
       </SidebarHeader>
       <SidebarContent>
@@ -68,3 +68,4 @@ export default function AppNavigation() {
     </>
   );
 }
+
