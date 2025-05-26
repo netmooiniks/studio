@@ -203,15 +203,22 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
               <FormControl>
                 <Input 
                   placeholder="e.g., 5, 12, 18 (comma-separated)" 
-                  value={field.value}
+                  value={field.value || ''}
                   onChange={handleCustomDaysChange}
                 />
               </FormControl>
               <FormDescription>
                 Enter additional days for candling alerts, relative to start date (Day 1).
-                These are in addition to default species candling days. Current custom days: 
-                {customDays.length > 0 ? customDays.map(d => <Badge key={d} variant="secondary" className="mr-1">{d}</Badge>) : "None"}
+                These are in addition to default species candling days.
               </FormDescription>
+              <div className="text-sm text-muted-foreground pt-1">
+                Current custom days:{' '}
+                {customDays.length > 0 ? (
+                  customDays.map(d => <Badge key={d} variant="secondary" className="mr-1">{d}</Badge>)
+                ) : (
+                  <span className="italic">None</span>
+                )}
+              </div>
               <FormMessage />
             </FormItem>
           )}
