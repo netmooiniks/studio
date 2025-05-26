@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Batch, Task, SpeciesName } from '@/lib/types';
+import type { Batch, Task, SpeciesName, IncubatorType } from '@/lib/types';
 import { SPECIES_DATA } from '@/lib/constants';
 import { addDays, differenceInDays, format, parseISO, startOfDay } from 'date-fns';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
@@ -22,7 +22,7 @@ interface DataContextType {
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Helper to generate tasks for a batch
-const generateTasksForBatch = (batch: Omit<Batch, 'id' | 'candlingResults' | 'tasks' | 'hatchedEggs'> & { id: string }): Task[] => {
+const generateTasksForBatch = (batch: Omit<Batch, 'candlingResults' | 'tasks' | 'hatchedEggs'> & { id: string }): Task[] => {
   const species = SPECIES_DATA[batch.speciesId];
   if (!species) return [];
 
@@ -33,8 +33,8 @@ const generateTasksForBatch = (batch: Omit<Batch, 'id' | 'candlingResults' | 'ta
     const currentDate = addDays(batchStartDate, i - 1);
     const formattedDate = format(currentDate, 'yyyy-MM-dd');
 
-    // Turning (daily until lockdown)
-    if (i < species.lockdownDay) {
+    // Turning (daily until lockdown, only if manual incubator)
+    if (batch.incubatorType === 'manual' && i < species.lockdownDay) {
       tasks.push({
         id: `${batch.id}-turn-${i}`,
         batchId: batch.id,
@@ -137,7 +137,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [batches, setBatches] = useState<Batch[]>(() => {
     if (typeof window !== 'undefined') {
       const savedBatches = localStorage.getItem('hatchwise-batches');
-      return savedBatches ? JSON.parse(savedBatches) : [];
+      if (savedBatches) {
+        const parsedBatches = JSON.parse(savedBatches) as Batch[];
+        // Ensure all batches have an incubatorType, defaulting to 'manual' for older data
+        return parsedBatches.map(batch => ({
+          ...batch,
+          incubatorType: batch.incubatorType || 'manual',
+        }));
+      }
+      return [];
     }
     return [];
   });
@@ -150,7 +158,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addBatch = useCallback((batchData: Omit<Batch, 'id' | 'candlingResults' | 'tasks' | 'hatchedEggs'>) => {
     const newId = `batch-${Date.now()}`;
-    const fullBatchData = { ...batchData, id: newId };
+    // Ensure incubatorType is present, defaulting to 'manual' if somehow missed (though form should enforce)
+    const fullBatchData = { ...batchData, incubatorType: batchData.incubatorType || 'manual', id: newId };
     const newTasks = generateTasksForBatch(fullBatchData);
     const newBatch: Batch = {
       ...fullBatchData,
@@ -161,12 +170,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const updateBatch = useCallback((batchData: Batch) => {
-    // Re-generate tasks if start date or species changed, or custom candling days
-    // This is a simplified update; a real app might need more nuanced logic
     const existingBatch = batches.find(b => b.id === batchData.id);
     let tasksToUse = batchData.tasks;
-    if (existingBatch && (existingBatch.startDate !== batchData.startDate || existingBatch.speciesId !== batchData.speciesId || JSON.stringify(existingBatch.customCandlingDays) !== JSON.stringify(batchData.customCandlingDays) )) {
-        tasksToUse = generateTasksForBatch(batchData);
+
+    if (existingBatch && (
+        existingBatch.startDate !== batchData.startDate || 
+        existingBatch.speciesId !== batchData.speciesId || 
+        existingBatch.incubatorType !== batchData.incubatorType || // Check incubatorType change
+        JSON.stringify(existingBatch.customCandlingDays) !== JSON.stringify(batchData.customCandlingDays)
+      )) {
+        // Ensure incubatorType is present for task generation
+        const batchDataForTaskGen = { ...batchData, incubatorType: batchData.incubatorType || 'manual' };
+        tasksToUse = generateTasksForBatch(batchDataForTaskGen);
     }
 
     setBatches((prev) =>
@@ -179,7 +194,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const getBatchById = useCallback((batchId: string) => {
-    return batches.find((b) => b.id === batchId);
+    const batch = batches.find((b) => b.id === batchId);
+    // Ensure incubatorType is present when retrieving, defaulting to 'manual'
+    if (batch) {
+      return { ...batch, incubatorType: batch.incubatorType || 'manual' };
+    }
+    return undefined;
   }, [batches]);
 
   const getAllTasks = useCallback((): Task[] => {
@@ -212,7 +232,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setBatches(prev => prev.map(b => {
       if (b.id === batchId) {
         const newResults = [...b.candlingResults, { day, fertile, notes }];
-        // Sort by day just in case
         newResults.sort((a,b) => a.day - b.day);
         return { ...b, candlingResults: newResults };
       }

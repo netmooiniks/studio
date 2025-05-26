@@ -17,12 +17,15 @@ export interface CandlingResult {
   notes?: string;
 }
 
+export type IncubatorType = 'manual' | 'auto';
+
 export interface Batch {
   id: string;
   name: string;
   speciesId: SpeciesName;
   startDate: string; // ISO date string
   numberOfEggs: number;
+  incubatorType: IncubatorType; // Added incubator type
   customCandlingDays?: number[];
   candlingResults: CandlingResult[];
   tasks: Task[]; // Tasks specific to this batch

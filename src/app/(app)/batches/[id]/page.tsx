@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useData } from '@/contexts/data-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Edit, Layers, CalendarDays, Egg, Thermometer, Droplets, CheckCircle, AlertTriangle, Lightbulb, BarChart3, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Edit, Layers, CalendarDays, Egg, Thermometer, Droplets, CheckCircle, AlertTriangle, Lightbulb, BarChart3, ClipboardList, Zap, Hand } from 'lucide-react';
 import Link from 'next/link';
 import { SPECIES_DATA } from '@/lib/constants';
 import { format, parseISO, differenceInDays, startOfDay, addDays } from 'date-fns';
@@ -229,6 +229,12 @@ export default function BatchDetailPage() {
             <p className="flex items-center"><Egg className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Eggs Set:</strong> {batch.numberOfEggs}</p>
             <p className="flex items-center"><Thermometer className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Incubation Period:</strong> {species.incubationDays} days</p>
             <p className="flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Est. Hatch:</strong> {format(estimatedHatchDate, 'PPP')}</p>
+             <p className="flex items-center">
+              {batch.incubatorType === 'auto' 
+                ? <Zap className="mr-2 h-5 w-5 text-muted-foreground" /> 
+                : <Hand className="mr-2 h-5 w-5 text-muted-foreground" />}
+              <strong>Incubator:</strong> {batch.incubatorType === 'auto' ? 'Auto Turn' : 'Manual Turn'}
+            </p>
           </div>
           <div className="space-y-2 lg:col-span-2">
             <Label>Progress (Day {currentDayOfIncubation} of {species.incubationDays})</Label>
@@ -264,7 +270,7 @@ export default function BatchDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No tasks generated for this batch yet.</p>
+                <p className="text-muted-foreground">No tasks generated for this batch yet. This might be due to an 'Auto Turn' incubator setting.</p>
               )}
             </CardContent>
           </Card>

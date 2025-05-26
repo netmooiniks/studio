@@ -27,10 +27,12 @@ import { cn } from "@/lib/utils";
 import { CalendarIcon, Check, ChevronsUpDown } from "lucide-react";
 import { format } from "date-fns";
 import { ALL_SPECIES_LIST, SPECIES_DATA } from '@/lib/constants';
-import type { Batch, SpeciesName } from '@/lib/types';
+import type { Batch, SpeciesName, IncubatorType } from '@/lib/types';
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+
+const incubatorTypes = ['manual', 'auto'] as const;
 
 const batchFormSchema = z.object({
   name: z.string().min(2, { message: "Batch name must be at least 2 characters." }).max(50),
@@ -39,12 +41,14 @@ const batchFormSchema = z.object({
   }),
   startDate: z.date({ required_error: "A start date is required." }),
   numberOfEggs: z.coerce.number().int().min(1, { message: "Must be at least 1 egg." }).max(1000),
+  incubatorType: z.enum(incubatorTypes, { required_error: "Please select an incubator type."}).default('manual'),
   customCandlingDaysInput: z.string().optional(), // Temporary input for comma-separated days
   notes: z.string().max(500, {message: "Notes cannot exceed 500 characters."}).optional(),
 });
 
 type BatchFormValues = z.infer<typeof batchFormSchema>;
 
+// Ensure the onSubmit prop expects incubatorType by using the Batch type directly where appropriate
 interface BatchFormProps {
   onSubmit: (data: Omit<Batch, 'id' | 'candlingResults' | 'tasks' | 'hatchedEggs'> & { customCandlingDays?: number[] }) => void;
   initialData?: Batch;
@@ -59,12 +63,14 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
       ? {
           ...initialData,
           startDate: new Date(initialData.startDate),
+          incubatorType: initialData.incubatorType || 'manual',
           customCandlingDaysInput: initialData.customCandlingDays?.join(', ') || '',
         }
       : {
           name: "",
           startDate: new Date(),
           numberOfEggs: 10,
+          incubatorType: 'manual',
           customCandlingDaysInput: '',
           notes: '',
         },
@@ -108,33 +114,57 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="speciesId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Species</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a species" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {ALL_SPECIES_LIST.map(species => (
-                    <SelectItem key={species.id} value={species.id}>
-                      {species.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                {field.value ? `Incubation: ${SPECIES_DATA[field.value]?.incubationDays} days. Default candling: Days ${SPECIES_DATA[field.value]?.defaultCandlingDays.join(', ')} & ${SPECIES_DATA[field.value]?.lockdownDay} (lockdown).` : 'Select the bird species for this batch.'}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <FormField
+            control={form.control}
+            name="speciesId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Species</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a species" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {ALL_SPECIES_LIST.map(species => (
+                      <SelectItem key={species.id} value={species.id}>
+                        {species.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  {field.value ? `Incubation: ${SPECIES_DATA[field.value]?.incubationDays} days. Default candling: Days ${SPECIES_DATA[field.value]?.defaultCandlingDays.join(', ')} & ${SPECIES_DATA[field.value]?.lockdownDay} (lockdown).` : 'Select the bird species for this batch.'}
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+           <FormField
+            control={form.control}
+            name="incubatorType"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Incubator Type</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select incubator type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="manual">Manual Turn</SelectItem>
+                    <SelectItem value="auto">Auto Turn</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormDescription>Select if your incubator has automatic egg turning. 'Auto Turn' will remove daily turning tasks.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
