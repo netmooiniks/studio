@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { EggIcon, LayoutDashboard, Layers, ClipboardList, Settings, PlusCircle } from 'lucide-react';
+import { EggIcon, LayoutDashboard, Layers, ClipboardList, Archive, PlusCircle } from 'lucide-react'; // Added Archive
 import {
   SidebarHeader,
   SidebarContent,
@@ -19,6 +19,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/batches', label: 'Batches', icon: Layers },
   { href: '/tasks', label: 'Daily Tasks', icon: ClipboardList },
+  { href: '/history', label: 'History', icon: Archive }, // Added History page
   // { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
