@@ -5,12 +5,12 @@ import { getAuth } from "firebase/auth";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAcAklWKtyi-GMbq2PejGuoY3uospl1dyk",
-  authDomain: "hatchtrack.firebaseapp.com",
-  projectId: "hatchtrack",
-  storageBucket: "hatchtrack.firebasestorage.app", // Updated as per your request
-  messagingSenderId: "947747547328",
-  appId: "1:947747547328:web:19a9b37707b34541ae2525"
+  apiKey: "AIzaSyDmhvQMfLgHA-ViWROE3XVlbJVGmjQBlC4",
+  authDomain: "hatchwise.firebaseapp.com",
+  projectId: "hatchwise",
+  storageBucket: "hatchwise.firebasestorage.app",
+  messagingSenderId: "288005574631",
+  appId: "1:288005574631:web:150517f4aa707de5777742"
 };
 
 // Initialize Firebase
@@ -23,4 +23,3 @@ if (!getApps().length) {
 
 export const auth = getAuth(app);
 export default app;
-
