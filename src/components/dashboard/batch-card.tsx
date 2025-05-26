@@ -27,20 +27,31 @@ export function BatchCard({ batch }: BatchCardProps) {
   const progressPercentage = Math.min(Math.max(0, (currentDayOfIncubation / species.incubationDays) * 100), 100);
 
   const isCompleted = currentDayOfIncubation > species.incubationDays + 2; // Allow few days for hatching to complete
-  const isHatchingWindow = currentDayOfIncubation >= species.lockdownDay && currentDayOfIncubation <= species.incubationDays + 2;
+  const speciesLockdownDay = species.lockdownDay;
+  const isHatchingWindow = currentDayOfIncubation >= speciesLockdownDay && currentDayOfIncubation <= species.incubationDays + 2;
+  
+  const daysUntilLockdown = speciesLockdownDay - currentDayOfIncubation;
 
   const todaysTasks = getTasksForDate(new Date()).filter(task => task.batchId === batch.id && !task.completed);
   const hasPendingTasks = todaysTasks.length > 0;
 
-  let statusText = `Day ${currentDayOfIncubation} of ${species.incubationDays}`;
+  let statusText: string;
+
   if (isCompleted) {
     statusText = batch.hatchedEggs !== undefined ? `Hatched: ${batch.hatchedEggs}` : "Completed";
   } else if (isHatchingWindow) {
     statusText = "Hatching Window!";
-  } else if (currentDayOfIncubation > 0 && currentDayOfIncubation === species.lockdownDay) {
+  } else if (currentDayOfIncubation === speciesLockdownDay) { // Exact lockdown day
     statusText = "Lockdown Day!";
-  } else if (currentDayOfIncubation <= 0) {
-    statusText = `Starts in ${Math.abs(currentDayOfIncubation-1)} day(s)`;
+  } else if (daysUntilLockdown === 1 && currentDayOfIncubation > 0) { // 1 day before lockdown
+    statusText = "Lockdown in 1 day";
+  } else if (daysUntilLockdown === 2 && currentDayOfIncubation > 0) { // 2 days before lockdown
+    statusText = "Lockdown in 2 days";
+  } else if (currentDayOfIncubation <= 0) { // Upcoming batch
+    const daysToStart = Math.abs(currentDayOfIncubation - 1);
+    statusText = `Starts in ${daysToStart} day${daysToStart === 1 ? '' : 's'}`;
+  } else { // Default active state
+    statusText = `Day ${currentDayOfIncubation} of ${species.incubationDays}`;
   }
 
 
