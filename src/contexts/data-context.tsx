@@ -1,7 +1,7 @@
 
 "use client";
 
-import type { Batch, Task, SpeciesName, IncubatorType } from '@/lib/types';
+import type { Batch, Task, CandlingResult, IncubatorType } from '@/lib/types';
 import { SPECIES_DATA } from '@/lib/constants';
 import { addDays, differenceInDays, format, parseISO, startOfDay } from 'date-fns';
 import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from 'react';
@@ -139,10 +139,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const savedBatches = localStorage.getItem('hatchwise-batches');
       if (savedBatches) {
         const parsedBatches = JSON.parse(savedBatches) as Batch[];
-        // Ensure all batches have an incubatorType, defaulting to 'manual' for older data
         return parsedBatches.map(batch => ({
           ...batch,
           incubatorType: batch.incubatorType || 'manual',
+          candlingResults: batch.candlingResults || [], // Ensure candlingResults exists
+          // hatchedEggs will be undefined if not present, which is fine
         }));
       }
       return [];
@@ -158,13 +159,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addBatch = useCallback((batchData: Omit<Batch, 'id' | 'candlingResults' | 'tasks' | 'hatchedEggs'>) => {
     const newId = `batch-${Date.now()}`;
-    // Ensure incubatorType is present, defaulting to 'manual' if somehow missed (though form should enforce)
     const fullBatchData = { ...batchData, incubatorType: batchData.incubatorType || 'manual', id: newId };
     const newTasks = generateTasksForBatch(fullBatchData);
     const newBatch: Batch = {
       ...fullBatchData,
-      candlingResults: [],
+      candlingResults: [], // Initialize candlingResults
       tasks: newTasks,
+      // hatchedEggs is implicitly undefined here
     };
     setBatches((prev) => [...prev, newBatch]);
   }, []);
@@ -176,10 +177,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (existingBatch && (
         existingBatch.startDate !== batchData.startDate || 
         existingBatch.speciesId !== batchData.speciesId || 
-        existingBatch.incubatorType !== batchData.incubatorType || // Check incubatorType change
+        existingBatch.incubatorType !== batchData.incubatorType || 
         JSON.stringify(existingBatch.customCandlingDays) !== JSON.stringify(batchData.customCandlingDays)
       )) {
-        // Ensure incubatorType is present for task generation
         const batchDataForTaskGen = { ...batchData, incubatorType: batchData.incubatorType || 'manual' };
         tasksToUse = generateTasksForBatch(batchDataForTaskGen);
     }
@@ -193,11 +193,15 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setBatches((prev) => prev.filter((b) => b.id !== batchId));
   }, []);
 
-  const getBatchById = useCallback((batchId: string) => {
+  const getBatchById = useCallback((batchId: string): Batch | undefined => {
     const batch = batches.find((b) => b.id === batchId);
-    // Ensure incubatorType is present when retrieving, defaulting to 'manual'
     if (batch) {
-      return { ...batch, incubatorType: batch.incubatorType || 'manual' };
+      return { 
+        ...batch, 
+        incubatorType: batch.incubatorType || 'manual',
+        candlingResults: batch.candlingResults || [],
+        // hatchedEggs remains as is, or undefined
+      };
     }
     return undefined;
   }, [batches]);
@@ -208,7 +212,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const getTasksForDate = useCallback((date: Date): Task[] => {
     const formattedDate = format(startOfDay(date), 'yyyy-MM-dd');
-    return getAllTasks().filter(task => task.date === formattedDate && !task.completed);
+    return getAllTasks().filter(task => task.date === formattedDate); // Removed !task.completed to show all tasks for the day on dashboard, completion is visual
   }, [getAllTasks]);
 
 
@@ -231,8 +235,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const addCandlingResult = useCallback((batchId: string, day: number, fertile: number, notes?: string) => {
     setBatches(prev => prev.map(b => {
       if (b.id === batchId) {
-        const newResults = [...b.candlingResults, { day, fertile, notes }];
-        newResults.sort((a,b) => a.day - b.day);
+        const newResults: CandlingResult[] = [...(b.candlingResults || []), { day, fertile, notes }];
+        newResults.sort((a,b) => a.day - b.day); // Sort by day
         return { ...b, candlingResults: newResults };
       }
       return b;

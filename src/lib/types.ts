@@ -25,7 +25,7 @@ export interface Batch {
   speciesId: SpeciesName;
   startDate: string; // ISO date string
   numberOfEggs: number;
-  incubatorType: IncubatorType; // Added incubator type
+  incubatorType: IncubatorType;
   customCandlingDays?: number[];
   candlingResults: CandlingResult[];
   tasks: Task[]; // Tasks specific to this batch
@@ -47,8 +47,10 @@ export interface Task {
   notes?: string;
 }
 
-export interface HatchData {
-  totalEggs: number;
-  fertileEggsAtLockdown: number;
-  hatchedChicks: number;
-}
+// This type was removed as it was not used and seemed like a placeholder.
+// If HatchData is needed for something specific, it can be redefined.
+// export interface HatchData {
+//   totalEggs: number;
+//   fertileEggsAtLockdown: number;
+//   hatchedChicks: number;
+// }

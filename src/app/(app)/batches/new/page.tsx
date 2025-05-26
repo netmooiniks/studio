@@ -12,8 +12,8 @@ export default function NewBatchPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const handleSubmit = (data: Omit<Batch, 'id' | 'candlingResults' | 'tasks' | 'hatchedEggs'>) => {
-    addBatch(data);
+  const handleSubmit = (data: Omit<Batch, 'id' | 'candlingResults' | 'tasks' | 'hatchedEggs'> & { customCandlingDays?: number[] }) => {
+    addBatch(data); // addBatch in DataContext handles default candlingResults, tasks, hatchedEggs
     toast({
       title: "Batch Created!",
       description: `Successfully created batch "${data.name}".`,

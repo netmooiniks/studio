@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useData } from '@/contexts/data-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Edit, Layers, CalendarDays, Egg, Thermometer, Droplets, CheckCircle, AlertTriangle, Lightbulb, BarChart3, ClipboardList, Zap, Hand } from 'lucide-react';
+import { ArrowLeft, Edit, Layers, CalendarDays, Egg, Thermometer, Lightbulb, BarChart3, ClipboardList, Zap, Hand } from 'lucide-react';
 import Link from 'next/link';
 import { SPECIES_DATA } from '@/lib/constants';
 import { format, parseISO, differenceInDays, startOfDay, addDays } from 'date-fns';
@@ -12,7 +12,7 @@ import SpeciesIcon from '@/components/shared/species-icon';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TaskItem from '@/components/tasks/task-item';
-import { CandlingResult, Task } from '@/lib/types';
+import type { CandlingResult, Task } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -129,7 +129,7 @@ function HatchRateCalculator({ batchId }: { batchId: string }) {
         <div className="flex items-end gap-2">
           <div className="flex-grow">
             <Label htmlFor="hatched-eggs-input">Number of Hatched Eggs</Label>
-            <Input id="hatched-eggs-input" type="number" value={hatchedInput} onChange={e => setHatchedInput(e.target.value)} placeholder={`0 - ${batch.numberOfEggs}`} />
+            <Input id="hatched-eggs-input" type="number" value={hatchedInput} onChange={e => setHatchedInput(e.target.value)} placeholder={`0 - ${batch.numberOfEggs}`} min="0" max={batch.numberOfEggs} />
           </div>
           <Button onClick={handleSetHatched}>Set Hatched</Button>
         </div>
@@ -163,7 +163,6 @@ export default function BatchDetailPage() {
     return [...batch.tasks].sort((a, b) => {
       const dateDiff = parseISO(a.date).getTime() - parseISO(b.date).getTime();
       if (dateDiff !== 0) return dateDiff;
-      // Basic type sort order
       const typeOrder = { 'candle': 1, 'turn': 2, 'mist': 3, 'lockdown': 4, 'hatch_check': 5, 'custom': 6 };
       return (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99) ;
     });
@@ -186,7 +185,7 @@ export default function BatchDetailPage() {
   const startDate = startOfDay(parseISO(batch.startDate));
   const currentDayOfIncubation = differenceInDays(today, startDate) + 1;
   const progressPercentage = Math.min(Math.max(0, (currentDayOfIncubation / species.incubationDays) * 100), 100);
-  const estimatedHatchDate = addDays(startDate, species.incubationDays -1); // -1 because day 1 is start date
+  const estimatedHatchDate = addDays(startDate, species.incubationDays -1); 
 
   const handleTaskToggle = (task: Task) => {
     updateTask({ ...task, completed: !task.completed });
@@ -197,6 +196,7 @@ export default function BatchDetailPage() {
   };
   
   const handleAddCandling = (day: number, fertile: number, notes?: string) => {
+    if (!batch) return;
     addCandlingResult(batch.id, day, fertile, notes);
     toast({ title: "Candling Result Added", description: `Day ${day}: ${fertile} fertile eggs recorded.`});
   };
@@ -270,7 +270,7 @@ export default function BatchDetailPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-muted-foreground">No tasks generated for this batch yet. This might be due to an 'Auto Turn' incubator setting.</p>
+                <p className="text-muted-foreground">No tasks generated for this batch yet. This might be due to an 'Auto Turn' incubator setting or species configuration.</p>
               )}
             </CardContent>
           </Card>
@@ -294,6 +294,7 @@ export default function BatchDetailPage() {
                     <TableRow>
                       <TableHead>Incubation Day</TableHead>
                       <TableHead>Fertile Eggs</TableHead>
+                      <TableHead>% Fertile</TableHead>
                       <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -302,6 +303,7 @@ export default function BatchDetailPage() {
                       <TableRow key={index}>
                         <TableCell>{result.day}</TableCell>
                         <TableCell>{result.fertile} / {batch.numberOfEggs}</TableCell>
+                        <TableCell>{((result.fertile / batch.numberOfEggs) * 100).toFixed(1)}%</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{result.notes || '-'}</TableCell>
                       </TableRow>
                     ))}

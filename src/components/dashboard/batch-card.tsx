@@ -26,19 +26,21 @@ export function BatchCard({ batch }: BatchCardProps) {
   
   const progressPercentage = Math.min(Math.max(0, (currentDayOfIncubation / species.incubationDays) * 100), 100);
 
-  const isCompleted = currentDayOfIncubation > species.incubationDays;
+  const isCompleted = currentDayOfIncubation > species.incubationDays + 2; // Allow few days for hatching to complete
   const isHatchingWindow = currentDayOfIncubation >= species.lockdownDay && currentDayOfIncubation <= species.incubationDays + 2;
 
-  const todaysTasks = getTasksForDate(new Date()).filter(task => task.batchId === batch.id);
-  const hasPendingTasks = todaysTasks.some(task => !task.completed);
+  const todaysTasks = getTasksForDate(new Date()).filter(task => task.batchId === batch.id && !task.completed);
+  const hasPendingTasks = todaysTasks.length > 0;
 
   let statusText = `Day ${currentDayOfIncubation} of ${species.incubationDays}`;
   if (isCompleted) {
     statusText = batch.hatchedEggs !== undefined ? `Hatched: ${batch.hatchedEggs}` : "Completed";
   } else if (isHatchingWindow) {
     statusText = "Hatching Window!";
-  } else if (currentDayOfIncubation === species.lockdownDay) {
+  } else if (currentDayOfIncubation > 0 && currentDayOfIncubation === species.lockdownDay) {
     statusText = "Lockdown Day!";
+  } else if (currentDayOfIncubation <= 0) {
+    statusText = `Starts in ${Math.abs(currentDayOfIncubation-1)} day(s)`;
   }
 
 
@@ -60,17 +62,17 @@ export function BatchCard({ batch }: BatchCardProps) {
         <div className="mb-2">
           <div className="flex justify-between text-sm mb-1">
             <span className="font-medium">{statusText}</span>
-            {!isCompleted && <span className="text-muted-foreground">{progressPercentage.toFixed(0)}%</span>}
+            {!isCompleted && currentDayOfIncubation > 0 && <span className="text-muted-foreground">{progressPercentage.toFixed(0)}%</span>}
           </div>
-          {!isCompleted && <Progress value={progressPercentage} aria-label={`${statusText} progress`} className="h-3" />}
+          {!isCompleted && currentDayOfIncubation > 0 && <Progress value={progressPercentage} aria-label={`${statusText} progress`} className="h-3" />}
         </div>
         
-        {hasPendingTasks && !isCompleted && (
+        {hasPendingTasks && !isCompleted && currentDayOfIncubation > 0 && (
           <p className="text-sm text-accent flex items-center mt-3">
-            <AlertTriangle className="mr-1 h-4 w-4" /> {todaysTasks.filter(t => !t.completed).length} pending task(s) for today.
+            <AlertTriangle className="mr-1 h-4 w-4" /> {todaysTasks.length} pending task(s) for today.
           </p>
         )}
-        {!hasPendingTasks && !isCompleted && currentDayOfIncubation <= species.incubationDays && (
+        {!hasPendingTasks && !isCompleted && currentDayOfIncubation > 0 && currentDayOfIncubation <= species.incubationDays && (
            <p className="text-sm text-green-600 flex items-center mt-3">
             <CheckCircle2 className="mr-1 h-4 w-4" /> All tasks for today complete!
           </p>
@@ -78,6 +80,11 @@ export function BatchCard({ batch }: BatchCardProps) {
         {isCompleted && batch.hatchedEggs !== undefined && (
           <p className="text-sm text-green-600 font-semibold mt-3">
             Hatch successful: {batch.hatchedEggs} / {batch.numberOfEggs} chicks!
+          </p>
+        )}
+         {isCompleted && batch.hatchedEggs === undefined && (
+          <p className="text-sm text-muted-foreground mt-3">
+            Incubation period complete. Record hatched eggs.
           </p>
         )}
 
