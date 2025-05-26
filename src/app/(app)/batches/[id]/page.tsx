@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useData } from '@/contexts/data-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Edit, Layers, CalendarDays, Egg, Thermometer, Droplets, CheckCircle, AlertTriangle, Lightbulb, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Edit, Layers, CalendarDays, Egg, Thermometer, Droplets, CheckCircle, AlertTriangle, Lightbulb, BarChart3, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import { SPECIES_DATA } from '@/lib/constants';
 import { format, parseISO, differenceInDays, startOfDay, addDays } from 'date-fns';
