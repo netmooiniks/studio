@@ -2,23 +2,75 @@
 import type { Species, SpeciesName } from './types';
 
 export const SPECIES_DATA: Record<SpeciesName, Species> = {
+  chicken: {
+    id: 'chicken',
+    name: 'Chicken',
+    incubationDays: 21, // days 0-20
+    defaultCandlingDays: [6, 13], // Actual day 7, 14
+    mistingStartDay: 999, // No standard misting
+    lockdownDay: 18, // Actual day 19
+  },
   pekin_duck: {
     id: 'pekin_duck',
     name: 'Pekin Duck',
-    incubationDays: 28, // Total duration. Days are 0-indexed from 0 to 27.
-    defaultCandlingDays: [6, 13], // 0-indexed (previously 7, 14)
-    mistingStartDay: 9, // 0-indexed (previously 10)
-    // Misting occurs from mistingStartDay up to, but not including, lockdownDay
-    lockdownDay: 24, // 0-indexed (previously 25)
+    incubationDays: 28, // days 0-27
+    defaultCandlingDays: [6, 9], // Actual day 7, 10. Guide: 5-7, 10, 25. Candling on lockdown day is handled by task gen.
+    mistingStartDay: 9, // Actual day 10
+    lockdownDay: 24, // Actual day 25
   },
   muscovy_duck: {
     id: 'muscovy_duck',
     name: 'Muscovy Duck',
-    incubationDays: 35, // Total duration. Days are 0-indexed from 0 to 34.
-    defaultCandlingDays: [9, 19], // 0-indexed (previously 10, 20)
-    mistingStartDay: 9, // 0-indexed (previously 10)
-    lockdownDay: 31, // 0-indexed (previously 32)
+    incubationDays: 35, // days 0-34
+    defaultCandlingDays: [9, 19, 29], // Actual day 10, then ~weekly (Day 20, Day 30)
+    mistingStartDay: 9, // Actual day 10
+    lockdownDay: 31, // Actual day 32
+  },
+  turkey: {
+    id: 'turkey',
+    name: 'Turkey',
+    incubationDays: 28, // days 0-27
+    defaultCandlingDays: [9, 13, 24], // Guide "7-10, 14, 25" -> actual Day 10, 14, 25
+    mistingStartDay: 999, // No standard misting
+    lockdownDay: 25, // Actual day 26
+  },
+  goose_general: {
+    id: 'goose_general',
+    name: 'Goose (General)',
+    incubationDays: 30, // days 0-29 (average)
+    defaultCandlingDays: [6, 9, 16, 23], // Actual day 7, 10, then ~weekly
+    mistingStartDay: 7, // Actual day 8
+    lockdownDay: 26, // Actual day 27
+  },
+  coturnix_quail: {
+    id: 'coturnix_quail',
+    name: 'Coturnix Quail',
+    incubationDays: 17, // days 0-16
+    defaultCandlingDays: [6, 13], // Actual day 7, 14
+    mistingStartDay: 999, // No standard misting
+    lockdownDay: 14, // Actual day 15
+  },
+  bobwhite_quail: {
+    id: 'bobwhite_quail',
+    name: 'Bobwhite Quail',
+    incubationDays: 23, // days 0-22
+    defaultCandlingDays: [11, 14], // Guide "12-15" -> actual Day 12, Day 15
+    mistingStartDay: 999, // No standard misting
+    lockdownDay: 20, // Actual day 21
+  },
+  custom: {
+    id: 'custom',
+    name: 'Custom (Define Params)',
+    incubationDays: 1, // Minimal default, user should adjust via custom features or notes
+    defaultCandlingDays: [], // User must define these using "Custom Candling Days" input
+    mistingStartDay: 999, // Default to no misting
+    lockdownDay: 0, // Minimal default
   },
 };
 
-export const ALL_SPECIES_LIST: Species[] = Object.values(SPECIES_DATA);
+export const ALL_SPECIES_LIST: Species[] = Object.values(SPECIES_DATA).sort((a, b) => {
+  if (a.id === 'custom') return 1; // Always sort 'custom' to the end
+  if (b.id === 'custom') return -1;
+  return a.name.localeCompare(b.name); // Sort other species alphabetically by name
+});
+

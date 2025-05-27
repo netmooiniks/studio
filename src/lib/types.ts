@@ -1,18 +1,25 @@
 
-export type SpeciesName = 'pekin_duck' | 'muscovy_duck';
+export type SpeciesName = 
+  'pekin_duck' | 
+  'muscovy_duck' |
+  'chicken' |
+  'turkey' |
+  'goose_general' |
+  'coturnix_quail' |
+  'bobwhite_quail' |
+  'custom';
 
 export interface Species {
   id: SpeciesName;
   name: string;
-  incubationDays: number;
-  defaultCandlingDays: number[]; // Relative to start day (day 1)
-  mistingStartDay: number; // Relative to start day
-  mistingEndDay: number; // Relative to start day (lockdown day)
-  lockdownDay: number; // Relative to start day
+  incubationDays: number; // Total duration, e.g., 28 means days 0-27
+  defaultCandlingDays: number[]; // 0-indexed days for candling tasks
+  mistingStartDay: number; // 0-indexed day when misting starts (use a high value like 999 if no misting)
+  lockdownDay: number; // 0-indexed day when lockdown procedures begin
 }
 
 export interface CandlingResult {
-  day: number; // Incubation day number
+  day: number; // Incubation day number (0-indexed)
   fertile: number;
   notes?: string;
 }
@@ -26,7 +33,7 @@ export interface Batch {
   startDate: string; // ISO date string
   numberOfEggs: number;
   incubatorType: IncubatorType;
-  customCandlingDays?: number[];
+  customCandlingDays?: number[]; // 0-indexed custom candling days
   candlingResults: CandlingResult[];
   tasks: Task[]; // Tasks specific to this batch
   hatchedEggs?: number;
@@ -40,17 +47,9 @@ export interface Task {
   batchId: string;
   batchName?: string; // For display purposes
   date: string; // ISO date string
-  dayOfIncubation: number;
+  dayOfIncubation: number; // 0-indexed
   description: string;
   type: TaskType;
   completed: boolean;
   notes?: string;
 }
-
-// This type was removed as it was not used and seemed like a placeholder.
-// If HatchData is needed for something specific, it can be redefined.
-// export interface HatchData {
-//   totalEggs: number;
-//   fertileEggsAtLockdown: number;
-//   hatchedChicks: number;
-// }
