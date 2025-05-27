@@ -5,7 +5,7 @@ import { LoginForm } from "@/components/auth/login-form";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ChronoHatchIcon } from "@/components/shared/ChronoHatchIcon"; // Changed import
+import Image from 'next/image';
 
 export default function LoginPage() {
   const { currentUser, loading } = useAuth();
@@ -21,7 +21,7 @@ export default function LoginPage() {
     // Show a loading state or nothing while redirecting
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-            <ChronoHatchIcon className="h-12 w-12 text-primary mb-4 animate-pulse" /> {/* Changed Icon */}
+            <Image src="/icon.png" alt="Authenticating Icon" width={48} height={48} className="mb-4 animate-pulse" />
             <p className="text-muted-foreground">Loading...</p>
         </div>
     );
@@ -30,7 +30,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mb-8 text-center">
-        <ChronoHatchIcon className="h-16 w-16 text-primary mx-auto mb-4" /> {/* Changed Icon */}
+        <Image src="/icon.png" alt="ChronoHatch Logo" width={64} height={64} className="mx-auto mb-4" />
         <h1 className="text-3xl font-bold text-primary">ChronoHatch<sup className="text-sm font-normal align-super">©</sup></h1>
         <p className="text-muted-foreground">Your Smart Incubation Companion</p>
       </div>

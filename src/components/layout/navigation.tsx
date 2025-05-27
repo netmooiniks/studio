@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { ChronoHatchIcon } from '@/components/shared/ChronoHatchIcon'; // Changed import
+import Image from 'next/image';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -32,7 +32,7 @@ export default function AppNavigation() {
     <>
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-sidebar-foreground">
-          <ChronoHatchIcon className="h-8 w-8 text-primary" /> {/* Changed Icon */}
+          <Image src="/icon.png" alt="ChronoHatch Logo" width={32} height={32} />
           <span className="group-data-[collapsible=icon]:hidden">ChronoHatch<sup className="text-xs font-normal align-super">©</sup></span>
         </Link>
       </SidebarHeader>

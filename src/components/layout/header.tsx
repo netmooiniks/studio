@@ -9,7 +9,7 @@ import { useData } from '@/contexts/data-context';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { format, isBefore, startOfDay, parseISO } from 'date-fns';
 import { useState, useEffect } from 'react';
-import { ChronoHatchIcon } from '@/components/shared/ChronoHatchIcon'; // Changed import
+import Image from 'next/image';
 
 // import { useTheme } from "next-themes"; // if you add dark mode toggle
 
@@ -49,7 +49,7 @@ export default function AppHeader() {
         <div className="flex items-center gap-2">
           <SidebarTrigger className="md:hidden" />
          <Link href="/" className="flex items-center gap-2 text-lg font-semibold md:text-base text-primary">
-            <ChronoHatchIcon className="h-6 w-6" /> {/* Changed Icon */}
+            <Image src="/icon.png" alt="ChronoHatch Logo" width={24} height={24} />
             <span className="sr-only">ChronoHatch</span>
           </Link>
         </div>

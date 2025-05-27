@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useData } from '@/contexts/data-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Edit, Layers, CalendarDays, Thermometer, Lightbulb, BarChart3, Zap, Hand, ClipboardList } from 'lucide-react'; // Removed Egg, added ClipboardList
+import { ArrowLeft, Edit, Layers, CalendarDays, Thermometer, Lightbulb, BarChart3, Zap, Hand, ClipboardList } from 'lucide-react';
 import Link from 'next/link';
 import { SPECIES_DATA } from '@/lib/constants';
 import { format, parseISO, differenceInDays, startOfDay, addDays } from 'date-fns';
@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useState, useMemo } from 'react';
+import Image from 'next/image';
 import {
   Table,
   TableBody,
@@ -36,7 +37,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from '@/components/ui/textarea';
-import { ChronoHatchIcon } from '@/components/shared/ChronoHatchIcon'; // Changed import
 
 
 // Component for adding candling results
@@ -249,7 +249,10 @@ export default function BatchDetailPage() {
         <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <div className="space-y-2">
             <p className="flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Set Date:</strong> {format(setDate, 'PPP')}</p>
-            <p className="flex items-center"><ChronoHatchIcon className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Eggs Set:</strong> {batch.numberOfEggs}</p> {/* Changed Icon */}
+            <p className="flex items-center">
+              <Image src="/icon.png" alt="Eggs Set Icon" width={20} height={20} className="mr-2 text-muted-foreground" />
+              <strong>Eggs Set:</strong> {batch.numberOfEggs}
+            </p>
             <p className="flex items-center"><Thermometer className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Incubation Period:</strong> {species.incubationDays} days (Day 1 to {species.incubationDays})</p>
             <p className="flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Est. Hatch:</strong> {format(estimatedHatchDate, 'PPP')}</p>
              <p className="flex items-center">
