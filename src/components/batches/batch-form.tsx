@@ -51,9 +51,10 @@ type BatchFormValues = z.infer<typeof batchFormSchema>;
 interface BatchFormProps {
   onSubmit: (data: Omit<Batch, 'id' | 'candlingResults' | 'tasks' | 'hatchedEggs'> & { customCandlingDays?: number[] }) => void;
   initialData?: Batch;
+  onCancel?: () => void; // Added onCancel prop
 }
 
-export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
+export function BatchForm({ onSubmit, initialData, onCancel }: BatchFormProps) {
   const [customDays, setCustomDays] = useState<number[]>(initialData?.customCandlingDays || []); // Should be 1-indexed
   
   const form = useForm<BatchFormValues>({
@@ -144,7 +145,7 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
     ? `Incubation: ${currentSpecies.incubationDays} days (Day 1 to ${currentSpecies.incubationDays}). Day 1 is day after set. Default candling: Days ${currentSpecies.defaultCandlingDays.join(', ')} & ${currentSpecies.lockdownDay} (lockdown).`
     : 'Select the bird species for this batch.';
 
-  const handleCancel = () => {
+  const handleCancelClick = () => {
     if (initialData) {
       // Reset logic for editing
       form.reset({
@@ -166,6 +167,9 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
         notes: '',
       });
       setCustomDays([]); // Also clear custom days badges
+    }
+    if (onCancel) {
+      onCancel();
     }
   };
 
@@ -355,7 +359,7 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
           <Button type="submit" className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
             {initialData ? 'Save Changes' : 'Create Batch'}
           </Button>
-          <Button type="button" variant="outline" onClick={handleCancel} className="ml-2">
+          <Button type="button" variant="outline" onClick={handleCancelClick} className="ml-2">
             Cancel
           </Button>
         </div>

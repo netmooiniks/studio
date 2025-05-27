@@ -40,6 +40,10 @@ export default function EditBatchPage() {
     router.push(`/batches/${batchId}`);
   };
 
+  const handleCancel = () => {
+    router.back(); // Go back to the previous page (likely the batch detail page)
+  };
+
   if (!batchToEdit) {
      return (
       <div className="container mx-auto py-8 text-center">
@@ -65,7 +69,7 @@ export default function EditBatchPage() {
         </CardHeader>
         <CardContent>
           {/* Pass the full batchToEdit as initialData; BatchForm will pick what it needs */}
-          <BatchForm onSubmit={handleSubmit} initialData={batchToEdit} />
+          <BatchForm onSubmit={handleSubmit} initialData={batchToEdit} onCancel={handleCancel} />
         </CardContent>
       </Card>
     </div>

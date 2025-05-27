@@ -21,6 +21,10 @@ export default function NewBatchPage() {
     router.push('/batches');
   };
 
+  const handleCancel = () => {
+    router.push('/batches');
+  };
+
   return (
     <div className="container mx-auto py-8 max-w-2xl">
       <Card className="shadow-lg">
@@ -29,7 +33,7 @@ export default function NewBatchPage() {
           <CardDescription>Enter the details for your new incubation batch.</CardDescription>
         </CardHeader>
         <CardContent>
-          <BatchForm onSubmit={handleSubmit} />
+          <BatchForm onSubmit={handleSubmit} onCancel={handleCancel} />
         </CardContent>
       </Card>
     </div>
