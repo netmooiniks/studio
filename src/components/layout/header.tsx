@@ -17,7 +17,7 @@ export default function AppHeader() {
         <SidebarTrigger className="md:hidden" />
          <Link href="/" className="flex items-center gap-2 text-lg font-semibold md:text-base text-primary">
             <EggIcon className="h-6 w-6" />
-            <span className="sr-only">HatchWise</span>
+            <span className="sr-only">ChronoHatch</span>
           </Link>
       </div>
       <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
@@ -39,3 +39,4 @@ export default function AppHeader() {
     </header>
   );
 }
+

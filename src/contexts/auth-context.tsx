@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
       setCurrentUser(userCredential.user);
-      toast({ title: "Signup Successful", description: "Welcome to HatchWise!" });
+      toast({ title: "Signup Successful", description: "Welcome to ChronoHatch!" });
       return userCredential.user;
     } catch (error) {
       const authError = error as AuthError;
@@ -108,3 +108,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+

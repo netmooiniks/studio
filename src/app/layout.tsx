@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
 
 export const metadata: Metadata = {
-  title: 'HatchWise© - Egg Incubation Manager',
+  title: 'ChronoHatch© - Egg Incubation Manager',
   description: 'Manage your egg incubation batches with ease.',
 };
 
@@ -27,3 +27,4 @@ export default function RootLayout({
     </html>
   );
 }
+
