@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { CalendarIcon, ChevronLeft, ChevronRight, ClipboardList, CheckCircle2 } from 'lucide-react';
+import { CalendarIcon, ChevronLeft, ChevronRight, ClipboardList, CheckCircle2, Home } from 'lucide-react';
 import { format, startOfDay, addDays, subDays } from 'date-fns';
 import TaskItem from '@/components/tasks/task-item';
 import type { Task } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
+import Link from 'next/link';
 
 export default function TasksPage() {
   const { getAllTasks, updateTask } = useData();
@@ -52,6 +53,15 @@ export default function TasksPage() {
 
   return (
     <div className="container mx-auto py-8">
+      <div className="mb-6">
+        <Button variant="outline" asChild>
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
+      </div>
+
       <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold text-primary">Daily Tasks</h1>
         <div className="flex items-center gap-2">

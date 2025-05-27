@@ -5,7 +5,7 @@ import { useData } from '@/contexts/data-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Eye, Archive, Layers, CalendarDays, Egg, Percent } from 'lucide-react';
+import { Eye, Archive, Layers, CalendarDays, Egg, Percent, Home } from 'lucide-react';
 import { SPECIES_DATA } from '@/lib/constants';
 import { format, parseISO, differenceInDays, startOfDay, addDays } from 'date-fns';
 import SpeciesIcon from '@/components/shared/species-icon';
@@ -61,6 +61,15 @@ export default function HistoryPage() {
 
   return (
     <div className="container mx-auto py-8">
+      <div className="mb-6">
+        <Button variant="outline" asChild>
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
+      </div>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-primary flex items-center">
           <Archive className="mr-3 h-8 w-8" /> Batch History

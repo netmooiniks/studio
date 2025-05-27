@@ -5,7 +5,7 @@ import { useData } from '@/contexts/data-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Edit, Trash2, Eye, Layers, CalendarDays, Egg } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Eye, Layers, CalendarDays, Egg, Home } from 'lucide-react';
 import { SPECIES_DATA } from '@/lib/constants';
 import { format, parseISO, differenceInDays, startOfDay, addDays } from 'date-fns';
 import SpeciesIcon from '@/components/shared/species-icon';
@@ -38,6 +38,15 @@ export default function BatchesPage() {
   
   return (
     <div className="container mx-auto py-8">
+      <div className="mb-6">
+        <Button variant="outline" asChild>
+          <Link href="/">
+            <Home className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+        </Button>
+      </div>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-primary">Incubation Batches</h1>
         <Button asChild>
