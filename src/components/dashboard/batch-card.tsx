@@ -35,6 +35,7 @@ export function BatchCard({ batch }: BatchCardProps) {
     : 0;
 
   // Completion: after (total incubation days + 2 days for hatching)
+  // Day 1 is day after set. If incubation is 21 days, completed if current day > 21+2.
   const isCompleted = currentIncubationDay !== null && currentIncubationDay > species.incubationDays + 2;
   const speciesLockdownDay = species.lockdownDay; // 1-indexed
 
@@ -62,16 +63,16 @@ export function BatchCard({ batch }: BatchCardProps) {
     progressBarLabel = `Day ${currentIncubationDay} of ${species.incubationDays}`;
   } else if (daysUntilLockdown === 1) {
     statusText = "Lockdown in 1 day";
-    progressBarLabel = `Day ${currentIncubationDay} of ${species.incubationDays}`;
+    progressBarLabel = currentIncubationDay ? `Day ${currentIncubationDay} of ${species.incubationDays}` : null;
   } else if (daysUntilLockdown === 2) {
     statusText = "Lockdown in 2 days";
-    progressBarLabel = `Day ${currentIncubationDay} of ${species.incubationDays}`;
+    progressBarLabel = currentIncubationDay ? `Day ${currentIncubationDay} of ${species.incubationDays}` : null;
   } else if (daysElapsedSinceSet < 0) { // Upcoming batch
     const daysToStart = Math.abs(daysElapsedSinceSet);
     statusText = `Starts in ${daysToStart} day${daysToStart === 1 ? '' : 's'}`;
   } else if (daysElapsedSinceSet === 0) { // Set Day
     statusText = "Set Day";
-    progressBarLabel = `Set Day (0 / ${species.incubationDays} days)`;
+    progressBarLabel = "Incubation begins tomorrow"; // Clarified label for Set Day
   } else if (currentIncubationDay !== null) { // Default active state
     statusText = `Inc. Day: ${currentIncubationDay}`;
     progressBarLabel = `Day ${currentIncubationDay} of ${species.incubationDays}`;
@@ -133,3 +134,4 @@ export function BatchCard({ batch }: BatchCardProps) {
     </Card>
   );
 }
+
