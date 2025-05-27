@@ -38,6 +38,11 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
+// Helper to escape special characters for RegExp
+const escapeRegExp = (string: string): string => {
+  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+};
+
 // Helper to generate tasks for a batch
 const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 'speciesId' | 'incubatorType' | 'customCandlingDays'>): Task[] => {
   const species = SPECIES_DATA[batch.speciesId];
@@ -256,8 +261,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const oldBatchName = existingBatchFromState.name;
           const newBatchName = batchData.name;
           
-          const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          const oldBatchNameRegex = new RegExp(escapeRegExp(oldBatchName), 'g');
+          const escapedOldBatchName = escapeRegExp(oldBatchName);
+          const oldBatchNameRegex = new RegExp(escapedOldBatchName, 'g'); // 'g' for global replacement
 
           tasksForUpdate = (batchData.tasks || []).map(task => ({
               ...task,
@@ -299,14 +304,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [batches]);
 
   const getAllTasks = useCallback((): Task[] => {
-    // Ensure tasks always have the latest batchName from the batches state
     return batches.flatMap(batch => 
       (batch.tasks || []).map(task => {
-        // If the task description contains the old batch name, update it here too.
-        // This is a safeguard, primary update should happen in updateBatch.
         let currentDescription = task.description;
+        // Ensure task.batchName is defined and different from current batch.name before attempting replacement
         if (task.batchName && task.batchName !== batch.name && currentDescription.includes(task.batchName)) {
-             const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
              const oldNameRegex = new RegExp(escapeRegExp(task.batchName), 'g');
              currentDescription = currentDescription.replace(oldNameRegex, batch.name);
         }
@@ -329,12 +331,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const batchRef = doc(db, 'users', currentUser.uid, 'batches', updatedTask.batchId);
       const targetBatch = batches.find(b => b.id === updatedTask.batchId);
       if (!targetBatch) throw new Error("Batch not found for task update.");
-
-      // Ensure the updatedTask also has the correct batchName if it might be stale
-      // Also ensure its description reflects the correct batch name.
+      
       let taskDescription = updatedTask.description;
+      // Ensure updatedTask.batchName is defined and different from targetBatch.name before attempting replacement
       if (updatedTask.batchName && updatedTask.batchName !== targetBatch.name && taskDescription.includes(updatedTask.batchName)) {
-          const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const oldNameRegex = new RegExp(escapeRegExp(updatedTask.batchName), 'g');
           taskDescription = taskDescription.replace(oldNameRegex, targetBatch.name);
       }
@@ -416,3 +416,6 @@ export const useData = (): DataContextType => {
   }
   return context;
 };
+
+
+    
