@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { EggIcon, LayoutDashboard, Layers, ClipboardList, Archive, PlusCircle } from 'lucide-react'; // Added Archive
+import { EggIcon, LayoutDashboard, Layers, ClipboardList, Archive, PlusCircle, BookOpen } from 'lucide-react'; // Added BookOpen
 import {
   SidebarHeader,
   SidebarContent,
@@ -19,7 +19,8 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/batches', label: 'Batches', icon: Layers },
   { href: '/tasks', label: 'Daily Tasks', icon: ClipboardList },
-  { href: '/history', label: 'History', icon: Archive }, // Added History page
+  { href: '/history', label: 'History', icon: Archive },
+  { href: '/how-to-guide.html', label: 'How-To Guide', icon: BookOpen, target: '_blank' }, // Added How-To Guide
   // { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -40,15 +41,15 @@ export default function AppNavigation() {
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
                 asChild
-                isActive={pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))}
+                isActive={item.href !== '/how-to-guide.html' && (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)))}
                 tooltip={{ children: item.label, className: "group-data-[collapsible=icon]:block hidden" }}
                 className={cn(
-                  pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href))
+                  item.href !== '/how-to-guide.html' && (pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href)))
                     ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90"
                     : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
-                <Link href={item.href}>
+                <Link href={item.href} target={item.target || '_self'}>
                   <item.icon className="h-5 w-5" />
                   <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                 </Link>
@@ -68,4 +69,3 @@ export default function AppNavigation() {
     </>
   );
 }
-

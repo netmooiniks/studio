@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Poultry Incubation Guide</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Visualization & Content Choices:
+        - Core Principles: Presented in collapsible accordion sections for clarity and space management. Goal: Inform. Method: HTML/CSS, JS.
+        - Species Parameters (Table 1 from report): Data extracted into a JS object. A dropdown selects the species, and JS dynamically populates a dedicated area with its parameters (temps, humidity, turning, cooling, candling notes, weight loss). Goal: Compare, Inform. Method: JS data rendering, HTML/CSS for layout. Chart.js used for a bar chart comparing incubation periods.
+        - Candling Timeline (Table 2 from report): Presented as an HTML table. Additionally, an interactive candling timeline allows users to click stages (Early, Mid, Late) to see descriptions and simplified HTML/CSS visuals of egg/air cell development. Goal: Inform, Organize. Method: JS interaction, HTML/CSS visuals.
+        - Troubleshooting (Table 3 from report): Rendered as an interactive HTML table, potentially filterable by symptom in a future iteration. Goal: Organize, Solve. Method: HTML table.
+        - Air Cell Development: Visualized using styled HTML divs, updated by JS based on candling stage selection. Goal: Inform. Method: HTML/CSS, JS.
+        - Cooling & Misting: Detailed textual explanations with clear headings. Goal: Inform. Method: HTML/CSS.
+        - Justification: These choices prioritize interactivity and clear presentation of dense information, making it easier for users to find and understand specific details. Chart.js is used for simple comparisons. No SVG/Mermaid used, adhering to constraints.
+    -->
+    <style>
+        body { font-family: 'Inter', sans-serif; } /* Keep original font for guide consistency unless further changes requested */
+        .tab-button.active {
+            border-color: #0D9488; /* teal-600 */
+            background-color: #0D9488; /* teal-600 */
+            color: white;
+        }
+        .tab-button {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        .content-section { display: none; }
+        .content-section.active { display: block; }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .details-marker::before {
+            content: '▶';
+            margin-right: 0.5rem;
+            display: inline-block;
+            transition: transform 0.3s ease-out;
+        }
+        .details-open .details-marker::before {
+            transform: rotate(90deg);
+        }
+        /* Add some basic styling to make it look okay with app's tailwind */
+        body {
+          background-color: hsl(var(--background));
+          color: hsl(var(--foreground));
+        }
+        header, footer {
+          background-color: hsl(var(--primary));
+          color: hsl(var(--primary-foreground));
+        }
+        nav {
+           background-color: hsl(var(--primary) / 0.9);
+        }
+        .tab-button.active {
+            border-color: hsl(var(--accent)); 
+            background-color: hsl(var(--accent)); 
+            color: hsl(var(--accent-foreground));
+        }
+        .tab-button {
+             color: hsl(var(--primary-foreground));
+        }
+        .tab-button:hover {
+            background-color: hsl(var(--accent) / 0.8);
+        }
+        .content-section h2, #species-info h3, #candling-visuals-container h4, .content-section h3 {
+            color: hsl(var(--primary));
+        }
+        .content-section p, .content-section ul, .content-section ol, .content-section table {
+             color: hsl(var(--foreground));
+        }
+        .bg-white {
+            background-color: hsl(var(--card));
+        }
+        .text-neutral-700, .text-neutral-600, .text-neutral-500 {
+            color: hsl(var(--card-foreground));
+        }
+        .text-amber-700 { color: #B45309; } /* Keep specific amber for notes */
+        .bg-amber-50 { background-color: #FFFBEB; }
+        .text-amber-800 { color: #92400E; }
+        .text-red-600 { color: #DC2626; }
+        .bg-stone-50 { background-color: hsl(var(--muted));}
+        .border-stone-200, .divide-stone-200 { border-color: hsl(var(--border));}
+        .border-stone-300 { border-color: hsl(var(--border)); }
+        #species-select {
+            background-color: hsl(var(--input));
+            border-color: hsl(var(--input-border));
+            color: hsl(var(--foreground));
+        }
+        .bg-yellow-100 { background-color: #FEF9C3; }
+        .bg-yellow-300 { background-color: #FDE047; }
+        .bg-rose-50 { background-color: #FFF1F2; }
+        .border-red-400 { border-color: #F87171; }
+        .bg-red-500 { background-color: #EF4444; }
+        .text-red-500 { color: #EF4444; }
+        .border-red-600 { border-color: #DC2626; }
+        .bg-red-100 { background-color: #FEE2E2; }
+        .bg-sky-200 { background-color: #BAE6FD; }
+        .bg-neutral-200 { background-color: #E5E5E5; }
+        .bg-neutral-500 { background-color: #737373; }
+        .border-neutral-400 { border-color: #A3A3A3; }
+        .border-neutral-600 { border-color: #525252; }
+
+    </style>
+</head>
+<body class="bg-stone-100 text-neutral-800">
+    <header class="bg-teal-700 text-white p-6 shadow-md">
+        <h1 class="text-3xl font-bold text-center">Interactive Poultry Incubation Guide</h1>
+    </header>
+
+    <nav class="bg-teal-600 p-4 sticky top-0 z-50 shadow">
+        <ul class="flex flex-wrap justify-center space-x-2 sm:space-x-4">
+            <li><button data-tab="overview" class="tab-button active text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Overview</button></li>
+            <li><button data-tab="species" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Species Deep Dive</button></li>
+            <li><button data-tab="candling" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Candling Master</button></li>
+            <li><button data-tab="cooling" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Cooling & Misting</button></li>
+            <li><button data-tab="troubleshooting" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Troubleshooting</button></li>
+            <li><button data-tab="surehatch" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">SureHatch Notes</button></li>
+        </ul>
+    </nav>
+
+    <main class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <section id="overview" class="content-section active">
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">I. Principles of Artificial Incubation</h2>
+            <p class="mb-4 text-neutral-700">This section outlines the fundamental principles crucial for successful artificial egg incubation. Understanding these core concepts will help you manage your incubator effectively and maximize hatch rates. Key areas include core environmental factors, incubator types, egg handling, and biosecurity.</p>
+
+            <div class="space-y-3">
+                <details class="bg-white p-4 rounded-lg shadow group">
+                    <summary class="font-semibold text-lg text-neutral-700 cursor-pointer flex justify-between items-center group details-marker">
+                        A. Core Environmental Factors: Temperature, Humidity, Ventilation, Turning
+                        <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
+                    </summary>
+                    <div class="accordion-content mt-2 text-neutral-600 space-y-2">
+                        <p><strong>Temperature:</strong> The most critical factor. Optimal temperature varies by species and incubator type. Consistently high temperatures are more damaging than low ones, leading to early, weak hatches or mortality. Low temperatures cause late hatches and weak chicks. Target ranges are typically $37.2-37.5^\circ C$ for forced-air and $37.8-38.9^\circ C$ for still-air incubators for many species.</p>
+                        <p><strong>Humidity:</strong> Controls moisture loss from the egg, crucial for air cell development. Setting humidity is usually 50-65% RH, increasing to 70-90% RH for lockdown. Incorrect humidity leads to dehydrated or drowned chicks.</p>
+                        <p><strong>Ventilation:</strong> Supplies oxygen ($O_2$) and removes carbon dioxide ($CO_2$). Needs increase as embryos grow. Poor ventilation causes oxygen starvation or $CO_2$ poisoning.</p>
+                        <p><strong>Turning:</strong> Prevents embryo adhesion to the shell and promotes proper development. Turn eggs 3-5+ times daily, stopping 2-4 days before hatch (lockdown).</p>
+                        <p class="mt-2 text-sm text-amber-700">These factors are interconnected. For example, increasing ventilation can lower humidity. Careful monitoring and adjustment are key.</p>
+                    </div>
+                </details>
+
+                <details class="bg-white p-4 rounded-lg shadow group">
+                    <summary class="font-semibold text-lg text-neutral-700 cursor-pointer flex justify-between items-center group details-marker">
+                        B. Incubator Types: Forced-Air vs. Still-Air
+                         <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
+                    </summary>
+                    <div class="accordion-content mt-2 text-neutral-600 space-y-2">
+                        <p><strong>Forced-Air Incubators:</strong> Use a fan for uniform temperature and humidity. Generally operate at slightly lower temperatures (e.g., $37.2-37.5^\circ C$). Easier to manage.</p>
+                        <p><strong>Still-Air Incubators:</strong> Rely on natural convection, leading to temperature stratification (warmer at top). Operate at higher temperatures (e.g., $37.8-38.9^\circ C$) measured at the top of the eggs. More challenging to manage humidity.</p>
+                    </div>
+                </details>
+
+                <details class="bg-white p-4 rounded-lg shadow group">
+                    <summary class="font-semibold text-lg text-neutral-700 cursor-pointer flex justify-between items-center group details-marker">
+                        C. Egg Selection, Storage, and Handling
+                         <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
+                    </summary>
+                    <div class="accordion-content mt-2 text-neutral-600 space-y-2">
+                        <p><strong>Selection:</strong> Choose clean, well-shaped eggs of typical size. Avoid cracked, double-yolked, or misshapen eggs. Generally, do not wash eggs to preserve the protective bloom.</p>
+                        <p><strong>Storage:</strong> If not setting immediately, store at $13-18^\circ C$ with 70-75% RH, pointed end down. Set within 7-10 days for best results. Turn eggs daily if stored over a week.</p>
+                        <p><strong>Handling:</strong> Warm eggs to room temperature before incubating to prevent sweating. Handle gently, especially in the first week.</p>
+                    </div>
+                </details>
+
+                <details class="bg-white p-4 rounded-lg shadow group">
+                    <summary class="font-semibold text-lg text-neutral-700 cursor-pointer flex justify-between items-center group details-marker">
+                        D. Biosecurity in the Hatchery Environment
+                         <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
+                    </summary>
+                    <div class="accordion-content mt-2 text-neutral-600 space-y-2">
+                        <p>Crucial to prevent disease. Clean and disinfect incubators and equipment between hatches. Source eggs from healthy flocks. Wash hands before handling eggs. Avoid setting dirty or cracked eggs. Do not mix waterfowl eggs with other poultry eggs in the same incubator due to differing pathogen risks.</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+        <section id="species" class="content-section">
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">II. Species Deep Dive</h2>
+            <p class="mb-6 text-neutral-700">Select a poultry species from the dropdown below to view its specific incubation parameters, including temperature, humidity, turning schedule, and any special considerations like cooling or misting. This information is crucial as optimal conditions vary significantly between species.</p>
+            
+            <div class="mb-6">
+                <label for="species-select" class="block text-lg font-medium text-neutral-700 mb-2">Select Species:</label>
+                <select id="species-select" class="w-full max-w-md p-3 border border-stone-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500 text-neutral-700 bg-white">
+                    <option value="">-- Select a Species --</option>
+                </select>
+            </div>
+
+            <div id="species-info" class="mt-6 bg-white p-6 rounded-lg shadow-lg min-h-[300px]">
+                <p class="text-neutral-500 text-center">Select a species to see its incubation details.</p>
+            </div>
+            
+            <div class="mt-8">
+                <h3 class="text-xl font-semibold text-teal-700 mb-3">Incubation Period Comparison</h3>
+                <div class="chart-container bg-white p-4 rounded-lg shadow">
+                    <canvas id="incubationPeriodsChart"></canvas>
+                </div>
+                <p class="text-sm text-neutral-600 mt-2 text-center">This chart visually compares the typical incubation periods for different poultry species.</p>
+            </div>
+        </section>
+
+        <section id="candling" class="content-section">
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">III. The Art and Science of Egg Candling</h2>
+            <p class="mb-6 text-neutral-700">Egg candling involves shining a light through the egg to observe internal development. It's vital for checking fertility, monitoring embryo growth, assessing air cell size (an indicator of humidity), and removing non-viable eggs. This section guides you through the process.</p>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-neutral-700 mb-3">A. Candling Equipment and Basic Technique</h3>
+                    <p class="text-neutral-600">Use a bright LED flashlight or a commercial egg candler. Perform candling in a darkened room. Hold the light against the large end of the egg. Gently rotate to view contents. Minimize time out of incubator (max 10 mins). Brown eggs are harder to candle; may need to wait longer.</p>
+                </div>
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-neutral-700 mb-3">B. Interpreting Air Cell Development</h3>
+                    <p class="text-neutral-600">The air cell (at the broad end) enlarges as moisture evaporates. Its size indicates if humidity is correct.</p>
+                    <ul class="list-disc list-inside text-neutral-600 mt-2 space-y-1">
+                        <li><strong>Air Cell Too Large:</strong> Too much moisture lost (humidity too low). Increase incubator humidity.</li>
+                        <li><strong>Air Cell Too Small:</strong> Insufficient moisture lost (humidity too high). Decrease incubator humidity.</li>
+                    </ul>
+                     <p class="text-neutral-600 mt-2">Target air cell size varies by species and day (e.g., ~1/3 of egg by lockdown for many).</p>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-white p-5 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-neutral-700 mb-3">C. Candling Timeline & Observations</h3>
+                <p class="text-neutral-600 mb-4">Click on a stage to see typical observations. Note: Timings are general; refer to species-specific data for precise days.</p>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button class="candling-stage-btn bg-amber-500 hover:bg-amber-600 text-white py-2 px-4 rounded-md" data-stage="early">Early Development (First Week)</button>
+                    <button class="candling-stage-btn bg-amber-500 hover:bg-amber-600 text-white py-2 px-4 rounded-md" data-stage="mid">Mid-Incubation</button>
+                    <button class="candling-stage-btn bg-amber-500 hover:bg-amber-600 text-white py-2 px-4 rounded-md" data-stage="late">Late Incubation / Pre-Lockdown</button>
+                </div>
+                <div id="candling-details" class="p-4 border border-stone-200 rounded-md bg-stone-50 min-h-[150px]">
+                    <p class="text-neutral-500">Select a stage to view details.</p>
+                </div>
+            </div>
+            
+            <div id="candling-visuals-container" class="mt-6 bg-white p-5 rounded-lg shadow">
+                 <h4 class="text-lg font-semibold text-neutral-700 mb-2">Visual Guide (Simplified)</h4>
+                 <div class="flex flex-wrap justify-around items-center gap-4">
+                    <div class="text-center">
+                        <p class="font-medium text-neutral-600 mb-1">Infertile (Clear)</p>
+                        <div class="w-20 h-28 border-2 border-neutral-400 rounded-full mx-auto bg-yellow-100 flex items-center justify-center">
+                            <div class="w-10 h-10 bg-yellow-300 rounded-full opacity-50"></div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="font-medium text-neutral-600 mb-1">Early Viable (Day 5-7)</p>
+                        <div class="w-20 h-28 border-2 border-red-400 rounded-full mx-auto bg-rose-50 flex flex-col items-center justify-end p-1 relative">
+                            <div class="absolute top-1 right-1 w-4 h-6 bg-sky-200 opacity-70 rounded-full"></div>
+                            <div class="w-3 h-3 bg-red-500 rounded-full mb-1"></div>
+                            <div class="text-red-500 text-xs">🕸️ Veins</div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <p class="font-medium text-neutral-600 mb-1">Blood Ring</p>
+                        <div class="w-20 h-28 border-2 border-red-600 rounded-full mx-auto bg-red-100 flex items-center justify-center">
+                            <div class="w-12 h-12 border-2 border-red-500 rounded-full"></div>
+                        </div>
+                    </div>
+                     <div class="text-center">
+                        <p class="font-medium text-neutral-600 mb-1">Late Stage (Pre-Lockdown)</p>
+                        <div class="w-20 h-28 border-2 border-neutral-600 rounded-full mx-auto bg-neutral-200 flex flex-col items-center justify-start p-1">
+                            <div class="w-full h-1/3 bg-sky-200 opacity-70 rounded-t-full"></div>
+                            <div class="flex-grow w-full bg-neutral-500 rounded-b-full"></div>
+                        </div>
+                         <p class="text-xs text-neutral-500 mt-1">Large air cell, dark embryo</p>
+                    </div>
+                 </div>
+                 <p class="text-xs text-neutral-500 mt-4 text-center">Note: These are highly simplified representations. Actual candling appearance varies.</p>
+            </div>
+
+            <div class="mt-6 bg-white p-5 rounded-lg shadow">
+                <h3 class="text-xl font-semibold text-neutral-700 mb-3">D. Identifying Non-Viable Eggs</h3>
+                <ul class="list-disc list-inside text-neutral-600 space-y-1">
+                    <li><strong>Clears (Infertile):</strong> Translucent, only yolk shadow visible. No blood vessels. Remove.</li>
+                    <li><strong>Blood Rings:</strong> Distinct blood ring. Embryo died very early. Remove.</li>
+                    <li><strong>Cloudy/Murky (Dead Embryos):</strong> Contents cloudy, dark mass, no healthy veins. Remove to prevent "exploders."</li>
+                </ul>
+            </div>
+            
+            <div class="mt-6">
+                 <h3 class="text-xl font-semibold text-teal-700 mb-3">E. General Candling Timeline Table (Summary)</h3>
+                 <div class="overflow-x-auto bg-white rounded-lg shadow">
+                    <table class="min-w-full divide-y divide-stone-200">
+                        <thead class="bg-stone-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Species</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">First Candling (Day)</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Mid-Incubation (Day(s))</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Late/Pre-Lockdown (Day(s))</th>
+                            </tr>
+                        </thead>
+                        <tbody id="candling-table-body" class="bg-white divide-y divide-stone-200 text-sm text-neutral-600">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section id="cooling" class="content-section">
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">IV. Cooling and Misting Eggs</h2>
+            <p class="mb-6 text-neutral-700">Cooling and misting are essential for waterfowl (ducks, geese) and not standard for other poultry like chickens, turkeys, or quail. These practices mimic natural behaviors and address the unique physiology of waterfowl eggs.</p>
+
+            <div class="space-y-4">
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-neutral-700 mb-3">A. Rationale for Waterfowl</h3>
+                    <ul class="list-disc list-inside text-neutral-600 space-y-2">
+                        <li><strong>Mimics Natural Behavior:</strong> Mother bird leaves nest, returns with damp feathers.</li>
+                        <li><strong>Cuticle Management:</strong> Helps degrade thick, waxy cuticle on waterfowl eggs, improving permeability.</li>
+                        <li><strong>Enhanced Gas Exchange:</strong> Better $O_2$ in, $CO_2$ out.</li>
+                        <li><strong>Regulated Moisture Loss:</strong> Promotes overall water evaporation for proper air cell size.</li>
+                        <li><strong>Improved Shell Brittleness & Membrane Softening:</strong> Eases pipping and zipping.</li>
+                        <li><strong>Dissipation of Metabolic Heat:</strong> Prevents overheating of large, developing embryos.</li>
+                    </ul>
+                    <p class="mt-2 text-sm text-amber-700">Proper cooling/misting can improve waterfowl hatchability significantly.</p>
+                </div>
+
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-neutral-700 mb-3">B. General Protocols (Ducks & Geese)</h3>
+                    <p class="text-neutral-600">Refer to specific species data for precise start days and durations, but general steps include:</p>
+                    <ul class="list-disc list-inside text-neutral-600 space-y-2">
+                        <li><strong>Start Day:</strong> Typically Day 7-10 for ducks, Day 4-8 for geese.</li>
+                        <li><strong>Frequency:</strong> Usually once daily.</li>
+                        <li><strong>Procedure:</strong>
+                            <ol class="list-decimal list-inside ml-4 space-y-1">
+                                <li>Remove eggs from incubator or open incubator.</li>
+                                <li>Allow eggs to cool for 15-30 minutes (Pekin ducks up to 60 min), or until shell surface reaches approx. $30^\circ C$.</li>
+                                <li>Lightly mist eggs with clean, lukewarm or room temperature water.</li>
+                                <li>Return eggs to incubator.</li>
+                            </ol>
+                        </li>
+                        <li><strong>Cessation:</strong> Stop cooling and misting at lockdown (2-4 days before hatch).</li>
+                    </ul>
+                </div>
+                 <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold text-neutral-700 mb-3">C. Muscovy Duck Specifics</h3>
+                    <p class="text-neutral-600">Muscovies generally benefit from cooling/misting. Start misting around Day 7, cooling around Day 10, daily for ~30 mins (cool to ~$30^\circ C$), until lockdown (Day 31-32). An alternative "dry hatch" with a "baggie method" at hatch exists but is less common.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="troubleshooting" class="content-section">
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">V. Troubleshooting Common Incubation Problems</h2>
+            <p class="mb-6 text-neutral-700">Even with care, issues can arise. This section lists common problems, their probable causes, and corrective measures. Accurate record-keeping and candling are key to diagnosis.</p>
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
+                <table class="min-w-full divide-y divide-stone-200">
+                    <thead class="bg-stone-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Symptom</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Probable Cause(s)</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Corrective Measure(s)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="troubleshooting-table-body" class="bg-white divide-y divide-stone-200 text-sm text-neutral-600">
+                        </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="surehatch" class="content-section">
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">VI. Specific Considerations for SureHatch Incubators</h2>
+            <p class="mb-6 text-neutral-700">This section provides notes based on general SureHatch incubator manual information. Users should always consult their specific model's manual. Importantly, SureHatch manuals often emphasize not mixing waterfowl eggs with other poultry eggs in the same unit.</p>
+            
+            <div class="bg-white p-5 rounded-lg shadow space-y-3 text-neutral-600">
+                <p><strong>General SureHatch Recommendations (often chicken-focused):</strong></p>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><strong>Egg Quality:</strong> Set uniform, clean, fertile eggs. Avoid wiping or using permanent markers on eggs.</li>
+                    <li><strong>Temperature:</strong> Typically pre-set around $37.5^\circ C$ ($99.5^\circ F$).</li>
+                    <li><strong>Humidity (Chicken):</strong> Days 1-18: 50-60% RH; Lockdown (Days 18-21): 60-65% RH. Adjusted with water containers/vents.</li>
+                    <li><strong>Turning (Chicken):</strong> Automatic hourly turning, stop on Day 18.</li>
+                    <li><strong>Lockdown (Chicken):</strong> Do not open incubator Days 18-21.</li>
+                    <li><strong>Room Conditions:</strong> Maintain room temp $20-28^\circ C$, good ventilation.</li>
+                </ul>
+                <p class="font-semibold text-amber-700"><strong>Critical Warning for Waterfowl (from SureHatch manuals):</strong></p>
+                <p class="text-red-600 font-medium">NEVER mix waterfowl eggs (ducks, geese) with dry/game fowl eggs (chickens) in the same incubator or hatcher. Waterfowl eggs may carry pathogens harmful to other embryos.</p>
+                <p><strong>Implications for Waterfowl in SureHatch Incubators:</strong></p>
+                <p>Since manuals often lack specific waterfowl parameters, users must adapt general waterfowl guidelines (as detailed in other sections of this guide) for temperature, humidity (managing for weight loss), external cooling/misting, and adjusted lockdown timings. Prioritize rigorous sanitation.</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="text-center p-6 mt-8 bg-teal-700 text-stone-200 text-sm">
+        <p>This guide is for informational purposes. Always consult multiple sources and adapt to your specific equipment and conditions.</p>
+        <p>&copy; 2024 Interactive Incubation Guide. Content adapted from "A Comprehensive Guide to Artificial Egg Incubation".</p>
+    </footer>
+
+    <script>
+        const speciesData = {
+            "Chicken": {
+                period: "21 days",
+                forcedAirTempC: "37.5-38.0°C",
+                stillAirTempC: "38.0-38.9°C (or graded)",
+                settingHumidity: "50-60% RH / 83-87°F WB (approx. 28.3-30.5°C WB)",
+                lockdownHumidity: "65-75% RH / 90°F WB (approx. 32.2°C WB)",
+                turnStopDay: "18",
+                coolingMistingStart: "No (Standard)",
+                candlingDays: "3-7, 14, 18",
+                notes: "Relatively straightforward incubation. Brown eggs may be harder to candle early. Ensure stable temperature."
+            },
+            "Turkey": {
+                period: "28 days",
+                forcedAirTempC: "37.2-37.5°C",
+                stillAirTempC: "37.8-38.6°C",
+                settingHumidity: "45-60% RH / 84-86°F WB (approx. 28.9-30°C WB)",
+                lockdownHumidity: "65-70% RH / 90°F WB (approx. 32.2°C WB)",
+                turnStopDay: "25",
+                coolingMistingStart: "No (Standard)",
+                candlingDays: "7-10, 14, 25 (Air cell ~1/3)",
+                notes: "Longer incubation than chickens. Ensure adequate ventilation, especially late term. Lockdown humidity is critical."
+            },
+            "Pekin Duck": {
+                period: "28 days",
+                forcedAirTempC: "37.4-37.7°C",
+                stillAirTempC: "38.0-38.9°C",
+                settingHumidity: "55-60% RH / 84.5-86°F WB (approx. 29.2-30°C WB)",
+                lockdownHumidity: "65-81% RH (staged) / 88-94°F WB (approx. 31.1-34.4°C WB)",
+                turnStopDay: "25",
+                coolingMistingStart: "Yes (Day 7-10)",
+                candlingDays: "5-7, 10, 25 (Air cell ~1/3). Target 13-14% weight loss by Day 25.",
+                notes: "Cooling and misting are critical. Temperature often lowered slightly for lockdown. Manage weight loss carefully."
+            },
+            "Muscovy Duck": {
+                period: "33-37 days (avg. 35)",
+                forcedAirTempC: "37.5-37.6°C",
+                stillAirTempC: "38.1-38.9°C",
+                settingHumidity: "Highly Variable: 25-60% RH (Dry Hatch to 58%) / 85-86°F WB (approx. 29.4-30°C WB)",
+                lockdownHumidity: "Highly Variable: 66-83% RH or Baggie Method / 90°F WB (approx. 32.2°C WB)",
+                turnStopDay: "31-32",
+                coolingMistingStart: "Yes (Day 1-10, variable freq.)",
+                candlingDays: "7-10, then ~weekly, lockdown. Air cell ~1/3 by pip. Target 2.8% weekly weight loss.",
+                notes: "Long incubation. Humidity is highly variable; focus on achieving target weight loss. Cooling/misting generally essential. 'Baggie method' is an alternative for hatching."
+            },
+            "Goose (General)": {
+                period: "28-35 days",
+                forcedAirTempC: "37.2-37.7°C",
+                stillAirTempC: "38.0-39.4°C (or graded)",
+                settingHumidity: "Highly Variable (Breed dependent): 20-55% RH / 86-88°F WB (approx. 30-31.1°C WB)",
+                lockdownHumidity: "65-75%+ RH / 90-92°F WB (approx. 32.2-33.3°C WB)",
+                turnStopDay: "25-27",
+                coolingMistingStart: "Yes (Day 4-8)",
+                candlingDays: "5-7, 10, then ~weekly/daily near pip. Monitor air cell 'dip'. Target 14-17% weight loss by pip.",
+                notes: "Challenging; breed variations significant. Cooling/misting vital. Egg weight loss is a key indicator for humidity management."
+            },
+            "Coturnix Quail": {
+                period: "17-18 days",
+                forcedAirTempC: "37.5-37.8°C",
+                stillAirTempC: "38.0-38.3°C (or graded)",
+                settingHumidity: "40-55% RH / 85-86°F WB (approx. 29.4-30°C WB)",
+                lockdownHumidity: "50-75% RH / 90°F WB (approx. 32.2°C WB)",
+                turnStopDay: "14-15",
+                coolingMistingStart: "No (Standard)",
+                candlingDays: "7-10, 14 (if candled). Heartbeat Day 3, fully developed Day 15.",
+                notes: "Short cycle, small delicate eggs. Stable conditions critical. Candling difficult due to dark/speckled shells."
+            },
+            "Bobwhite Quail": {
+                period: "23-24 days",
+                forcedAirTempC: "37.5-37.8°C",
+                stillAirTempC: "~38.9°C",
+                settingHumidity: "40-60% RH / 84-87°F WB (approx. 28.9-30.5°C WB)",
+                lockdownHumidity: "50-75% RH / 90°F WB (approx. 32.2°C WB)",
+                turnStopDay: "20-21",
+                coolingMistingStart: "No (Standard)",
+                candlingDays: "12-15. Pips into air cell Day 22.",
+                notes: "Longer cycle than Coturnix. Eggs often lighter, easier to candle. Maintain stable environment."
+            }
+        };
+
+        const candlingTimelineTableData = [
+            { species: "Chicken", first: "3-7", mid: "10-14", late: "18" },
+            { species: "Turkey", first: "7-10", mid: "14-18", late: "25" },
+            { species: "Pekin Duck", first: "5-7", mid: "10-14", late: "25" },
+            { species: "Muscovy Duck", first: "7-10", mid: "~14, ~21, ~28", late: "31-32" },
+            { species: "Goose", first: "5-10", mid: "~14-20", late: "24-27 (daily)" },
+            { species: "Coturnix Quail", first: "7-10 (if done)", mid: "12-14 (if done)", late: "14 (Lockdown Day 15)" },
+            { species: "Bobwhite Quail", first: "12-15", mid: "N/A", late: "20-21 (Lockdown Day 21)" }
+        ];
+
+        const troubleshootingData = [
+            { symptom: "Clear Eggs (No Embryonic Development)", causes: "Infertile males; Old/improperly stored eggs; Environmental damage.", measures: "Improve breeder management; Use fresh eggs (store <7-10 days at 10-15°C, 60-75% RH)." },
+            { symptom: "Blood Rings in Eggs", causes: "Improper egg storage; Incorrect incubation temperatures (too high/low); Poor breeder nutrition.", measures: "Follow storage guidelines; Calibrate thermometer, maintain stable temp; Balanced breeder diet." },
+            { symptom: "Early Embryonic Death (First Few Days)", causes: "Incorrect temp (often too high); Improper turning; Poor ventilation; Breeder diseases.", measures: "Stable, correct temp; Turn 3-5+ times/day; Adequate ventilation; Healthy stock." },
+            { symptom: "Mid-Term Embryonic Death", causes: "Incorrect temp; Improper ventilation; Nutritional deficiencies; Contamination.", measures: "Stable, correct temp; Adequate ventilation; Balanced breeder diet; Incubator sanitation." },
+            { symptom: "Chicks Fully Formed, Dead in Shell (Not Pipped)", causes: "Low average humidity; Incorrect temp; Poor ventilation; Improper turning late; Chilling.", measures: "Target humidity (check air cell); Stable temp; Late-stage ventilation; Stop turning at lockdown." },
+            { symptom: "Pipped Eggs, Chick Died Without Hatching", causes: "Insufficient hatch humidity; Poor hatch ventilation; Malposition.", measures: "Increase lockdown humidity; High ventilation at hatch; Set small end down, turn correctly." },
+            { symptom: "Sticky Chicks (Smeared with Egg Contents)", causes: "High average humidity; Low temp; Inadequate ventilation.", measures: "Reduce setting humidity (check air cell/weight); Correct temp; Improve ventilation." },
+            { symptom: "Dry Sticks (Shell Sticking to Chick)", causes: "Low humidity (esp. at hatch); Excessive ventilation drying membranes.", measures: "Increase hatch humidity; Reduce excessive ventilation at hatch." },
+            { symptom: "Early Hatching (Often with Bloody Navels)", causes: "High incubation temperatures; Improper egg storage (too warm).", measures: "Lower incubator temp; Store eggs correctly." },
+            { symptom: "Late Hatching / Draggy Hatch", causes: "Low incubation temperatures; Old/improperly stored eggs; Faulty incubator.", measures: "Raise incubator temp; Use fresh, correctly stored eggs; Check incubator heating." },
+            { symptom: "Malformed/Crippled Chicks", causes: "Incorrect temp (often too high); Low humidity; Improper setting/turning; Nutritional deficiencies; Heredity; Slick trays.", measures: "Correct temp/humidity; Proper setting/turning; Balanced breeder diet; Textured hatcher floor." },
+            { symptom: "Small, Weak Chicks", causes: "High temp; Low humidity; Small eggs; Poor hatcher ventilation; Diseased breeders.", measures: "Correct temp/humidity; Standard eggs; Improve hatcher ventilation; Healthy breeders." },
+            { symptom: "Mushy Chicks, Bad Odor (Omphalitis)", causes: "Low average temp; Poor ventilation; Bacterial contamination.", measures: "Correct temp; Improve ventilation; Thoroughly clean/disinfect incubator & eggs." },
+            { symptom: "Exploders (Eggs Bursting)", causes: "Bacterial contamination (dirty/cracked eggs).", measures: "Set only clean, uncracked eggs; Strict sanitation; Remove non-viable eggs promptly." },
+            { symptom: "Short Down on Chicks", causes: "High temp; Low humidity; Excessive ventilation.", measures: "Correct temp/humidity; Moderate ventilation." }
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.tab-button');
+            const contentSections = document.querySelectorAll('.content-section');
+            const speciesSelect = document.getElementById('species-select');
+            const speciesInfoDiv = document.getElementById('species-info');
+            const candlingStageButtons = document.querySelectorAll('.candling-stage-btn');
+            const candlingDetailsDiv = document.getElementById('candling-details');
+            const accordionSummaries = document.querySelectorAll('details > summary');
+            const candlingTableBody = document.getElementById('candling-table-body');
+            const troubleshootingTableBody = document.getElementById('troubleshooting-table-body');
+
+
+            // Populate species select
+            if (speciesSelect) {
+                for (const speciesName in speciesData) {
+                    const option = document.createElement('option');
+                    option.value = speciesName;
+                    option.textContent = speciesName;
+                    speciesSelect.appendChild(option);
+                }
+            }
+            
+            // Populate candling table
+            if (candlingTableBody) {
+                candlingTimelineTableData.forEach(item => {
+                    const row = candlingTableBody.insertRow();
+                    row.innerHTML = `
+                        <td class="px-4 py-2 whitespace-nowrap">${item.species}</td>
+                        <td class="px-4 py-2">${item.first}</td>
+                        <td class="px-4 py-2">${item.mid}</td>
+                        <td class="px-4 py-2">${item.late}</td>
+                    `;
+                });
+            }
+
+            // Populate troubleshooting table
+             if (troubleshootingTableBody) {
+                troubleshootingData.forEach(item => {
+                    const row = troubleshootingTableBody.insertRow();
+                    row.innerHTML = `
+                        <td class="px-4 py-2">${item.symptom}</td>
+                        <td class="px-4 py-2">${item.causes}</td>
+                        <td class="px-4 py-2">${item.measures}</td>
+                    `;
+                });
+            }
+
+
+            // Tab navigation
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const targetTab = tab.getAttribute('data-tab');
+                    contentSections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === targetTab) {
+                            section.classList.add('active');
+                        }
+                    });
+                });
+            });
+
+            // Species selection
+            if (speciesSelect) {
+                speciesSelect.addEventListener('change', (event) => {
+                    const selectedSpecies = event.target.value;
+                    if (selectedSpecies && speciesData[selectedSpecies]) {
+                        const data = speciesData[selectedSpecies];
+                        speciesInfoDiv.innerHTML = `
+                            <h3 class="text-xl font-bold text-teal-700 mb-3">${selectedSpecies}</h3>
+                            <div class="grid md:grid-cols-2 gap-4 text-neutral-700">
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${data.stillAirTempC}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${data.settingHumidity}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${data.lockdownHumidity}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
+                            </div>
+                            <div class="mt-4 bg-amber-50 p-3 rounded-md text-amber-800 text-sm">
+                                <strong>Key Notes:</strong> ${data.notes}
+                            </div>
+                        `;
+                    } else {
+                        speciesInfoDiv.innerHTML = '<p class="text-neutral-500 text-center">Select a species to see its incubation details.</p>';
+                    }
+                });
+            }
+
+            // Candling stage details
+            const candlingContent = {
+                early: `<strong>Fertile Egg:</strong> Small dark spot (embryo) with radiating blood vessels ("spider"). Beating heart may be visible depending on species/day. <br><strong>Infertile:</strong> Clear, only yolk shadow. <br><strong>Blood Ring:</strong> Embryo died very early. Remove infertile and blood rings.`,
+                mid: `Embryo significantly larger, movement often visible. Well-established blood vessel network (chorioallantoic membrane). Eyes may appear as large dark spots.`,
+                late: `Embryo fills most of egg, appearing as dark mass. Air cell is the only clear area (large end). Movement may be subtle. Bill may be seen in air sac for ducks/geese (internal pip).`
+            };
+            candlingStageButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const stage = button.getAttribute('data-stage');
+                    if (candlingDetailsDiv && candlingContent[stage]) {
+                        candlingDetailsDiv.innerHTML = candlingContent[stage];
+                    } else if (candlingDetailsDiv) {
+                         candlingDetailsDiv.innerHTML = '<p>Details for this stage.</p>';
+                    }
+                });
+            });
+            
+            // Accordion functionality for <details>
+            accordionSummaries.forEach(summary => {
+                summary.addEventListener('click', (event) => {
+                    const detailElement = summary.parentElement;
+                    if (!detailElement) return;
+
+                    const contentElement = detailElement.querySelector('.accordion-content');
+                    if (!contentElement) return;
+
+                    if (detailElement.hasAttribute('open')) {
+                        // Currently open, about to be closed by browser default or this click
+                        if (event.target === summary || summary.contains(event.target)) { // if summary itself was clicked
+                             event.preventDefault(); // Prevent browser from closing it immediately
+                             detailElement.removeAttribute('open');
+                        }
+                        summary.classList.remove('details-open');
+                        contentElement.style.maxHeight = null;
+                    } else {
+                        // Currently closed, about to be opened by browser default or this click
+                        // Browser will add 'open' attribute. We just style.
+                        summary.classList.add('details-open');
+                        contentElement.style.maxHeight = contentElement.scrollHeight + "px";
+                    }
+                });
+            });
+             // Set initial max-height for already open details elements (e.g. if user navigates back)
+            document.querySelectorAll('details[open]').forEach(detailElement => {
+                const summary = detailElement.querySelector('summary');
+                if (summary) summary.classList.add('details-open');
+                const content = detailElement.querySelector('.accordion-content');
+                if (content) content.style.maxHeight = content.scrollHeight + "px";
+            });
+
+
+            // Incubation Periods Chart
+            const chartCanvas = document.getElementById('incubationPeriodsChart');
+            if (chartCanvas) {
+                const speciesNames = Object.keys(speciesData);
+                const incubationDays = speciesNames.map(name => {
+                    const period = speciesData[name].period;
+                    const daysMatch = period.match(/(\d+)/);
+                    return daysMatch ? parseInt(daysMatch[1]) : 0;
+                });
+
+                const chartColors = [
+                    '#4F46E5', '#0D9488', '#DB2777', '#F59E0B', '#10B981', '#6366F1', '#EC4899' 
+                ];
+
+                new Chart(chartCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: speciesNames,
+                        datasets: [{
+                            label: 'Typical Incubation Period (Days)',
+                            data: incubationDays,
+                            backgroundColor: speciesNames.map((_, i) => chartColors[i % chartColors.length]),
+                            borderColor: speciesNames.map((_, i) => chartColors[i % chartColors.length]),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Days' }
+                            },
+                            x: {
+                                ticks: {
+                                    autoSkip: false,
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    callback: function(value, index, values) {
+                                        let label = this.getLabelForValue(value);
+                                        if (label.length > 10) {
+                                            return label.match(/.{1,10}/g);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw} days (${speciesData[context.label].period})`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
