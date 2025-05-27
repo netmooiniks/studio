@@ -8,34 +8,34 @@ body {
 
 @layer base {
   :root {
-    --background: 54 100% 90%; /* Light Yellow */
-    --foreground: 240 10% 15%; /* Dark Gray for text */
+    --background: 0 0% 100%; /* White */
+    --foreground: 204 16% 26%; /* Charcoal Grey */
 
     --card: 0 0% 100%; /* White */
-    --card-foreground: 240 10% 15%;
+    --card-foreground: 204 16% 26%; /* Charcoal Grey */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 15%;
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 204 16% 26%; /* Charcoal Grey */
 
-    --primary: 180 100% 25.1%; /* Teal */
-    --primary-foreground: 180 100% 95%; /* Light Teal/White */
+    --primary: 210 100% 50%; /* Bright Sky Blue */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    --secondary: 54 80% 80%; /* Lighter Yellow */
-    --secondary-foreground: 54 50% 30%; /* Darker text for secondary */
+    --secondary: 205 100% 90%; /* Light Sky Blue */
+    --secondary-foreground: 210 60% 30%; /* Darker Blue/Charcoal */
 
-    --muted: 54 50% 85%; /* Lighter Yellow */
-    --muted-foreground: 54 30% 50%; /* Grayish Yellow */
+    --muted: 216 13% 86%; /* Light Cool Grey */
+    --muted-foreground: 216 10% 55%; /* Mid Cool Grey */
 
-    --accent: 16 100% 65.7%; /* Coral */
+    --accent: 39 100% 50%; /* Bright Orange */
     --accent-foreground: 0 0% 100%; /* White */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84.2% 60.2%; /* Default Red */
+    --destructive-foreground: 0 0% 98%; /* Default White */
 
-    --border: 54 50% 75%; /* Subtle border */
-    --input: 0 0% 100%; /* White input background for clarity on yellow */
-    --input-border: 54 50% 70%; /* Slightly darker border for inputs */
-    --ring: 180 100% 25.1%; /* Teal for focus rings */
+    --border: 216 13% 78%; /* Light Cool Grey (for borders) */
+    --input: 0 0% 100%; /* White */
+    --input-border: 216 13% 70%; /* Light Cool Grey (for input borders) */
+    --ring: 210 100% 50%; /* Bright Sky Blue (for focus rings) */
 
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -45,17 +45,19 @@ body {
     --radius: 0.5rem;
 
     /* Sidebar specific colors */
-    --sidebar-background: 180 40% 28%; /* Darker Teal */
-    --sidebar-foreground: 180 20% 90%; /* Light text for dark sidebar */
-    --sidebar-primary: 16 100% 65.7%; /* Coral for active items in sidebar */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 180 40% 35%; /* Slightly lighter than sidebar-background for hover */
-    --sidebar-accent-foreground: 180 20% 95%;
-    --sidebar-border: 180 40% 20%;
-    --sidebar-ring: 16 100% 65.7%;
+    --sidebar-background: 220 70% 22%; /* Deep Sapphire */
+    --sidebar-foreground: 220 20% 90%; /* Light Grey/White Text */
+    --sidebar-primary: 210 100% 50%; /* Bright Sky Blue (for active items) */
+    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-accent: 220 60% 30%; /* Slightly Lighter Sapphire (for hover) */
+    --sidebar-accent-foreground: 220 20% 95%; /* Light Grey/White Text */
+    --sidebar-border: 220 70% 15%; /* Darker Sapphire */
+    --sidebar-ring: 39 100% 50%; /* Bright Orange (for focus rings in sidebar) */
   }
 
   .dark {
+    /* Dark theme variables are untouched and will likely need adjustment
+       in a follow-up request to match the new branding if dark mode is used. */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
 
@@ -65,8 +67,8 @@ body {
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 180 100% 70%; /* Lighter Teal for dark mode */
-    --primary-foreground: 180 100% 15%;
+    --primary: 210 100% 70%; /* Lighter Bright Sky Blue for dark mode */
+    --primary-foreground: 210 100% 15%; /* Darker text for contrast */
 
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
@@ -74,16 +76,16 @@ body {
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 0 0% 63.9%;
 
-    --accent: 16 100% 75%; /* Lighter Coral for dark mode */
-    --accent-foreground: 16 100% 15%;
+    --accent: 39 100% 65%; /* Lighter Orange for dark mode */
+    --accent-foreground: 39 100% 15%; /* Darker text for contrast */
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --input-border: 240 3.7% 25.9%;
-    --ring: 180 100% 70%;
+    --input-border: 240 3.7% 25.9%; /* Adjusted input border for dark mode */
+    --ring: 210 100% 70%; /* Lighter Bright Sky Blue for focus rings */
 
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -92,14 +94,14 @@ body {
     --chart-5: 340 75% 55%;
 
     /* Sidebar specific colors for dark mode */
-    --sidebar-background: 240 5% 12%; /* Darker Gray */
-    --sidebar-foreground: 0 0% 80%; 
-    --sidebar-primary: 16 100% 75%; /* Coral for active items */
-    --sidebar-primary-foreground: 16 100% 15%;
-    --sidebar-accent: 240 5% 18%; 
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 240 5% 10%;
-    --sidebar-ring: 16 100% 75%;
+    --sidebar-background: 220 40% 15%; /* Darker Deep Sapphire */
+    --sidebar-foreground: 220 15% 85%; 
+    --sidebar-primary: 210 100% 70%; /* Lighter Bright Sky Blue for active items */
+    --sidebar-primary-foreground: 210 100% 15%;
+    --sidebar-accent: 220 40% 22%; 
+    --sidebar-accent-foreground: 220 15% 90%;
+    --sidebar-border: 220 40% 10%;
+    --sidebar-ring: 39 100% 65%; /* Lighter Orange for focus rings */
   }
 }
 
