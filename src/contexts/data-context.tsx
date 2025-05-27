@@ -203,11 +203,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const batchDocDataBase = {
         ...batchData, // name, speciesId, startDate, numberOfEggs, incubatorType, customCandlingDays, notes
         candlingResults: [],
-        hatchedEggs: 0,
+        hatchedEggs: 0, // Initialize hatchedEggs to 0
       };
       // Tasks will be generated after we have an ID
-      // Temporarily cast to Omit to satisfy addDoc, tasks will be added in updateDoc
-      const docRef = await addDoc(collection(db, 'users', currentUser.uid, 'batches'), Omit<typeof batchDocDataBase, 'tasks'>);
+      const docRef = await addDoc(collection(db, 'users', currentUser.uid, 'batches'), batchDocDataBase);
       
       const newTasks = generateTasksForBatch({ 
         id: docRef.id, 
@@ -235,7 +234,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const batchRef = doc(db, 'users', currentUser.uid, 'batches', batchData.id);
       const existingBatchFromState = batches.find(b => b.id === batchData.id);
 
-      let tasksForUpdate = batchData.tasks || []; // Start with tasks from incoming batchData
+      let tasksForUpdate = batchData.tasks || []; 
 
       const shouldRegenerateTasks = existingBatchFromState && (
           existingBatchFromState.startDate !== batchData.startDate ||
@@ -245,35 +244,34 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       );
 
       if (shouldRegenerateTasks) {
-          // Regenerate tasks; they will pick up the new batchData.name
           tasksForUpdate = generateTasksForBatch({
               id: batchData.id,
-              name: batchData.name, // new name
+              name: batchData.name, 
               startDate: batchData.startDate,
               speciesId: batchData.speciesId,
               incubatorType: batchData.incubatorType,
               customCandlingDays: batchData.customCandlingDays,
           });
       } else if (existingBatchFromState && existingBatchFromState.name !== batchData.name) {
-          // Tasks are not regenerated, but the name has changed.
-          // Update batchName in existing tasks (which are in batchData.tasks at this point).
+          const oldBatchName = existingBatchFromState.name;
+          const newBatchName = batchData.name;
+          
+          const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const oldBatchNameRegex = new RegExp(escapeRegExp(oldBatchName), 'g');
+
           tasksForUpdate = (batchData.tasks || []).map(task => ({
               ...task,
-              batchName: batchData.name, // Apply the new batch name
+              batchName: newBatchName, 
+              description: task.description.replace(oldBatchNameRegex, newBatchName), 
           }));
       }
-      // If not regenerating and name didn't change, tasksForUpdate remains batchData.tasks
-      // (which contains the original tasks with their original batchName, which is correct).
       
-      // Ensure the batchData object being saved is complete and correct.
-      // batchData comes from EditBatchPage and should be the full intended state.
       const finalBatchDoc = {
-        ...batchData, // Contains new name, speciesId, dates, notes, etc. from form,
-                      // and old candlingResults, hatchedEggs from batchToEdit
-        tasks: tasksForUpdate, // Contains either regenerated tasks or old tasks with updated name
+        ...batchData, 
+        tasks: tasksForUpdate, 
       };
       
-      await setDoc(batchRef, finalBatchDoc);
+      await setDoc(batchRef, finalBatchDoc); // Use setDoc to overwrite the entire document as intended
       toast({ title: "Batch Updated", description: `Batch "${batchData.name}" updated.` });
     } catch (error) {
       console.error("Error updating batch:", error);
@@ -302,7 +300,19 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const getAllTasks = useCallback((): Task[] => {
     // Ensure tasks always have the latest batchName from the batches state
-    return batches.flatMap(batch => (batch.tasks || []).map(task => ({...task, batchName: batch.name})));
+    return batches.flatMap(batch => 
+      (batch.tasks || []).map(task => {
+        // If the task description contains the old batch name, update it here too.
+        // This is a safeguard, primary update should happen in updateBatch.
+        let currentDescription = task.description;
+        if (task.batchName && task.batchName !== batch.name && currentDescription.includes(task.batchName)) {
+             const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+             const oldNameRegex = new RegExp(escapeRegExp(task.batchName), 'g');
+             currentDescription = currentDescription.replace(oldNameRegex, batch.name);
+        }
+        return {...task, batchName: batch.name, description: currentDescription };
+      })
+    );
   }, [batches]);
 
   const getTasksForDate = useCallback((date: Date): Task[] => {
@@ -321,10 +331,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!targetBatch) throw new Error("Batch not found for task update.");
 
       // Ensure the updatedTask also has the correct batchName if it might be stale
-      const taskWithCorrectBatchName = {...updatedTask, batchName: targetBatch.name };
+      // Also ensure its description reflects the correct batch name.
+      let taskDescription = updatedTask.description;
+      if (updatedTask.batchName && updatedTask.batchName !== targetBatch.name && taskDescription.includes(updatedTask.batchName)) {
+          const escapeRegExp = (str: string) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const oldNameRegex = new RegExp(escapeRegExp(updatedTask.batchName), 'g');
+          taskDescription = taskDescription.replace(oldNameRegex, targetBatch.name);
+      }
+      
+      const taskWithCorrectBatchNameAndDesc = {...updatedTask, batchName: targetBatch.name, description: taskDescription };
 
       const newTasks = (targetBatch.tasks || []).map(task => 
-        task.id === taskWithCorrectBatchName.id ? taskWithCorrectBatchName : task
+        task.id === taskWithCorrectBatchNameAndDesc.id ? taskWithCorrectBatchNameAndDesc : task
       );
       await updateDoc(batchRef, { tasks: newTasks });
       // Toast is handled in the component calling updateTask
@@ -398,5 +416,3 @@ export const useData = (): DataContextType => {
   }
   return context;
 };
-
-    
