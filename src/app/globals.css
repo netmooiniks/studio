@@ -8,7 +8,7 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* White */
+    --background: 210 60% 97%; /* Very Light Blue */
     --foreground: 204 16% 26%; /* Charcoal Grey */
 
     --card: 0 0% 100%; /* White */
@@ -56,24 +56,23 @@ body {
   }
 
   .dark {
-    /* Dark theme variables are untouched and will likely need adjustment
-       in a follow-up request to match the new branding if dark mode is used. */
-    --background: 240 10% 3.9%;
+    /* Dark theme variables are touched up slightly but may need more refinement */
+    --background: 220 40% 10%; /* Darker Sapphire variant for background */
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 3.9%;
+    --card: 220 40% 15%; /* Slightly lighter than background */
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 3.9%;
+    --popover: 220 40% 15%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 210 100% 70%; /* Lighter Bright Sky Blue for dark mode */
     --primary-foreground: 210 100% 15%; /* Darker text for contrast */
 
-    --secondary: 240 3.7% 15.9%;
+    --secondary: 220 30% 25%; /* Muted blue for secondary elements */
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 240 3.7% 15.9%;
+    --muted: 220 20% 30%;
     --muted-foreground: 0 0% 63.9%;
 
     --accent: 39 100% 65%; /* Lighter Orange for dark mode */
@@ -82,10 +81,10 @@ body {
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --input-border: 240 3.7% 25.9%; /* Adjusted input border for dark mode */
-    --ring: 210 100% 70%; /* Lighter Bright Sky Blue for focus rings */
+    --border: 220 30% 35%;
+    --input: 220 30% 25%;
+    --input-border: 220 30% 40%; 
+    --ring: 210 100% 70%; 
 
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
@@ -94,14 +93,14 @@ body {
     --chart-5: 340 75% 55%;
 
     /* Sidebar specific colors for dark mode */
-    --sidebar-background: 220 40% 15%; /* Darker Deep Sapphire */
-    --sidebar-foreground: 220 15% 85%; 
-    --sidebar-primary: 210 100% 70%; /* Lighter Bright Sky Blue for active items */
-    --sidebar-primary-foreground: 210 100% 15%;
-    --sidebar-accent: 220 40% 22%; 
-    --sidebar-accent-foreground: 220 15% 90%;
-    --sidebar-border: 220 40% 10%;
-    --sidebar-ring: 39 100% 65%; /* Lighter Orange for focus rings */
+    --sidebar-background: 220 70% 22%; /* Kept same as light mode for distinct sidebar */
+    --sidebar-foreground: 220 20% 90%; 
+    --sidebar-primary: 210 100% 65%; /* Slightly adjusted from primary dark */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 60% 30%; 
+    --sidebar-accent-foreground: 220 20% 95%;
+    --sidebar-border: 220 70% 15%;
+    --sidebar-ring: 39 100% 65%; 
   }
 }
 
