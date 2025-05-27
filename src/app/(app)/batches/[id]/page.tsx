@@ -89,11 +89,33 @@ function AddCandlingResultForm({ batchId, onAddResult }: { batchId: string, onAd
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="candling-day">Incubation Day (1 = Day after set)</Label>
-            <Input id="candling-day" type="number" value={day ?? ""} onChange={e => setDay(parseInt(e.target.value))} required min="1" max={maxIncubationDay} />
+            <Input 
+              id="candling-day" 
+              type="number" 
+              value={day ?? ""} 
+              onChange={e => {
+                const val = parseInt(e.target.value);
+                setDay(isNaN(val) ? undefined : val);
+              }} 
+              required 
+              min="1" 
+              max={maxIncubationDay} 
+            />
           </div>
           <div>
             <Label htmlFor="fertile-eggs">Number of Fertile Eggs</Label>
-            <Input id="fertile-eggs" type="number" value={fertile ?? ""} onChange={e => setFertile(parseInt(e.target.value))} required min="0" max={batch?.numberOfEggs} />
+            <Input 
+              id="fertile-eggs" 
+              type="number" 
+              value={fertile ?? ""} 
+              onChange={e => {
+                const val = parseInt(e.target.value);
+                setFertile(isNaN(val) ? undefined : val);
+              }} 
+              required 
+              min="0" 
+              max={batch?.numberOfEggs} 
+            />
           </div>
           <div>
             <Label htmlFor="candling-notes">Notes (Optional)</Label>
@@ -154,8 +176,8 @@ function HatchRateCalculator({ batchId }: { batchId: string }) {
         
         <div className="mt-4 pt-4 border-t">
           <h4 className="font-semibold mb-2">Calculated Hatch Rates:</h4>
-          <p>Of Total Eggs Set: <span className="font-bold text-lg text-primary">{hatchRateOfTotal.toFixed(1)}%</span></p>
-          <p>Of Fertile Eggs: <span className="font-bold text-lg text-primary">{hatchRateOfFertile.toFixed(1)}%</span></p>
+          <div>Of Total Eggs Set: <span className="font-bold text-lg text-primary">{hatchRateOfTotal.toFixed(1)}%</span></div>
+          <div>Of Fertile Eggs: <span className="font-bold text-lg text-primary">{hatchRateOfFertile.toFixed(1)}%</span></div>
         </div>
       </CardContent>
     </Card>
