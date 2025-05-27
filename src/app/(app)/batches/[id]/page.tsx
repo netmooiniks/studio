@@ -342,7 +342,7 @@ export default function BatchDetailPage() {
                   <TableBody>
                     {batch.candlingResults.map((result, index) => (
                       <TableRow key={index}>
-                        <TableCell>Day {result.day}</TableCell> {/* Displaying the 1-indexed day */}
+                        <TableCell>Day {result.day}</TableCell>
                         <TableCell>{result.fertile} / {batch.numberOfEggs}</TableCell>
                         <TableCell>{batch.numberOfEggs > 0 ? ((result.fertile / batch.numberOfEggs) * 100).toFixed(1) : 'N/A'}%</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{result.notes || '-'}</TableCell>
