@@ -9,7 +9,6 @@ import { Eye, Archive, Layers, CalendarDays, Egg, Percent, Home } from 'lucide-r
 import { SPECIES_DATA } from '@/lib/constants';
 import { format, parseISO, differenceInDays, startOfDay, addDays } from 'date-fns';
 import SpeciesIcon from '@/components/shared/species-icon';
-import { Badge } from '@/components/ui/badge';
 import type { Batch } from '@/lib/types';
 
 export default function HistoryPage() {
@@ -19,16 +18,16 @@ export default function HistoryPage() {
   const completedBatches = batches.filter(batch => {
     const species = SPECIES_DATA[batch.speciesId];
     if (!species) return false;
-    const startDate = startOfDay(parseISO(batch.startDate));
-    const dayOfIncubation = differenceInDays(today, startDate); // 0-indexed
-    // Consider completed a few days after expected hatch to allow for late hatchers
-    // species.incubationDays is total duration, so days 0 to N-1. Completion is >= N.
-    return dayOfIncubation >= species.incubationDays + 2; 
+    const setDate = startOfDay(parseISO(batch.startDate));
+    const daysElapsedSinceSet = differenceInDays(today, setDate);
+    // Consider completed a few days after expected hatch
+    // If incubation is N days, hatch is on Day N. Completed if current day > N+2.
+    return daysElapsedSinceSet > species.incubationDays + 2; 
   }).map(batch => {
     const species = SPECIES_DATA[batch.speciesId];
-    const startDate = startOfDay(parseISO(batch.startDate));
-    // Estimated hatch date is Day N-1 (0-indexed)
-    const estimatedHatchDate = addDays(startDate, species.incubationDays -1); 
+    const setDate = startOfDay(parseISO(batch.startDate));
+    // Estimated hatch date is Set Date + species.incubationDays
+    const estimatedHatchDate = addDays(setDate, species.incubationDays); 
     
     const lastCandlingResult = batch.candlingResults.length > 0 
       ? batch.candlingResults[batch.candlingResults.length - 1] 
@@ -88,7 +87,7 @@ export default function HistoryPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Completed Batches</CardTitle>
-          <CardDescription>Review statistics from your past incubation batches. Day 0 is the set day.</CardDescription>
+          <CardDescription>Review statistics from your past incubation batches. Day 1 is the day after eggs are set.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -96,7 +95,7 @@ export default function HistoryPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead className="hidden sm:table-cell">Species</TableHead>
-                <TableHead className="hidden md:table-cell">Start Date (Day 0)</TableHead>
+                <TableHead className="hidden md:table-cell">Set Date</TableHead>
                 <TableHead className="hidden lg:table-cell">Hatch Date (Est.)</TableHead>
                 <TableHead className="text-center">Set</TableHead>
                 <TableHead className="text-center hidden md:table-cell">Fertile</TableHead>

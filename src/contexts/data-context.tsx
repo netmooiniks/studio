@@ -15,7 +15,7 @@ import {
   setDoc, 
   deleteDoc, 
   updateDoc,
-  writeBatch as firestoreWriteBatch, // Alias to avoid conflict with type Batch
+  writeBatch as firestoreWriteBatch,
   query, 
   orderBy,
   Timestamp
@@ -38,25 +38,18 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-// Helper to escape special characters for RegExp
-const escapeRegExp = (string: string): string => {
-  if (typeof string !== 'string' || string.length === 0) return '';
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
-};
-
-// Helper to generate tasks for a batch
 const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 'speciesId' | 'incubatorType' | 'customCandlingDays'>): Task[] => {
   const species = SPECIES_DATA[batch.speciesId];
   if (!species) return [];
 
   const tasks: Task[] = [];
-  const batchStartDate = startOfDay(parseISO(batch.startDate));
-  const lastMistingDay = species.lockdownDay -1; // Misting stops the day before lockdown
+  const batchSetDate = startOfDay(parseISO(batch.startDate)); // This is the day eggs are actually set
 
-  // Incubation days are 0-indexed, from Day 0 to Day (species.incubationDays - 1)
-  for (let day = 0; day < species.incubationDays; day++) {
-    const currentDate = addDays(batchStartDate, day); // Day 0 is batchStartDate
-    const formattedDate = format(currentDate, 'yyyy-MM-dd');
+  // Incubation runs from Day 1 to Day species.incubationDays.
+  // Day 1 is the day AFTER eggs are set.
+  for (let day = 1; day <= species.incubationDays; day++) { // `day` is 1-indexed incubation day
+    const taskDateForThisIncubationDay = addDays(batchSetDate, day); // Date for tasks of this incubation day
+    const formattedDate = format(taskDateForThisIncubationDay, 'yyyy-MM-dd');
 
     // Turning eggs (if manual) up to the day before lockdown
     if (batch.incubatorType === 'manual' && day < species.lockdownDay) {
@@ -65,49 +58,49 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: day, // 0-indexed
+        dayOfIncubation: day, // 1-indexed
         description: `Turn eggs`,
         type: 'turn',
         completed: false,
       });
     }
 
-    // Misting eggs, from mistingStartDay up to and including lastMistingDay
-    if (species.mistingStartDay <= day && day <= lastMistingDay) { // Ensure mistingStartDay is a valid start
+    // Misting eggs, from mistingStartDay up to the day before lockdown
+    if (species.mistingStartDay <= day && day < species.lockdownDay) {
       tasks.push({
         id: `${batch.id}-mist-${day}`,
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: day, // 0-indexed
+        dayOfIncubation: day, // 1-indexed
         description: `Mist eggs`,
         type: 'mist',
         completed: false,
       });
     }
 
-    // Default candling days
+    // Default candling days (1-indexed)
     if (species.defaultCandlingDays.includes(day)) {
       tasks.push({
         id: `${batch.id}-candle-default-${day}`,
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: day, // 0-indexed
+        dayOfIncubation: day, // 1-indexed
         description: `Candle eggs (Day ${day})`,
         type: 'candle',
         completed: false,
       });
     }
     
-    // Custom candling days (assumed to be 0-indexed from form)
+    // Custom candling days (expected to be 1-indexed from form)
     if (batch.customCandlingDays?.includes(day)) {
        tasks.push({
         id: `${batch.id}-candle-custom-${day}`,
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: day, // 0-indexed
+        dayOfIncubation: day, // 1-indexed
         description: `Custom candle eggs (Day ${day})`,
         type: 'candle',
         completed: false,
@@ -121,7 +114,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: day, // 0-indexed
+        dayOfIncubation: day, // 1-indexed
         description: `Lockdown. Stop turning/misting. Increase humidity.`,
         type: 'lockdown',
         completed: false,
@@ -132,23 +125,22 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: day, // 0-indexed
+        dayOfIncubation: day, // 1-indexed
         description: `Final candling before lockdown (Day ${day})`,
         type: 'candle',
         completed: false,
       });
     }
     
-    // Hatch check tasks: from expected hatch day (species.incubationDays - 1) for a few days
-    // Hatching typically starts on the last day of incubation (Day N-1) and can extend.
-    // Let's check from Day (N-1) up to Day (N-1 + 2).
-    if (day >= (species.incubationDays - 1) && day < (species.incubationDays -1 + 3) ) {
+    // Hatch check tasks: from species.incubationDays (expected hatch day) for a few days.
+    // e.g., if 21 days incubation, check on Day 21, 22, 23.
+    if (day >= species.incubationDays && day <= species.incubationDays + 2 ) {
         tasks.push({
             id: `${batch.id}-hatch_check-${day}`,
             batchId: batch.id,
             batchName: batch.name,
             date: formattedDate,
-            dayOfIncubation: day, // 0-indexed
+            dayOfIncubation: day, // 1-indexed
             description: `Check for hatching (Day ${day})`,
             type: 'hatch_check',
             completed: false,
@@ -187,16 +179,16 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           startDate: batchDataFromDoc.startDate instanceof Timestamp 
             ? batchDataFromDoc.startDate.toDate().toISOString().split('T')[0] 
             : batchDataFromDoc.startDate,
-          candlingResults: batchDataFromDoc.candlingResults || [],
-          tasks: (batchDataFromDoc.tasks || []).map((task: Task) => {
-            // Ensure task.batchName is current, description is left as is (or as generated)
-            return {
-              ...task, 
-              batchName: currentBatchName,
-            };
-          }),
+          candlingResults: (batchDataFromDoc.candlingResults || []).map((cr: CandlingResult) => ({
+            ...cr, // day in candlingResult should be 1-indexed
+          })).sort((a,b) => a.day - b.day),
+          tasks: (batchDataFromDoc.tasks || []).map((task: Task) => ({
+            ...task, 
+            batchName: currentBatchName,
+            // dayOfIncubation in task should be 1-indexed
+          })),
           incubatorType: batchDataFromDoc.incubatorType || 'manual',
-          customCandlingDays: batchDataFromDoc.customCandlingDays || [],
+          customCandlingDays: batchDataFromDoc.customCandlingDays || [], // Should be 1-indexed
         } as Batch;
       });
       setBatches(userBatches);
@@ -218,8 +210,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const batchDocDataBase = {
         ...batchData, 
-        candlingResults: [],
+        candlingResults: [], // Candling results days will be 1-indexed
         hatchedEggs: 0, 
+        customCandlingDays: batchData.customCandlingDays || [], // ensure it's passed, should be 1-indexed
       };
       
       const docRef = await addDoc(collection(db, 'users', currentUser.uid, 'batches'), batchDocDataBase);
@@ -230,11 +223,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         startDate: batchData.startDate, 
         speciesId: batchData.speciesId,
         incubatorType: batchData.incubatorType,
-        customCandlingDays: batchData.customCandlingDays 
+        customCandlingDays: batchData.customCandlingDays // 1-indexed
       });
-      await updateDoc(docRef, { tasks: newTasks });
-
-      // toast({ title: "Batch Added", description: `Batch "${batchData.name}" created.` }); // Toast handled by new batch page
+      await updateDoc(docRef, { tasks: newTasks }); // Tasks will have 1-indexed dayOfIncubation
     } catch (error) {
       console.error("Error adding batch:", error);
       toast({ title: "Error Adding Batch", description: String(error), variant: "destructive"});
@@ -266,25 +257,24 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               startDate: batchData.startDate,
               speciesId: batchData.speciesId,
               incubatorType: batchData.incubatorType,
-              customCandlingDays: batchData.customCandlingDays,
+              customCandlingDays: batchData.customCandlingDays, // 1-indexed
           });
       } else if (existingBatchFromState && existingBatchFromState.name !== batchData.name) {
-          // Only update batchName in tasks if name changed and tasks are not regenerated
           const newBatchName = batchData.name;
           tasksForUpdate = (existingBatchFromState.tasks || []).map(t => ({
               ...t,
               batchName: newBatchName,
-              // Description remains as generated, or as it was
           }));
       }
       
       const finalBatchDoc = {
         ...batchData, 
-        tasks: tasksForUpdate, 
+        tasks: tasksForUpdate, // Tasks will have 1-indexed dayOfIncubation
+        candlingResults: (batchData.candlingResults || []).sort((a,b) => a.day - b.day), // days are 1-indexed
+        customCandlingDays: batchData.customCandlingDays || [], // 1-indexed
       };
       
       await setDoc(batchRef, finalBatchDoc);
-      // toast({ title: "Batch Updated", description: `Batch "${batchData.name}" updated.` }); // Toast handled by edit batch page
     } catch (error) {
       console.error("Error updating batch:", error);
       toast({ title: "Error Updating Batch", description: String(error), variant: "destructive"});
@@ -293,7 +283,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const deleteBatch = useCallback(async (batchId: string) => {
     if (!currentUser) {
-      // toast({ title: "Not Authenticated", description: "You must be logged in to delete a batch.", variant: "destructive" }); // Toast handled by batches page
       return;
     }
     try {
@@ -312,10 +301,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const getAllTasks = useCallback((): Task[] => {
     return batches.flatMap(batch => {
       const currentBatchName = batch.name;
-      return (batch.tasks || []).map(task => {
-        // Ensure task.batchName is current, description is left as is
-        return {...task, batchName: currentBatchName };
-      });
+      return (batch.tasks || []).map(task => ({
+        ...task, 
+        batchName: currentBatchName 
+      }));
     });
   }, [batches]);
 
@@ -326,7 +315,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateTask = useCallback(async (updatedTask: Task) => {
     if (!currentUser) {
-      // toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" }); // Toast handled by caller
       return;
     }
     try {
@@ -334,9 +322,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const targetBatch = batches.find(b => b.id === updatedTask.batchId);
       if (!targetBatch) throw new Error("Batch not found for task update.");
       
-      const currentBatchName = targetBatch.name;
-      // Ensure task.batchName is current, description is left as is
-      const taskWithCorrectBatchName = {...updatedTask, batchName: currentBatchName };
+      const taskWithCorrectBatchName = {...updatedTask, batchName: targetBatch.name };
 
       const newTasks = (targetBatch.tasks || []).map(task => 
         task.id === taskWithCorrectBatchName.id ? taskWithCorrectBatchName : task
@@ -350,9 +336,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addCandlingResult = useCallback(async (batchId: string, day: number, fertile: number, notes?: string) => {
     if (!currentUser) {
-      // toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" }); // Toast handled by caller
       return;
     }
+    // `day` received here is 1-indexed from the form
     try {
       const batchRef = doc(db, 'users', currentUser.uid, 'batches', batchId);
       const targetBatch = batches.find(b => b.id === batchId);
@@ -362,8 +348,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const newResults = [...(targetBatch.candlingResults || []), newResult].sort((a,b) => a.day - b.day);
       
       await updateDoc(batchRef, { candlingResults: newResults });
-    } catch (error)
- {
+    } catch (error) {
       console.error("Error adding candling result:", error);
       toast({ title: "Error Adding Candling", description: String(error), variant: "destructive"});
     }
@@ -371,7 +356,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   const setHatchedEggs = useCallback(async (batchId: string, count: number) => {
     if (!currentUser) {
-      // toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" }); // Toast handled by caller
       return;
     }
     try {
@@ -410,6 +394,3 @@ export const useData = (): DataContextType => {
   }
   return context;
 };
-
-
-    

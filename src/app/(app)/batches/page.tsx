@@ -74,7 +74,7 @@ export default function BatchesPage() {
       <Card>
         <CardHeader>
           <CardTitle>All Batches</CardTitle>
-          <CardDescription>Manage all your ongoing and past incubation batches. Day 0 is the set day.</CardDescription>
+          <CardDescription>Manage all your ongoing and past incubation batches. Day 1 is the day after eggs are set.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -82,26 +82,33 @@ export default function BatchesPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Species</TableHead>
-                <TableHead className="hidden md:table-cell">Start Date (Day 0)</TableHead>
+                <TableHead className="hidden md:table-cell">Set Date</TableHead>
                 <TableHead className="text-center">Eggs</TableHead>
-                <TableHead className="hidden lg:table-cell text-center">Status</TableHead>
+                <TableHead className="hidden lg:table-cell text-center">Status (Day)</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {batches.map((batch) => {
                 const species = SPECIES_DATA[batch.speciesId];
-                const startDate = startOfDay(parseISO(batch.startDate));
-                const dayOfIncubation = differenceInDays(today, startDate); // 0-indexed
+                const setDate = startOfDay(parseISO(batch.startDate));
+                const daysElapsedSinceSet = differenceInDays(today, setDate); 
                 
-                let status: "active" | "upcoming" | "completed" = "active";
-                if (dayOfIncubation < 0) {
-                    status = "upcoming";
-                } else if (dayOfIncubation >= species.incubationDays + 2) { // Considered completed 2 days after total incubation period
-                    status = "completed";
+                let statusLabel: string;
+                let statusVariant: "default" | "secondary" | "outline" = "secondary";
+
+                if (daysElapsedSinceSet < 0) {
+                    statusLabel = "Upcoming";
+                    statusVariant = "outline";
+                } else if (daysElapsedSinceSet === 0) {
+                    statusLabel = "Set Day";
+                } else if (daysElapsedSinceSet > species.incubationDays + 2) {
+                    statusLabel = "Completed";
+                    statusVariant = "default"; // More prominent for completed
                 } else {
-                    status = "active";
+                    statusLabel = `Active (Day ${daysElapsedSinceSet})`;
                 }
+
 
                 return (
                   <TableRow key={batch.id}>
@@ -112,12 +119,18 @@ export default function BatchesPage() {
                       </div>
                     </TableCell>
                     <TableCell>{species?.name || 'Unknown'}</TableCell>
-                    <TableCell className="hidden md:table-cell">{format(parseISO(batch.startDate), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="hidden md:table-cell">{format(setDate, 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-center">{batch.numberOfEggs}</TableCell>
                     <TableCell className="hidden lg:table-cell text-center">
-                      {status === "active" && <Badge variant="secondary" className="bg-green-100 text-green-700">Active (Day {dayOfIncubation})</Badge>}
-                      {status === "upcoming" && <Badge variant="outline">Upcoming</Badge>}
-                      {status === "completed" && <Badge variant="default" className="bg-blue-100 text-blue-700">Completed</Badge>}
+                       <Badge 
+                          variant={statusVariant} 
+                          className={cn(
+                            statusLabel.startsWith("Active") && "bg-green-100 text-green-700",
+                            statusLabel === "Completed" && "bg-blue-100 text-blue-700"
+                          )}
+                        >
+                          {statusLabel}
+                        </Badge>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" asChild title="View Details">
