@@ -29,7 +29,7 @@ import { format } from "date-fns";
 import { ALL_SPECIES_LIST, SPECIES_DATA } from '@/lib/constants';
 import type { Batch, SpeciesName, IncubatorType } from '@/lib/types';
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 
 const incubatorTypes = ['manual', 'auto'] as const;
@@ -48,13 +48,13 @@ const batchFormSchema = z.object({
 
 type BatchFormValues = z.infer<typeof batchFormSchema>;
 
-// Ensure the onSubmit prop expects incubatorType by using the Batch type directly where appropriate
 interface BatchFormProps {
   onSubmit: (data: Omit<Batch, 'id' | 'candlingResults' | 'tasks' | 'hatchedEggs'> & { customCandlingDays?: number[] }) => void;
   initialData?: Batch;
 }
 
 export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
+  // customDays stores 0-indexed days
   const [customDays, setCustomDays] = useState<number[]>(initialData?.customCandlingDays || []);
   
   const form = useForm<BatchFormValues>({
@@ -64,7 +64,8 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
           ...initialData,
           startDate: new Date(initialData.startDate),
           incubatorType: initialData.incubatorType || 'manual',
-          customCandlingDaysInput: initialData.customCandlingDays?.join(', ') || '',
+          // Display 0-indexed days as comma-separated string. User also inputs 0-indexed.
+          customCandlingDaysInput: (initialData.customCandlingDays || []).join(', ') || '', 
         }
       : {
           name: "",
@@ -76,14 +77,32 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
         },
   });
 
+  // Effect to update customDays when species changes, to re-validate against new max incubation day
+  const watchedSpeciesId = form.watch('speciesId');
+  useEffect(() => {
+    if (watchedSpeciesId) {
+        const speciesInfo = SPECIES_DATA[watchedSpeciesId];
+        if (speciesInfo) {
+            const maxDay = speciesInfo.incubationDays -1; // 0-indexed max day
+            setCustomDays(prevDays => prevDays.filter(d => d >= 0 && d <= maxDay));
+             // Update the input field display if days were filtered out
+            form.setValue('customCandlingDaysInput', customDays.filter(d => d >= 0 && d <= maxDay).join(', '));
+        }
+    }
+  }, [watchedSpeciesId, form, customDays]);
+
+
   const handleCustomDaysChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     form.setValue('customCandlingDaysInput', input);
+    const speciesInfo = SPECIES_DATA[form.getValues('speciesId')];
+    const maxDay = speciesInfo ? speciesInfo.incubationDays - 1 : 99; // Max 0-indexed day
+
     const parsedDays = input.split(',')
         .map(d => parseInt(d.trim(), 10))
-        .filter(d => !isNaN(d) && d > 0 && d <= (SPECIES_DATA[form.getValues('speciesId')]?.incubationDays || 100)) // Max 100 as fallback
+        .filter(d => !isNaN(d) && d >= 0 && d <= maxDay) 
         .sort((a,b) => a - b);
-    setCustomDays([...new Set(parsedDays)]); // Ensure unique days
+    setCustomDays([...new Set(parsedDays)]); // Ensure unique days, stored 0-indexed
   };
 
 
@@ -92,9 +111,15 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
     onSubmit({ 
       ...restOfData, 
       startDate: format(data.startDate, "yyyy-MM-dd"),
-      customCandlingDays: customDays 
+      customCandlingDays: customDays // customDays is already 0-indexed
     });
   }
+  
+  const currentSpecies = form.watch('speciesId') ? SPECIES_DATA[form.watch('speciesId')] : null;
+  const speciesInfoText = currentSpecies 
+    ? `Incubation: ${currentSpecies.incubationDays} days (Day 0 to ${currentSpecies.incubationDays-1}). Default candling: Days ${currentSpecies.defaultCandlingDays.join(', ')} & ${currentSpecies.lockdownDay} (lockdown). Day 0 is set day.`
+    : 'Select the bird species for this batch.';
+
 
   return (
     <Form {...form}>
@@ -121,7 +146,24 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Species</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select 
+                    onValueChange={(value) => {
+                        field.onChange(value);
+                        // Potentially clear/revalidate customCandlingDays if species changes
+                        const speciesInfo = SPECIES_DATA[value as SpeciesName];
+                        if (speciesInfo) {
+                            const maxDay = speciesInfo.incubationDays -1;
+                            const currentInput = form.getValues('customCandlingDaysInput') || "";
+                            const filteredDays = currentInput.split(',')
+                                .map(d => parseInt(d.trim(), 10))
+                                .filter(d => !isNaN(d) && d >= 0 && d <= maxDay)
+                                .sort((a,b) => a-b);
+                            setCustomDays([...new Set(filteredDays)]);
+                            form.setValue('customCandlingDaysInput', filteredDays.join(', '));
+                        }
+                    }} 
+                    defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select a species" />
@@ -136,7 +178,7 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
                   </SelectContent>
                 </Select>
                 <FormDescription>
-                  {field.value ? `Incubation: ${SPECIES_DATA[field.value]?.incubationDays} days. Default candling: Days ${SPECIES_DATA[field.value]?.defaultCandlingDays.join(', ')} & ${SPECIES_DATA[field.value]?.lockdownDay} (lockdown).` : 'Select the bird species for this batch.'}
+                  {speciesInfoText}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -172,7 +214,7 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
             name="startDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel>Start Date</FormLabel>
+                <FormLabel>Start Date (Day 0)</FormLabel>
                 <Popover>
                   <PopoverTrigger asChild>
                     <FormControl>
@@ -197,12 +239,12 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
                       mode="single"
                       selected={field.value}
                       onSelect={field.onChange}
-                      disabled={(date) => date < new Date("1900-01-01") } // Allow past dates for record keeping
+                      disabled={(date) => date < new Date("1900-01-01") } 
                       initialFocus
                     />
                   </PopoverContent>
                 </Popover>
-                <FormDescription>The day eggs are set in the incubator.</FormDescription>
+                <FormDescription>The day eggs are set in the incubator is Day 0.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -229,20 +271,21 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
           name="customCandlingDaysInput"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Custom Candling Days (Optional)</FormLabel>
+              <FormLabel>Custom Candling Days (Optional, 0-indexed)</FormLabel>
               <FormControl>
                 <Input 
-                  placeholder="e.g., 5, 12, 18 (comma-separated)" 
+                  placeholder="e.g., 4, 11, 17 (0 = set day)" 
                   value={field.value || ''}
                   onChange={handleCustomDaysChange}
+                  disabled={!form.getValues('speciesId')}
                 />
               </FormControl>
               <FormDescription>
-                Enter additional days for candling alerts, relative to start date (Day 1).
-                These are in addition to default species candling days.
+                Enter 0-indexed days for candling alerts (e.g., Day 0 is set day).
+                These are in addition to default species candling days. Max day is {currentSpecies ? currentSpecies.incubationDays -1 : 'N/A'}.
               </FormDescription>
               <div className="text-sm text-muted-foreground pt-1">
-                Current custom days:{' '}
+                Current custom days (0-indexed):{' '}
                 {customDays.length > 0 ? (
                   customDays.map(d => <Badge key={d} variant="secondary" className="mr-1">{d}</Badge>)
                 ) : (
@@ -272,7 +315,21 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
           {initialData ? 'Save Changes' : 'Create Batch'}
         </Button>
         {initialData && (
-          <Button type="button" variant="outline" onClick={() => form.reset()} className="ml-2">
+          <Button type="button" variant="outline" onClick={() => {
+            // Reset form to initial data, ensuring customDays state is also reset
+            if (initialData) {
+                form.reset({
+                    ...initialData,
+                    startDate: new Date(initialData.startDate),
+                    incubatorType: initialData.incubatorType || 'manual',
+                    customCandlingDaysInput: (initialData.customCandlingDays || []).join(', ') || '',
+                });
+                setCustomDays(initialData.customCandlingDays || []);
+            } else {
+                form.reset();
+                setCustomDays([]);
+            }
+          }} className="ml-2">
             Cancel
           </Button>
         )}

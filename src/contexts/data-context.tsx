@@ -45,94 +45,105 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
 
   const tasks: Task[] = [];
   const batchStartDate = startOfDay(parseISO(batch.startDate));
+  const lastMistingDay = species.lockdownDay -1; // Misting stops the day before lockdown
 
-  for (let i = 1; i <= species.incubationDays; i++) {
-    const currentDate = addDays(batchStartDate, i - 1);
+  // Incubation days are 0-indexed, from Day 0 to Day (species.incubationDays - 1)
+  for (let day = 0; day < species.incubationDays; day++) {
+    const currentDate = addDays(batchStartDate, day); // Day 0 is batchStartDate
     const formattedDate = format(currentDate, 'yyyy-MM-dd');
 
-    if (batch.incubatorType === 'manual' && i < species.lockdownDay) {
+    // Turning eggs (if manual) up to the day before lockdown
+    if (batch.incubatorType === 'manual' && day < species.lockdownDay) {
       tasks.push({
-        id: `${batch.id}-turn-${i}`,
+        id: `${batch.id}-turn-${day}`,
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: i,
+        dayOfIncubation: day, // 0-indexed
         description: `Turn eggs for ${batch.name}`,
         type: 'turn',
         completed: false,
       });
     }
 
-    if (i >= species.mistingStartDay && i < species.lockdownDay) {
+    // Misting eggs, from mistingStartDay up to and including lastMistingDay
+    if (day >= species.mistingStartDay && day <= lastMistingDay) {
       tasks.push({
-        id: `${batch.id}-mist-${i}`,
+        id: `${batch.id}-mist-${day}`,
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: i,
+        dayOfIncubation: day, // 0-indexed
         description: `Mist eggs for ${batch.name}`,
         type: 'mist',
         completed: false,
       });
     }
 
-    if (species.defaultCandlingDays.includes(i)) {
+    // Default candling days
+    if (species.defaultCandlingDays.includes(day)) {
       tasks.push({
-        id: `${batch.id}-candle-default-${i}`,
+        id: `${batch.id}-candle-default-${day}`,
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: i,
-        description: `Candle eggs for ${batch.name} (Day ${i})`,
+        dayOfIncubation: day, // 0-indexed
+        description: `Candle eggs for ${batch.name} (Day ${day})`,
         type: 'candle',
         completed: false,
       });
     }
     
-    if (batch.customCandlingDays?.includes(i)) {
+    // Custom candling days (assumed to be 0-indexed from form)
+    if (batch.customCandlingDays?.includes(day)) {
        tasks.push({
-        id: `${batch.id}-candle-custom-${i}`,
+        id: `${batch.id}-candle-custom-${day}`,
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: i,
-        description: `Custom candle eggs for ${batch.name} (Day ${i})`,
+        dayOfIncubation: day, // 0-indexed
+        description: `Custom candle eggs for ${batch.name} (Day ${day})`,
         type: 'candle',
         completed: false,
       });
     }
 
-    if (i === species.lockdownDay) {
+    // Lockdown day tasks
+    if (day === species.lockdownDay) {
       tasks.push({
-        id: `${batch.id}-lockdown-${i}`,
+        id: `${batch.id}-lockdown-${day}`,
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: i,
+        dayOfIncubation: day, // 0-indexed
         description: `Lockdown for ${batch.name}. Stop turning/misting. Increase humidity.`,
         type: 'lockdown',
         completed: false,
       });
+      // Final candling on lockdown day
       tasks.push({
-        id: `${batch.id}-candle-lockdown-${i}`,
+        id: `${batch.id}-candle-lockdown-${day}`,
         batchId: batch.id,
         batchName: batch.name,
         date: formattedDate,
-        dayOfIncubation: i,
-        description: `Final candling for ${batch.name} before lockdown`,
+        dayOfIncubation: day, // 0-indexed
+        description: `Final candling for ${batch.name} before lockdown (Day ${day})`,
         type: 'candle',
         completed: false,
       });
     }
     
-    if (i >= species.incubationDays && i <= species.incubationDays + 2) {
+    // Hatch check tasks: from expected hatch day (species.incubationDays - 1) for a few days
+    // Hatching typically starts on the last day of incubation (Day N-1) and can extend.
+    // Let's check from Day (N-1) up to Day (N-1 + 2).
+    if (day >= (species.incubationDays - 1) && day < (species.incubationDays -1 + 3) ) {
         tasks.push({
-            id: `${batch.id}-hatch_check-${i}`,
+            id: `${batch.id}-hatch_check-${day}`,
             batchId: batch.id,
             batchName: batch.name,
             date: formattedDate,
-            dayOfIncubation: i,
-            description: `Check for hatching in ${batch.name}`,
+            dayOfIncubation: day, // 0-indexed
+            description: `Check for hatching in ${batch.name} (Day ${day})`,
             type: 'hatch_check',
             completed: false,
         });
@@ -170,6 +181,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         candlingResults: doc.data().candlingResults || [],
         tasks: doc.data().tasks || [],
         incubatorType: doc.data().incubatorType || 'manual',
+        customCandlingDays: doc.data().customCandlingDays || [],
       } as Batch));
       setBatches(userBatches);
       setLoadingData(false);
@@ -188,30 +200,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
     try {
-      // Firestore will generate the ID, but tasks need an ID for their own generation.
-      // We'll add a temporary ID, then let Firestore assign the final one to the batch.
-      // The tasks themselves will have IDs derived from this temporary one initially,
-      // but this isn't ideal. A better approach is to add the batch, get its ID, then add tasks.
-      // For simplicity now, we'll generate tasks with a placeholder batch ID part if needed.
-      // OR, we can add the batch, then update it with tasks.
-      
-      // Create the batch document without tasks first
       const batchDocData = {
         ...batchData,
         incubatorType: batchData.incubatorType || 'manual',
         candlingResults: [],
-        hatchedEggs: 0, // Default to 0
-         // Convert date string to Firestore Timestamp for proper querying if needed, or store as ISO string
-        startDate: batchData.startDate // Assuming it's already yyyy-MM-dd
+        hatchedEggs: 0, 
+        startDate: batchData.startDate,
+        customCandlingDays: batchData.customCandlingDays || [],
       };
 
       const docRef = await addDoc(collection(db, 'users', currentUser.uid, 'batches'), batchDocData);
       
-      // Now generate tasks with the real batch ID
-      const newTasks = generateTasksForBatch({ ...batchData, id: docRef.id });
+      const newTasks = generateTasksForBatch({ ...batchData, id: docRef.id, customCandlingDays: batchData.customCandlingDays || [] });
       await updateDoc(docRef, { tasks: newTasks });
 
-      // No need to call setBatches here, onSnapshot will update the state
       toast({ title: "Batch Added", description: `Batch "${batchData.name}" created.` });
     } catch (error) {
       console.error("Error adding batch:", error);
@@ -233,14 +235,17 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           existingBatch.startDate !== batchData.startDate || 
           existingBatch.speciesId !== batchData.speciesId || 
           existingBatch.incubatorType !== batchData.incubatorType || 
-          JSON.stringify(existingBatch.customCandlingDays) !== JSON.stringify(batchData.customCandlingDays)
+          JSON.stringify(existingBatch.customCandlingDays || []) !== JSON.stringify(batchData.customCandlingDays || [])
         )) {
-          const batchDataForTaskGen = { ...batchData, incubatorType: batchData.incubatorType || 'manual' };
+          const batchDataForTaskGen = { 
+            ...batchData, 
+            incubatorType: batchData.incubatorType || 'manual',
+            customCandlingDays: batchData.customCandlingDays || [],
+          };
           tasksToUse = generateTasksForBatch(batchDataForTaskGen);
       }
       
-      await setDoc(batchRef, { ...batchData, tasks: tasksToUse, incubatorType: batchData.incubatorType || 'manual' });
-      // onSnapshot will handle state update
+      await setDoc(batchRef, { ...batchData, tasks: tasksToUse, incubatorType: batchData.incubatorType || 'manual', customCandlingDays: batchData.customCandlingDays || [] });
        toast({ title: "Batch Updated", description: `Batch "${batchData.name}" updated.` });
     } catch (error) {
       console.error("Error updating batch:", error);
@@ -256,8 +261,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const batchRef = doc(db, 'users', currentUser.uid, 'batches', batchId);
       await deleteDoc(batchRef);
-      // onSnapshot will handle state update
-      // toast({ title: "Batch Deleted", description: "Batch removed successfully."}); // Toast handled by component
     } catch (error) {
       console.error("Error deleting batch:", error);
       toast({ title: "Error Deleting Batch", description: String(error), variant: "destructive"});
@@ -265,7 +268,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [currentUser, toast]);
 
   const getBatchById = useCallback((batchId: string): Batch | undefined => {
-    // Data is now primarily driven by onSnapshot, so local state should be up-to-date
     return batches.find((b) => b.id === batchId);
   }, [batches]);
 
@@ -292,8 +294,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         task.id === updatedTask.id ? updatedTask : task
       );
       await updateDoc(batchRef, { tasks: newTasks });
-      // onSnapshot handles state update
-      // Toast handled by component
     } catch (error) {
       console.error("Error updating task:", error);
       toast({ title: "Error Updating Task", description: String(error), variant: "destructive"});
@@ -310,12 +310,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const targetBatch = batches.find(b => b.id === batchId);
       if (!targetBatch) throw new Error("Batch not found for candling result.");
 
-      const newResult: CandlingResult = { day, fertile, notes: notes || '' };
+      const newResult: CandlingResult = { day, fertile, notes: notes || '' }; // day is 0-indexed
       const newResults = [...(targetBatch.candlingResults || []), newResult].sort((a,b) => a.day - b.day);
       
       await updateDoc(batchRef, { candlingResults: newResults });
-      // onSnapshot handles state update
-      // Toast handled by component
     } catch (error) {
       console.error("Error adding candling result:", error);
       toast({ title: "Error Adding Candling", description: String(error), variant: "destructive"});
@@ -330,8 +328,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const batchRef = doc(db, 'users', currentUser.uid, 'batches', batchId);
       await updateDoc(batchRef, { hatchedEggs: count });
-      // onSnapshot handles state update
-      // Toast handled by component
     } catch (error) {
       console.error("Error setting hatched eggs:", error);
       toast({ title: "Error Setting Hatched Eggs", description: String(error), variant: "destructive"});
@@ -365,4 +361,3 @@ export const useData = (): DataContextType => {
   }
   return context;
 };
-

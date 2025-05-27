@@ -5,20 +5,19 @@ export const SPECIES_DATA: Record<SpeciesName, Species> = {
   pekin_duck: {
     id: 'pekin_duck',
     name: 'Pekin Duck',
-    incubationDays: 28,
-    defaultCandlingDays: [7, 14], // Day 25 is lockdown candling
-    mistingStartDay: 10,
-    mistingEndDay: 25, // Stop misting at lockdown
-    lockdownDay: 25,
+    incubationDays: 28, // Total duration. Days are 0-indexed from 0 to 27.
+    defaultCandlingDays: [6, 13], // 0-indexed (previously 7, 14)
+    mistingStartDay: 9, // 0-indexed (previously 10)
+    // Misting occurs from mistingStartDay up to, but not including, lockdownDay
+    lockdownDay: 24, // 0-indexed (previously 25)
   },
   muscovy_duck: {
     id: 'muscovy_duck',
     name: 'Muscovy Duck',
-    incubationDays: 35,
-    defaultCandlingDays: [10, 20], // Day 32 is lockdown candling
-    mistingStartDay: 10,
-    mistingEndDay: 32, // Stop misting at lockdown
-    lockdownDay: 32,
+    incubationDays: 35, // Total duration. Days are 0-indexed from 0 to 34.
+    defaultCandlingDays: [9, 19], // 0-indexed (previously 10, 20)
+    mistingStartDay: 9, // 0-indexed (previously 10)
+    lockdownDay: 31, // 0-indexed (previously 32)
   },
 };
 

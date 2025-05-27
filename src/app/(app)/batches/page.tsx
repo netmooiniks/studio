@@ -65,7 +65,7 @@ export default function BatchesPage() {
       <Card>
         <CardHeader>
           <CardTitle>All Batches</CardTitle>
-          <CardDescription>Manage all your ongoing and past incubation batches.</CardDescription>
+          <CardDescription>Manage all your ongoing and past incubation batches. Day 0 is the set day.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -73,7 +73,7 @@ export default function BatchesPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Species</TableHead>
-                <TableHead className="hidden md:table-cell">Start Date</TableHead>
+                <TableHead className="hidden md:table-cell">Start Date (Day 0)</TableHead>
                 <TableHead className="text-center">Eggs</TableHead>
                 <TableHead className="hidden lg:table-cell text-center">Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -83,10 +83,16 @@ export default function BatchesPage() {
               {batches.map((batch) => {
                 const species = SPECIES_DATA[batch.speciesId];
                 const startDate = startOfDay(parseISO(batch.startDate));
-                const dayOfIncubation = differenceInDays(today, startDate) + 1;
+                const dayOfIncubation = differenceInDays(today, startDate); // 0-indexed
+                
                 let status: "active" | "upcoming" | "completed" = "active";
-                if (dayOfIncubation < 1) status = "upcoming";
-                else if (dayOfIncubation > species.incubationDays) status = "completed";
+                if (dayOfIncubation < 0) {
+                    status = "upcoming";
+                } else if (dayOfIncubation >= species.incubationDays + 2) { // Considered completed 2 days after total incubation period
+                    status = "completed";
+                } else {
+                    status = "active";
+                }
 
                 return (
                   <TableRow key={batch.id}>

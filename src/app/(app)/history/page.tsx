@@ -20,23 +20,25 @@ export default function HistoryPage() {
     const species = SPECIES_DATA[batch.speciesId];
     if (!species) return false;
     const startDate = startOfDay(parseISO(batch.startDate));
-    const dayOfIncubation = differenceInDays(today, startDate) + 1;
+    const dayOfIncubation = differenceInDays(today, startDate); // 0-indexed
     // Consider completed a few days after expected hatch to allow for late hatchers
-    return dayOfIncubation > species.incubationDays + 2; 
+    // species.incubationDays is total duration, so days 0 to N-1. Completion is >= N.
+    return dayOfIncubation >= species.incubationDays + 2; 
   }).map(batch => {
     const species = SPECIES_DATA[batch.speciesId];
     const startDate = startOfDay(parseISO(batch.startDate));
-    const estimatedHatchDate = addDays(startDate, species.incubationDays -1);
+    // Estimated hatch date is Day N-1 (0-indexed)
+    const estimatedHatchDate = addDays(startDate, species.incubationDays -1); 
     
     const lastCandlingResult = batch.candlingResults.length > 0 
       ? batch.candlingResults[batch.candlingResults.length - 1] 
       : null;
     
-    const fertileEggs = lastCandlingResult ? lastCandlingResult.fertile : batch.numberOfEggs; // Fallback to total if no candling
+    const fertileEggs = lastCandlingResult ? lastCandlingResult.fertile : batch.numberOfEggs;
     
-    const fertilityRate = lastCandlingResult 
+    const fertilityRate = lastCandlingResult && batch.numberOfEggs > 0
       ? (lastCandlingResult.fertile / batch.numberOfEggs) * 100 
-      : null; // null if no candling data
+      : null;
 
     const hatchRateOfTotal = batch.hatchedEggs !== undefined && batch.numberOfEggs > 0
       ? (batch.hatchedEggs / batch.numberOfEggs) * 100
@@ -50,7 +52,7 @@ export default function HistoryPage() {
       ...batch,
       speciesName: species.name,
       estimatedHatchDate: format(estimatedHatchDate, 'MMM d, yyyy'),
-      fertileEggsCount: lastCandlingResult ? lastCandlingResult.fertile : (batch.hatchedEggs !== undefined ? batch.numberOfEggs : undefined), // if hatchedEggs is defined, assume all were fertile if no candling
+      fertileEggsCount: lastCandlingResult ? lastCandlingResult.fertile : (batch.hatchedEggs !== undefined ? batch.numberOfEggs : undefined),
       fertilityRate,
       hatchRateOfTotal,
       hatchRateOfFertile,
@@ -77,7 +79,7 @@ export default function HistoryPage() {
       <Card className="shadow-lg">
         <CardHeader>
           <CardTitle>Completed Batches</CardTitle>
-          <CardDescription>Review statistics from your past incubation batches.</CardDescription>
+          <CardDescription>Review statistics from your past incubation batches. Day 0 is the set day.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -85,7 +87,7 @@ export default function HistoryPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead className="hidden sm:table-cell">Species</TableHead>
-                <TableHead className="hidden md:table-cell">Start Date</TableHead>
+                <TableHead className="hidden md:table-cell">Start Date (Day 0)</TableHead>
                 <TableHead className="hidden lg:table-cell">Hatch Date (Est.)</TableHead>
                 <TableHead className="text-center">Set</TableHead>
                 <TableHead className="text-center hidden md:table-cell">Fertile</TableHead>

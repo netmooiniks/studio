@@ -49,18 +49,20 @@ function AddCandlingResultForm({ batchId, onAddResult }: { batchId: string, onAd
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (day && fertile !== undefined && batch) {
+    if (day !== undefined && fertile !== undefined && batch) {
       if (fertile > batch.numberOfEggs) {
         alert("Number of fertile eggs cannot exceed total eggs in batch.");
         return;
       }
-      onAddResult(day, fertile, notes);
+      onAddResult(day, fertile, notes); // day is 0-indexed
       setDay(undefined);
       setFertile(undefined);
       setNotes('');
       setIsOpen(false);
     }
   };
+
+  const maxIncubationDay = batch?.speciesId ? SPECIES_DATA[batch.speciesId].incubationDays - 1 : 49;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -70,12 +72,12 @@ function AddCandlingResultForm({ batchId, onAddResult }: { batchId: string, onAd
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add Candling Result</DialogTitle>
-          <DialogDescription>Record the results of your latest egg candling.</DialogDescription>
+          <DialogDescription>Record the results of your latest egg candling (Day 0 is set day).</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="candling-day">Incubation Day</Label>
-            <Input id="candling-day" type="number" value={day ?? ""} onChange={e => setDay(parseInt(e.target.value))} required min="1" max={batch?.speciesId ? SPECIES_DATA[batch.speciesId].incubationDays : 50} />
+            <Label htmlFor="candling-day">Incubation Day (0 = Set Day)</Label>
+            <Input id="candling-day" type="number" value={day ?? ""} onChange={e => setDay(parseInt(e.target.value))} required min="0" max={maxIncubationDay} />
           </div>
           <div>
             <Label htmlFor="fertile-eggs">Number of Fertile Eggs</Label>
@@ -163,6 +165,9 @@ export default function BatchDetailPage() {
     return [...batch.tasks].sort((a, b) => {
       const dateDiff = parseISO(a.date).getTime() - parseISO(b.date).getTime();
       if (dateDiff !== 0) return dateDiff;
+      // Sort by dayOfIncubation next if dates are same
+      const dayDiff = a.dayOfIncubation - b.dayOfIncubation;
+      if (dayDiff !== 0) return dayDiff;
       const typeOrder = { 'candle': 1, 'turn': 2, 'mist': 3, 'lockdown': 4, 'hatch_check': 5, 'custom': 6 };
       return (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99) ;
     });
@@ -183,9 +188,9 @@ export default function BatchDetailPage() {
 
   const species = SPECIES_DATA[batch.speciesId];
   const startDate = startOfDay(parseISO(batch.startDate));
-  const currentDayOfIncubation = differenceInDays(today, startDate) + 1;
-  const progressPercentage = Math.min(Math.max(0, (currentDayOfIncubation / species.incubationDays) * 100), 100);
-  const estimatedHatchDate = addDays(startDate, species.incubationDays -1); 
+  const currentDayOfIncubation = differenceInDays(today, startDate); // 0-indexed
+  const progressPercentage = Math.min(Math.max(0, ((currentDayOfIncubation + 1) / species.incubationDays) * 100), 100);
+  const estimatedHatchDate = addDays(startDate, species.incubationDays -1); // Day 0 is start, so hatch is on Day N-1
 
   const handleTaskToggle = (task: Task) => {
     updateTask({ ...task, completed: !task.completed });
@@ -197,7 +202,7 @@ export default function BatchDetailPage() {
   
   const handleAddCandling = (day: number, fertile: number, notes?: string) => {
     if (!batch) return;
-    addCandlingResult(batch.id, day, fertile, notes);
+    addCandlingResult(batch.id, day, fertile, notes); // day is 0-indexed
     toast({ title: "Candling Result Added", description: `Day ${day}: ${fertile} fertile eggs recorded.`});
   };
 
@@ -227,7 +232,7 @@ export default function BatchDetailPage() {
           <div className="space-y-2">
             <p className="flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Start Date:</strong> {format(startDate, 'PPP')}</p>
             <p className="flex items-center"><Egg className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Eggs Set:</strong> {batch.numberOfEggs}</p>
-            <p className="flex items-center"><Thermometer className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Incubation Period:</strong> {species.incubationDays} days</p>
+            <p className="flex items-center"><Thermometer className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Incubation Period:</strong> {species.incubationDays} days (Day 0 to {species.incubationDays -1})</p>
             <p className="flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Est. Hatch:</strong> {format(estimatedHatchDate, 'PPP')}</p>
              <p className="flex items-center">
               {batch.incubatorType === 'auto' 
@@ -237,8 +242,8 @@ export default function BatchDetailPage() {
             </p>
           </div>
           <div className="space-y-2 lg:col-span-2">
-            <Label>Progress (Day {currentDayOfIncubation} of {species.incubationDays})</Label>
-            <Progress value={progressPercentage} className="h-4" aria-label={`Incubation progress: Day ${currentDayOfIncubation} of ${species.incubationDays}`} />
+            <Label>Progress (Day {currentDayOfIncubation + 1} of {species.incubationDays}, currently Day {currentDayOfIncubation})</Label>
+            <Progress value={progressPercentage} className="h-4" aria-label={`Incubation progress: Day ${currentDayOfIncubation + 1} of ${species.incubationDays}`} />
             {batch.notes && (
               <div className="mt-2 p-3 bg-muted/50 rounded-md">
                 <p className="text-sm font-medium">Notes:</p>
@@ -260,7 +265,7 @@ export default function BatchDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Task Schedule</CardTitle>
-              <CardDescription>All upcoming and completed tasks for this batch.</CardDescription>
+              <CardDescription>All upcoming and completed tasks for this batch. Day 0 is the day eggs are set.</CardDescription>
             </CardHeader>
             <CardContent>
               {sortedTasks.length > 0 ? (
@@ -281,7 +286,7 @@ export default function BatchDetailPage() {
             <CardHeader className="flex flex-row justify-between items-center">
               <div>
                 <CardTitle>Fertility Tracking</CardTitle>
-                <CardDescription>Log and view candling results over time.</CardDescription>
+                <CardDescription>Log and view candling results over time (Day 0 is set day).</CardDescription>
               </div>
               <AddCandlingResultForm batchId={batch.id} onAddResult={handleAddCandling} />
             </CardHeader>
@@ -301,7 +306,7 @@ export default function BatchDetailPage() {
                   <TableBody>
                     {batch.candlingResults.map((result, index) => (
                       <TableRow key={index}>
-                        <TableCell>{result.day}</TableCell>
+                        <TableCell>Day {result.day}</TableCell> {/* Displaying the 0-indexed day */}
                         <TableCell>{result.fertile} / {batch.numberOfEggs}</TableCell>
                         <TableCell>{((result.fertile / batch.numberOfEggs) * 100).toFixed(1)}%</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{result.notes || '-'}</TableCell>
