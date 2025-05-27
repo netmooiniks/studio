@@ -2,7 +2,7 @@
 "use client";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { LogOut, Sun, Moon, AlertTriangle } from "lucide-react";
+import { LogOut, Sun, Moon, AlertTriangle, UserCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { useData } from '@/contexts/data-context';
@@ -54,7 +54,13 @@ export default function AppHeader() {
           </Link>
         </div>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-3">
+            {currentUser && !authLoading && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <UserCircle className="h-5 w-5" />
+                <span>{currentUser.email}</span>
+              </div>
+            )}
             {currentUser && (
               <Button variant="ghost" size="sm" onClick={signOutUser} disabled={authLoading}>
                 <LogOut className="mr-2 h-4 w-4" /> Logout
