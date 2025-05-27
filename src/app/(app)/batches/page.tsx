@@ -22,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils'; // Added import
 
 export default function BatchesPage() {
   const { batches, deleteBatch } = useData();
@@ -92,21 +93,28 @@ export default function BatchesPage() {
               {batches.map((batch) => {
                 const species = SPECIES_DATA[batch.speciesId];
                 const setDate = startOfDay(parseISO(batch.startDate));
+                // daysElapsedSinceSet represents how many full days have passed since the setDate.
+                // If today is setDate, daysElapsedSinceSet = 0.
+                // If today is setDate + 1 day, daysElapsedSinceSet = 1 (this is Incubation Day 1).
                 const daysElapsedSinceSet = differenceInDays(today, setDate); 
                 
                 let statusLabel: string;
                 let statusVariant: "default" | "secondary" | "outline" = "secondary";
+                let currentIncubationDay: number | null = null;
 
                 if (daysElapsedSinceSet < 0) {
                     statusLabel = "Upcoming";
                     statusVariant = "outline";
                 } else if (daysElapsedSinceSet === 0) {
                     statusLabel = "Set Day";
-                } else if (daysElapsedSinceSet > species.incubationDays + 2) {
-                    statusLabel = "Completed";
-                    statusVariant = "default"; // More prominent for completed
                 } else {
-                    statusLabel = `Active (Day ${daysElapsedSinceSet})`;
+                    currentIncubationDay = daysElapsedSinceSet; // This is now 1-indexed incubation day
+                    if (currentIncubationDay > species.incubationDays + 2) { // Check if well past hatch
+                        statusLabel = "Completed";
+                        statusVariant = "default"; 
+                    } else {
+                        statusLabel = `Active (Day ${currentIncubationDay})`;
+                    }
                 }
 
 
