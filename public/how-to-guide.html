@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Poultry Incubation Guide</title>
-    
+    <!-- Tailwind CSS is already part of the main Next.js app, so CDN link is removed -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Visualization & Content Choices:
         - Core Principles: Presented in collapsible accordion sections for clarity and space management. Goal: Inform. Method: HTML/CSS, JS.
@@ -16,14 +16,32 @@
         - Justification: These choices prioritize interactivity and clear presentation of dense information, making it easier for users to find and understand specific details. Chart.js is used for simple comparisons. No SVG/Mermaid used, adhering to constraints.
     -->
     <style>
-        body { font-family: 'Inter', sans-serif; } /* Keep original font for guide consistency unless further changes requested */
+        body { font-family: 'Inter', sans-serif; color: hsl(var(--foreground)); background-color: hsl(var(--background)); }
         .tab-button.active {
-            border-color: #0D9488; /* teal-600 */
-            background-color: #0D9488; /* teal-600 */
-            color: white;
+            border-color: hsl(var(--primary)); /* teal-600 */
+            background-color: hsl(var(--primary)); /* teal-600 */
+            color: hsl(var(--primary-foreground));
         }
         .tab-button {
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+            color: hsl(var(--primary-foreground));
+        }
+        .tab-button:hover {
+            background-color: hsl(var(--primary) / 0.8);
+        }
+        nav {
+            background-color: hsl(var(--primary) / 0.9); /* Slightly lighter primary for nav */
+        }
+        header {
+             background-color: hsl(var(--primary));
+             color: hsl(var(--primary-foreground));
+        }
+        footer {
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground) / 0.8);
+        }
+        h2, h3 {
+            color: hsl(var(--primary));
         }
         .content-section { display: none; }
         .content-section.active { display: block; }
@@ -46,6 +64,14 @@
             overflow: hidden;
             transition: max-height 0.3s ease-out;
         }
+        details {
+            background-color: hsl(var(--card));
+            color: hsl(var(--card-foreground));
+            border: 1px solid hsl(var(--border));
+        }
+        summary {
+            color: hsl(var(--card-foreground));
+        }
         .details-marker::before {
             content: '▶';
             margin-right: 0.5rem;
@@ -55,66 +81,24 @@
         .details-open .details-marker::before {
             transform: rotate(90deg);
         }
-        /* Add some basic styling to make it look okay with app's tailwind */
-        body {
-          background-color: hsl(var(--background));
-          color: hsl(var(--foreground));
-        }
-        header, footer {
-          background-color: hsl(var(--primary));
-          color: hsl(var(--primary-foreground));
-        }
-        nav {
-           background-color: hsl(var(--primary) / 0.9);
-        }
-        .tab-button.active {
-            border-color: hsl(var(--accent)); 
-            background-color: hsl(var(--accent)); 
-            color: hsl(var(--accent-foreground));
-        }
-        .tab-button {
-             color: hsl(var(--primary-foreground));
-        }
-        .tab-button:hover {
-            background-color: hsl(var(--accent) / 0.8);
-        }
-        .content-section h2, #species-info h3, #candling-visuals-container h4, .content-section h3 {
-            color: hsl(var(--primary));
-        }
-        .content-section p, .content-section ul, .content-section ol, .content-section table {
-             color: hsl(var(--foreground));
-        }
-        .bg-white {
-            background-color: hsl(var(--card));
-        }
-        .text-neutral-700, .text-neutral-600, .text-neutral-500 {
-            color: hsl(var(--card-foreground));
-        }
-        .text-amber-700 { color: #B45309; } /* Keep specific amber for notes */
-        .bg-amber-50 { background-color: #FFFBEB; }
-        .text-amber-800 { color: #92400E; }
-        .text-red-600 { color: #DC2626; }
-        .bg-stone-50 { background-color: hsl(var(--muted));}
-        .border-stone-200, .divide-stone-200 { border-color: hsl(var(--border));}
+        /* Tailwind classes from main app will apply, these are fallbacks or overrides if needed */
+        .bg-stone-100 { background-color: hsl(var(--background));}
+        .text-neutral-800 { color: hsl(var(--foreground));}
+        .bg-teal-700 { background-color: hsl(var(--primary));}
+        .text-white { color: hsl(var(--primary-foreground));}
+        .bg-teal-600 { background-color: hsl(var(--primary)/0.9); }
+        .text-neutral-700 { color: hsl(var(--card-foreground));}
+        .text-teal-700 { color: hsl(var(--primary));}
+        .bg-white { background-color: hsl(var(--card)); }
+        .text-neutral-600 { color: hsl(var(--card-foreground)/0.9); }
         .border-stone-300 { border-color: hsl(var(--border)); }
-        #species-select {
-            background-color: hsl(var(--input));
-            border-color: hsl(var(--input-border));
-            color: hsl(var(--foreground));
-        }
-        .bg-yellow-100 { background-color: #FEF9C3; }
-        .bg-yellow-300 { background-color: #FDE047; }
-        .bg-rose-50 { background-color: #FFF1F2; }
-        .border-red-400 { border-color: #F87171; }
-        .bg-red-500 { background-color: #EF4444; }
-        .text-red-500 { color: #EF4444; }
-        .border-red-600 { border-color: #DC2626; }
-        .bg-red-100 { background-color: #FEE2E2; }
-        .bg-sky-200 { background-color: #BAE6FD; }
-        .bg-neutral-200 { background-color: #E5E5E5; }
-        .bg-neutral-500 { background-color: #737373; }
-        .border-neutral-400 { border-color: #A3A3A3; }
-        .border-neutral-600 { border-color: #525252; }
+        .text-neutral-500 { color: hsl(var(--muted-foreground)); }
+        .bg-amber-500 { background-color: hsl(var(--accent)); }
+        .hover\:bg-amber-600:hover { background-color: hsl(var(--accent)/0.9); }
+        .border-stone-200 { border-color: hsl(var(--border)/0.8); }
+        .bg-stone-50 { background-color: hsl(var(--muted)/0.5); }
+        .text-amber-700 { color: hsl(var(--accent-foreground)); background-color: hsl(var(--accent)/0.7); padding: 0.25rem; border-radius: 0.25rem;} /* Adjusted for visibility */
+        .text-red-600 { color: hsl(var(--destructive)); }
 
     </style>
 </head>
@@ -125,12 +109,12 @@
 
     <nav class="bg-teal-600 p-4 sticky top-0 z-50 shadow">
         <ul class="flex flex-wrap justify-center space-x-2 sm:space-x-4">
-            <li><button data-tab="overview" class="tab-button active text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Overview</button></li>
-            <li><button data-tab="species" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Species Deep Dive</button></li>
-            <li><button data-tab="candling" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Candling Master</button></li>
-            <li><button data-tab="cooling" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Cooling & Misting</button></li>
-            <li><button data-tab="troubleshooting" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Troubleshooting</button></li>
-            <li><button data-tab="surehatch" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">SureHatch Notes</button></li>
+            <li><button data-tab="overview" class="tab-button active text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Overview</button></li>
+            <li><button data-tab="species" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Species Deep Dive</button></li>
+            <li><button data-tab="candling" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Candling Master</button></li>
+            <li><button data-tab="cooling" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Cooling & Misting</button></li>
+            <li><button data-tab="troubleshooting" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Troubleshooting</button></li>
+            <li><button data-tab="surehatch" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">SureHatch Notes</button></li>
         </ul>
     </nav>
 
@@ -146,9 +130,9 @@
                         <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content mt-2 text-neutral-600 space-y-2">
-                        <p><strong>Temperature:</strong> The most critical factor. Optimal temperature varies by species and incubator type. Consistently high temperatures are more damaging than low ones, leading to early, weak hatches or mortality. Low temperatures cause late hatches and weak chicks. Target ranges are typically $37.2-37.5^\circ C$ for forced-air and $37.8-38.9^\circ C$ for still-air incubators for many species.</p>
+                        <p><strong>Temperature:</strong> The most critical factor. Optimal temperature varies by species and incubator type. Consistently high temperatures are more damaging than low ones, leading to early, weak hatches or mortality. Low temperatures cause late hatches and weak chicks. Target ranges are typically 37.2-37.5<sup>°</sup>C for forced-air and 37.8-38.9<sup>°</sup>C for still-air incubators for many species.</p>
                         <p><strong>Humidity:</strong> Controls moisture loss from the egg, crucial for air cell development. Setting humidity is usually 50-65% RH, increasing to 70-90% RH for lockdown. Incorrect humidity leads to dehydrated or drowned chicks.</p>
-                        <p><strong>Ventilation:</strong> Supplies oxygen ($O_2$) and removes carbon dioxide ($CO_2$). Needs increase as embryos grow. Poor ventilation causes oxygen starvation or $CO_2$ poisoning.</p>
+                        <p><strong>Ventilation:</strong> Supplies oxygen (O<sub>2</sub>) and removes carbon dioxide (CO<sub>2</sub>). Needs increase as embryos grow. Poor ventilation causes oxygen starvation or CO<sub>2</sub> poisoning.</p>
                         <p><strong>Turning:</strong> Prevents embryo adhesion to the shell and promotes proper development. Turn eggs 3-5+ times daily, stopping 2-4 days before hatch (lockdown).</p>
                         <p class="mt-2 text-sm text-amber-700">These factors are interconnected. For example, increasing ventilation can lower humidity. Careful monitoring and adjustment are key.</p>
                     </div>
@@ -160,8 +144,8 @@
                          <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content mt-2 text-neutral-600 space-y-2">
-                        <p><strong>Forced-Air Incubators:</strong> Use a fan for uniform temperature and humidity. Generally operate at slightly lower temperatures (e.g., $37.2-37.5^\circ C$). Easier to manage.</p>
-                        <p><strong>Still-Air Incubators:</strong> Rely on natural convection, leading to temperature stratification (warmer at top). Operate at higher temperatures (e.g., $37.8-38.9^\circ C$) measured at the top of the eggs. More challenging to manage humidity.</p>
+                        <p><strong>Forced-Air Incubators:</strong> Use a fan for uniform temperature and humidity. Generally operate at slightly lower temperatures (e.g., 37.2-37.5<sup>°</sup>C). Easier to manage.</p>
+                        <p><strong>Still-Air Incubators:</strong> Rely on natural convection, leading to temperature stratification (warmer at top). Operate at higher temperatures (e.g., 37.8-38.9<sup>°</sup>C) measured at the top of the eggs. More challenging to manage humidity.</p>
                     </div>
                 </details>
 
@@ -172,7 +156,7 @@
                     </summary>
                     <div class="accordion-content mt-2 text-neutral-600 space-y-2">
                         <p><strong>Selection:</strong> Choose clean, well-shaped eggs of typical size. Avoid cracked, double-yolked, or misshapen eggs. Generally, do not wash eggs to preserve the protective bloom.</p>
-                        <p><strong>Storage:</strong> If not setting immediately, store at $13-18^\circ C$ with 70-75% RH, pointed end down. Set within 7-10 days for best results. Turn eggs daily if stored over a week.</p>
+                        <p><strong>Storage:</strong> If not setting immediately, store at 13-18<sup>°</sup>C with 70-75% RH, pointed end down. Set within 7-10 days for best results. Turn eggs daily if stored over a week.</p>
                         <p><strong>Handling:</strong> Warm eggs to room temperature before incubating to prevent sweating. Handle gently, especially in the first week.</p>
                     </div>
                 </details>
@@ -319,7 +303,7 @@
                     <ul class="list-disc list-inside text-neutral-600 space-y-2">
                         <li><strong>Mimics Natural Behavior:</strong> Mother bird leaves nest, returns with damp feathers.</li>
                         <li><strong>Cuticle Management:</strong> Helps degrade thick, waxy cuticle on waterfowl eggs, improving permeability.</li>
-                        <li><strong>Enhanced Gas Exchange:</strong> Better $O_2$ in, $CO_2$ out.</li>
+                        <li><strong>Enhanced Gas Exchange:</strong> Better O<sub>2</sub> in, CO<sub>2</sub> out.</li>
                         <li><strong>Regulated Moisture Loss:</strong> Promotes overall water evaporation for proper air cell size.</li>
                         <li><strong>Improved Shell Brittleness & Membrane Softening:</strong> Eases pipping and zipping.</li>
                         <li><strong>Dissipation of Metabolic Heat:</strong> Prevents overheating of large, developing embryos.</li>
@@ -336,7 +320,7 @@
                         <li><strong>Procedure:</strong>
                             <ol class="list-decimal list-inside ml-4 space-y-1">
                                 <li>Remove eggs from incubator or open incubator.</li>
-                                <li>Allow eggs to cool for 15-30 minutes (Pekin ducks up to 60 min), or until shell surface reaches approx. $30^\circ C$.</li>
+                                <li>Allow eggs to cool for 15-30 minutes (Pekin ducks up to 60 min), or until shell surface reaches approx. 30<sup>°</sup>C.</li>
                                 <li>Lightly mist eggs with clean, lukewarm or room temperature water.</li>
                                 <li>Return eggs to incubator.</li>
                             </ol>
@@ -346,7 +330,7 @@
                 </div>
                  <div class="bg-white p-5 rounded-lg shadow">
                     <h3 class="text-xl font-semibold text-neutral-700 mb-3">C. Muscovy Duck Specifics</h3>
-                    <p class="text-neutral-600">Muscovies generally benefit from cooling/misting. Start misting around Day 7, cooling around Day 10, daily for ~30 mins (cool to ~$30^\circ C$), until lockdown (Day 31-32). An alternative "dry hatch" with a "baggie method" at hatch exists but is less common.</p>
+                    <p class="text-neutral-600">Muscovies generally benefit from cooling/misting. Start misting around Day 7, cooling around Day 10, daily for ~30 mins (cool to ~30<sup>°</sup>C), until lockdown (Day 31-32). An alternative "dry hatch" with a "baggie method" at hatch exists but is less common.</p>
                 </div>
             </div>
         </section>
@@ -377,11 +361,11 @@
                 <p><strong>General SureHatch Recommendations (often chicken-focused):</strong></p>
                 <ul class="list-disc list-inside space-y-1">
                     <li><strong>Egg Quality:</strong> Set uniform, clean, fertile eggs. Avoid wiping or using permanent markers on eggs.</li>
-                    <li><strong>Temperature:</strong> Typically pre-set around $37.5^\circ C$ ($99.5^\circ F$).</li>
+                    <li><strong>Temperature:</strong> Typically pre-set around 37.5<sup>°</sup>C (99.5<sup>°</sup>F).</li>
                     <li><strong>Humidity (Chicken):</strong> Days 1-18: 50-60% RH; Lockdown (Days 18-21): 60-65% RH. Adjusted with water containers/vents.</li>
                     <li><strong>Turning (Chicken):</strong> Automatic hourly turning, stop on Day 18.</li>
                     <li><strong>Lockdown (Chicken):</strong> Do not open incubator Days 18-21.</li>
-                    <li><strong>Room Conditions:</strong> Maintain room temp $20-28^\circ C$, good ventilation.</li>
+                    <li><strong>Room Conditions:</strong> Maintain room temp 20-28<sup>°</sup>C, good ventilation.</li>
                 </ul>
                 <p class="font-semibold text-amber-700"><strong>Critical Warning for Waterfowl (from SureHatch manuals):</strong></p>
                 <p class="text-red-600 font-medium">NEVER mix waterfowl eggs (ducks, geese) with dry/game fowl eggs (chickens) in the same incubator or hatcher. Waterfowl eggs may carry pathogens harmful to other embryos.</p>
@@ -400,10 +384,10 @@
         const speciesData = {
             "Chicken": {
                 period: "21 days",
-                forcedAirTempC: "37.5-38.0°C",
-                stillAirTempC: "38.0-38.9°C (or graded)",
-                settingHumidity: "50-60% RH / 83-87°F WB (approx. 28.3-30.5°C WB)",
-                lockdownHumidity: "65-75% RH / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.5-38.0<sup>°</sup>C",
+                stillAirTempC: "38.0-38.9<sup>°</sup>C (or graded)",
+                settingHumidity: "50-60% RH / 83-87<sup>°</sup>F WB (approx. 28.3-30.5<sup>°</sup>C WB)",
+                lockdownHumidity: "65-75% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "18",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "3-7, 14, 18",
@@ -411,10 +395,10 @@
             },
             "Turkey": {
                 period: "28 days",
-                forcedAirTempC: "37.2-37.5°C",
-                stillAirTempC: "37.8-38.6°C",
-                settingHumidity: "45-60% RH / 84-86°F WB (approx. 28.9-30°C WB)",
-                lockdownHumidity: "65-70% RH / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.2-37.5<sup>°</sup>C",
+                stillAirTempC: "37.8-38.6<sup>°</sup>C",
+                settingHumidity: "45-60% RH / 84-86<sup>°</sup>F WB (approx. 28.9-30<sup>°</sup>C WB)",
+                lockdownHumidity: "65-70% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "25",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "7-10, 14, 25 (Air cell ~1/3)",
@@ -422,10 +406,10 @@
             },
             "Pekin Duck": {
                 period: "28 days",
-                forcedAirTempC: "37.4-37.7°C",
-                stillAirTempC: "38.0-38.9°C",
-                settingHumidity: "55-60% RH / 84.5-86°F WB (approx. 29.2-30°C WB)",
-                lockdownHumidity: "65-81% RH (staged) / 88-94°F WB (approx. 31.1-34.4°C WB)",
+                forcedAirTempC: "37.4-37.7<sup>°</sup>C",
+                stillAirTempC: "38.0-38.9<sup>°</sup>C",
+                settingHumidity: "55-60% RH / 84.5-86<sup>°</sup>F WB (approx. 29.2-30<sup>°</sup>C WB)",
+                lockdownHumidity: "65-81% RH (staged) / 88-94<sup>°</sup>F WB (approx. 31.1-34.4<sup>°</sup>C WB)",
                 turnStopDay: "25",
                 coolingMistingStart: "Yes (Day 7-10)",
                 candlingDays: "5-7, 10, 25 (Air cell ~1/3). Target 13-14% weight loss by Day 25.",
@@ -433,10 +417,10 @@
             },
             "Muscovy Duck": {
                 period: "33-37 days (avg. 35)",
-                forcedAirTempC: "37.5-37.6°C",
-                stillAirTempC: "38.1-38.9°C",
-                settingHumidity: "Highly Variable: 25-60% RH (Dry Hatch to 58%) / 85-86°F WB (approx. 29.4-30°C WB)",
-                lockdownHumidity: "Highly Variable: 66-83% RH or Baggie Method / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.5-37.6<sup>°</sup>C",
+                stillAirTempC: "38.1-38.9<sup>°</sup>C",
+                settingHumidity: "Highly Variable: 25-60% RH (Dry Hatch to 58%) / 85-86<sup>°</sup>F WB (approx. 29.4-30<sup>°</sup>C WB)",
+                lockdownHumidity: "Highly Variable: 66-83% RH or Baggie Method / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "31-32",
                 coolingMistingStart: "Yes (Day 1-10, variable freq.)",
                 candlingDays: "7-10, then ~weekly, lockdown. Air cell ~1/3 by pip. Target 2.8% weekly weight loss.",
@@ -444,10 +428,10 @@
             },
             "Goose (General)": {
                 period: "28-35 days",
-                forcedAirTempC: "37.2-37.7°C",
-                stillAirTempC: "38.0-39.4°C (or graded)",
-                settingHumidity: "Highly Variable (Breed dependent): 20-55% RH / 86-88°F WB (approx. 30-31.1°C WB)",
-                lockdownHumidity: "65-75%+ RH / 90-92°F WB (approx. 32.2-33.3°C WB)",
+                forcedAirTempC: "37.2-37.7<sup>°</sup>C",
+                stillAirTempC: "38.0-39.4<sup>°</sup>C (or graded)",
+                settingHumidity: "Highly Variable (Breed dependent): 20-55% RH / 86-88<sup>°</sup>F WB (approx. 30-31.1<sup>°</sup>C WB)",
+                lockdownHumidity: "65-75%+ RH / 90-92<sup>°</sup>F WB (approx. 32.2-33.3<sup>°</sup>C WB)",
                 turnStopDay: "25-27",
                 coolingMistingStart: "Yes (Day 4-8)",
                 candlingDays: "5-7, 10, then ~weekly/daily near pip. Monitor air cell 'dip'. Target 14-17% weight loss by pip.",
@@ -455,10 +439,10 @@
             },
             "Coturnix Quail": {
                 period: "17-18 days",
-                forcedAirTempC: "37.5-37.8°C",
-                stillAirTempC: "38.0-38.3°C (or graded)",
-                settingHumidity: "40-55% RH / 85-86°F WB (approx. 29.4-30°C WB)",
-                lockdownHumidity: "50-75% RH / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.5-37.8<sup>°</sup>C",
+                stillAirTempC: "38.0-38.3<sup>°</sup>C (or graded)",
+                settingHumidity: "40-55% RH / 85-86<sup>°</sup>F WB (approx. 29.4-30<sup>°</sup>C WB)",
+                lockdownHumidity: "50-75% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "14-15",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "7-10, 14 (if candled). Heartbeat Day 3, fully developed Day 15.",
@@ -466,10 +450,10 @@
             },
             "Bobwhite Quail": {
                 period: "23-24 days",
-                forcedAirTempC: "37.5-37.8°C",
-                stillAirTempC: "~38.9°C",
-                settingHumidity: "40-60% RH / 84-87°F WB (approx. 28.9-30.5°C WB)",
-                lockdownHumidity: "50-75% RH / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.5-37.8<sup>°</sup>C",
+                stillAirTempC: "~38.9<sup>°</sup>C",
+                settingHumidity: "40-60% RH / 84-87<sup>°</sup>F WB (approx. 28.9-30.5<sup>°</sup>C WB)",
+                lockdownHumidity: "50-75% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "20-21",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "12-15. Pips into air cell Day 22.",
@@ -488,7 +472,7 @@
         ];
 
         const troubleshootingData = [
-            { symptom: "Clear Eggs (No Embryonic Development)", causes: "Infertile males; Old/improperly stored eggs; Environmental damage.", measures: "Improve breeder management; Use fresh eggs (store <7-10 days at 10-15°C, 60-75% RH)." },
+            { symptom: "Clear Eggs (No Embryonic Development)", causes: "Infertile males; Old/improperly stored eggs; Environmental damage.", measures: "Improve breeder management; Use fresh eggs (store <7-10 days at 10-15<sup>°</sup>C, 60-75% RH)." },
             { symptom: "Blood Rings in Eggs", causes: "Improper egg storage; Incorrect incubation temperatures (too high/low); Poor breeder nutrition.", measures: "Follow storage guidelines; Calibrate thermometer, maintain stable temp; Balanced breeder diet." },
             { symptom: "Early Embryonic Death (First Few Days)", causes: "Incorrect temp (often too high); Improper turning; Poor ventilation; Breeder diseases.", measures: "Stable, correct temp; Turn 3-5+ times/day; Adequate ventilation; Healthy stock." },
             { symptom: "Mid-Term Embryonic Death", causes: "Incorrect temp; Improper ventilation; Nutritional deficiencies; Contamination.", measures: "Stable, correct temp; Adequate ventilation; Balanced breeder diet; Incubator sanitation." },
@@ -518,40 +502,33 @@
 
 
             // Populate species select
-            if (speciesSelect) {
-                for (const speciesName in speciesData) {
-                    const option = document.createElement('option');
-                    option.value = speciesName;
-                    option.textContent = speciesName;
-                    speciesSelect.appendChild(option);
-                }
+            for (const speciesName in speciesData) {
+                const option = document.createElement('option');
+                option.value = speciesName;
+                option.textContent = speciesName;
+                speciesSelect.appendChild(option);
             }
             
             // Populate candling table
-            if (candlingTableBody) {
-                candlingTimelineTableData.forEach(item => {
-                    const row = candlingTableBody.insertRow();
-                    row.innerHTML = `
-                        <td class="px-4 py-2 whitespace-nowrap">${item.species}</td>
-                        <td class="px-4 py-2">${item.first}</td>
-                        <td class="px-4 py-2">${item.mid}</td>
-                        <td class="px-4 py-2">${item.late}</td>
-                    `;
-                });
-            }
+            candlingTimelineTableData.forEach(item => {
+                const row = candlingTableBody.insertRow();
+                row.innerHTML = `
+                    <td class="px-4 py-2 whitespace-nowrap">${item.species}</td>
+                    <td class="px-4 py-2">${item.first}</td>
+                    <td class="px-4 py-2">${item.mid}</td>
+                    <td class="px-4 py-2">${item.late}</td>
+                `;
+            });
 
             // Populate troubleshooting table
-             if (troubleshootingTableBody) {
-                troubleshootingData.forEach(item => {
-                    const row = troubleshootingTableBody.insertRow();
-                    row.innerHTML = `
-                        <td class="px-4 py-2">${item.symptom}</td>
-                        <td class="px-4 py-2">${item.causes}</td>
-                        <td class="px-4 py-2">${item.measures}</td>
-                    `;
-                });
-            }
-
+            troubleshootingData.forEach(item => {
+                const row = troubleshootingTableBody.insertRow();
+                row.innerHTML = `
+                    <td class="px-4 py-2">${item.symptom}</td>
+                    <td class="px-4 py-2">${item.causes}</td>
+                    <td class="px-4 py-2">${item.measures}</td>
+                `;
+            });
 
             // Tab navigation
             tabs.forEach(tab => {
@@ -569,32 +546,30 @@
             });
 
             // Species selection
-            if (speciesSelect) {
-                speciesSelect.addEventListener('change', (event) => {
-                    const selectedSpecies = event.target.value;
-                    if (selectedSpecies && speciesData[selectedSpecies]) {
-                        const data = speciesData[selectedSpecies];
-                        speciesInfoDiv.innerHTML = `
-                            <h3 class="text-xl font-bold text-teal-700 mb-3">${selectedSpecies}</h3>
-                            <div class="grid md:grid-cols-2 gap-4 text-neutral-700">
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${data.stillAirTempC}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${data.settingHumidity}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${data.lockdownHumidity}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
-                            </div>
-                            <div class="mt-4 bg-amber-50 p-3 rounded-md text-amber-800 text-sm">
-                                <strong>Key Notes:</strong> ${data.notes}
-                            </div>
-                        `;
-                    } else {
-                        speciesInfoDiv.innerHTML = '<p class="text-neutral-500 text-center">Select a species to see its incubation details.</p>';
-                    }
-                });
-            }
+            speciesSelect.addEventListener('change', (event) => {
+                const selectedSpecies = event.target.value;
+                if (selectedSpecies && speciesData[selectedSpecies]) {
+                    const data = speciesData[selectedSpecies];
+                    speciesInfoDiv.innerHTML = `
+                        <h3 class="text-xl font-bold text-teal-700 mb-3">${selectedSpecies}</h3>
+                        <div class="grid md:grid-cols-2 gap-4 text-neutral-700">
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${data.stillAirTempC}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${data.settingHumidity}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${data.lockdownHumidity}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
+                        </div>
+                        <div class="mt-4 bg-amber-50 p-3 rounded-md text-amber-800 text-sm">
+                            <strong>Key Notes:</strong> ${data.notes}
+                        </div>
+                    `;
+                } else {
+                    speciesInfoDiv.innerHTML = '<p class="text-neutral-500 text-center">Select a species to see its incubation details.</p>';
+                }
+            });
 
             // Candling stage details
             const candlingContent = {
@@ -605,11 +580,7 @@
             candlingStageButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const stage = button.getAttribute('data-stage');
-                    if (candlingDetailsDiv && candlingContent[stage]) {
-                        candlingDetailsDiv.innerHTML = candlingContent[stage];
-                    } else if (candlingDetailsDiv) {
-                         candlingDetailsDiv.innerHTML = '<p>Details for this stage.</p>';
-                    }
+                    candlingDetailsDiv.innerHTML = candlingContent[stage] || '<p>Details for this stage.</p>';
                 });
             });
             
@@ -617,99 +588,100 @@
             accordionSummaries.forEach(summary => {
                 summary.addEventListener('click', (event) => {
                     const detailElement = summary.parentElement;
-                    if (!detailElement) return;
-
-                    const contentElement = detailElement.querySelector('.accordion-content');
-                    if (!contentElement) return;
-
+                    // Toggle open class for marker styling
                     if (detailElement.hasAttribute('open')) {
-                        // Currently open, about to be closed by browser default or this click
-                        if (event.target === summary || summary.contains(event.target)) { // if summary itself was clicked
-                             event.preventDefault(); // Prevent browser from closing it immediately
-                             detailElement.removeAttribute('open');
-                        }
+                        event.preventDefault(); // Prevent closing if already open by summary click
+                        detailElement.removeAttribute('open');
                         summary.classList.remove('details-open');
-                        contentElement.style.maxHeight = null;
+                        detailElement.querySelector('.accordion-content').style.maxHeight = null;
                     } else {
-                        // Currently closed, about to be opened by browser default or this click
-                        // Browser will add 'open' attribute. We just style.
+                        // For opening: default behavior of <details> handles 'open' attribute
                         summary.classList.add('details-open');
-                        contentElement.style.maxHeight = contentElement.scrollHeight + "px";
+                         // Auto-close other open accordions in the same group if needed
+                        // summary.closest('.space-y-3').querySelectorAll('details[open]').forEach(openDetail => {
+                        //     if (openDetail !== detailElement) {
+                        //         openDetail.removeAttribute('open');
+                        //         openDetail.querySelector('summary').classList.remove('details-open');
+                        //         openDetail.querySelector('.accordion-content').style.maxHeight = null;
+                        //     }
+                        // });
+                        const content = detailElement.querySelector('.accordion-content');
+                        content.style.maxHeight = content.scrollHeight + "px";
                     }
                 });
             });
              // Set initial max-height for already open details elements (e.g. if user navigates back)
             document.querySelectorAll('details[open]').forEach(detailElement => {
-                const summary = detailElement.querySelector('summary');
-                if (summary) summary.classList.add('details-open');
+                detailElement.querySelector('summary').classList.add('details-open');
                 const content = detailElement.querySelector('.accordion-content');
-                if (content) content.style.maxHeight = content.scrollHeight + "px";
+                content.style.maxHeight = content.scrollHeight + "px";
             });
 
 
             // Incubation Periods Chart
-            const chartCanvas = document.getElementById('incubationPeriodsChart');
-            if (chartCanvas) {
-                const speciesNames = Object.keys(speciesData);
-                const incubationDays = speciesNames.map(name => {
-                    const period = speciesData[name].period;
-                    const daysMatch = period.match(/(\d+)/);
-                    return daysMatch ? parseInt(daysMatch[1]) : 0;
-                });
+            const speciesNames = Object.keys(speciesData);
+            const incubationDays = speciesNames.map(name => {
+                const period = speciesData[name].period;
+                // Extract the first number for simplicity (e.g., "28-35 days" -> 28)
+                const daysMatch = period.match(/(\d+)/);
+                return daysMatch ? parseInt(daysMatch[1]) : 0;
+            });
 
-                const chartColors = [
-                    '#4F46E5', '#0D9488', '#DB2777', '#F59E0B', '#10B981', '#6366F1', '#EC4899' 
-                ];
+            const chartColors = [
+                '#4F46E5', '#0D9488', '#DB2777', '#F59E0B', '#10B981', '#6366F1', '#EC4899' 
+            ];
 
-                new Chart(chartCanvas, {
-                    type: 'bar',
-                    data: {
-                        labels: speciesNames,
-                        datasets: [{
-                            label: 'Typical Incubation Period (Days)',
-                            data: incubationDays,
-                            backgroundColor: speciesNames.map((_, i) => chartColors[i % chartColors.length]),
-                            borderColor: speciesNames.map((_, i) => chartColors[i % chartColors.length]),
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                title: { display: true, text: 'Days' }
-                            },
-                            x: {
-                                ticks: {
-                                    autoSkip: false,
-                                    maxRotation: 45,
-                                    minRotation: 45,
-                                    callback: function(value, index, values) {
-                                        let label = this.getLabelForValue(value);
-                                        if (label.length > 10) {
-                                            return label.match(/.{1,10}/g);
-                                        }
-                                        return label;
+
+            new Chart(document.getElementById('incubationPeriodsChart'), {
+                type: 'bar',
+                data: {
+                    labels: speciesNames,
+                    datasets: [{
+                        label: 'Typical Incubation Period (Days)',
+                        data: incubationDays,
+                        backgroundColor: speciesNames.map((_, i) => chartColors[i % chartColors.length]),
+                        borderColor: speciesNames.map((_, i) => chartColors[i % chartColors.length]),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Days' }
+                        },
+                        x: {
+                            ticks: {
+                                autoSkip: false,
+                                maxRotation: 45,
+                                minRotation: 45,
+                                callback: function(value, index, values) {
+                                    let label = this.getLabelForValue(value);
+                                    if (label.length > 10) { // Max 10 chars before wrapping
+                                        return label.match(/.{1,10}/g); // Split into lines of 10
                                     }
+                                    return label;
                                 }
                             }
-                        },
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        return `${context.dataset.label}: ${context.raw} days (${speciesData[context.label].period})`;
-                                    }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.dataset.label}: ${context.raw} days (${speciesData[context.label].period})`;
                                 }
                             }
                         }
                     }
-                });
-            }
+                }
+            });
         });
     </script>
 </body>
 </html>
+
+    
