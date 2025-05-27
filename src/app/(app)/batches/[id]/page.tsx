@@ -107,11 +107,12 @@ function HatchRateCalculator({ batchId }: { batchId: string }) {
 
   if (!batch) return null;
 
-  const lastCandling = batch.candlingResults.length > 0 ? batch.candlingResults[batch.candlingResults.length - 1].fertile : batch.numberOfEggs;
+  const lastCandlingResult = batch.candlingResults.length > 0 ? batch.candlingResults[batch.candlingResults.length - 1] : null;
+  const fertileAtLastCandling = lastCandlingResult ? lastCandlingResult.fertile : batch.numberOfEggs;
   const hatched = batch.hatchedEggs ?? 0;
 
   const hatchRateOfTotal = batch.numberOfEggs > 0 ? (hatched / batch.numberOfEggs) * 100 : 0;
-  const hatchRateOfFertile = lastCandling > 0 ? (hatched / lastCandling) * 100 : 0;
+  const hatchRateOfFertile = fertileAtLastCandling > 0 ? (hatched / fertileAtLastCandling) * 100 : 0;
 
   const handleSetHatched = () => {
     const count = parseInt(hatchedInput);
@@ -137,7 +138,7 @@ function HatchRateCalculator({ batchId }: { batchId: string }) {
           <Button onClick={handleSetHatched}>Set Hatched</Button>
         </div>
         <p>Total Eggs Set: <Badge variant="secondary">{batch.numberOfEggs}</Badge></p>
-        <p>Fertile Eggs (at last candling): <Badge variant="secondary">{lastCandling}</Badge></p>
+        <p>Fertile Eggs (at last candling): <Badge variant="secondary">{fertileAtLastCandling}</Badge></p>
         <p>Hatched Eggs: <Badge>{hatched}</Badge></p>
         
         <div className="mt-4 pt-4 border-t">
@@ -224,6 +225,8 @@ export default function BatchDetailPage() {
     toast({ title: "Candling Result Added", description: `Day ${day}: ${fertile} fertile eggs recorded.`});
   };
 
+  const latestCandlingResult = batch.candlingResults?.length > 0 ? batch.candlingResults[batch.candlingResults.length - 1] : null;
+
 
   return (
     <div className="container mx-auto py-8">
@@ -250,9 +253,21 @@ export default function BatchDetailPage() {
           <div className="space-y-2">
             <p className="flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Set Date:</strong> {format(setDate, 'PPP')}</p>
             <p className="flex items-center">
-              <Image src="/icon.png" alt="Eggs Set Icon" width={20} height={20} className="mr-2 text-muted-foreground" />
+              <Image src="/icon.png" alt="Eggs Set Icon" width={20} height={20} className="mr-2" />
               <strong>Eggs Set:</strong> {batch.numberOfEggs}
             </p>
+            {latestCandlingResult && (
+              <p className="flex items-center">
+                <Lightbulb className="mr-2 h-5 w-5 text-muted-foreground" /> 
+                <strong>Latest Fertile:</strong> {latestCandlingResult.fertile} (Day {latestCandlingResult.day})
+              </p>
+            )}
+            {!latestCandlingResult && (
+              <p className="flex items-center">
+                <Lightbulb className="mr-2 h-5 w-5 text-muted-foreground" /> 
+                <strong>Latest Fertile:</strong> No candling data yet
+              </p>
+            )}
             <p className="flex items-center"><Thermometer className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Incubation Period:</strong> {species.incubationDays} days (Day 1 to {species.incubationDays})</p>
             <p className="flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-muted-foreground" /> <strong>Est. Hatch:</strong> {format(estimatedHatchDate, 'PPP')}</p>
              <p className="flex items-center">
@@ -320,7 +335,7 @@ export default function BatchDetailPage() {
                     <TableRow>
                       <TableHead>Incubation Day</TableHead>
                       <TableHead>Fertile Eggs</TableHead>
-                      <TableHead>% Fertile</TableHead>
+                      <TableHead>% Fertile (of Total Set)</TableHead>
                       <TableHead>Notes</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -329,7 +344,7 @@ export default function BatchDetailPage() {
                       <TableRow key={index}>
                         <TableCell>Day {result.day}</TableCell> {/* Displaying the 1-indexed day */}
                         <TableCell>{result.fertile} / {batch.numberOfEggs}</TableCell>
-                        <TableCell>{((result.fertile / batch.numberOfEggs) * 100).toFixed(1)}%</TableCell>
+                        <TableCell>{batch.numberOfEggs > 0 ? ((result.fertile / batch.numberOfEggs) * 100).toFixed(1) : 'N/A'}%</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{result.notes || '-'}</TableCell>
                       </TableRow>
                     ))}

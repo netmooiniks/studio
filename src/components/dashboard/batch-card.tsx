@@ -73,13 +73,18 @@ export function BatchCard({ batch }: BatchCardProps) {
     statusText = `Starts in ${daysToStart} day${daysToStart === 1 ? '' : 's'}`;
   } else if (daysElapsedSinceSet === 0) { // Set Day
     statusText = "Set Day";
-    progressBarLabel = "Incubation begins tomorrow"; // Clarified label for Set Day
+    progressBarLabel = "Incubation begins tomorrow"; 
   } else if (currentIncubationDay !== null) { // Default active state
     statusText = `Inc. Day: ${currentIncubationDay}`;
     progressBarLabel = `Day ${currentIncubationDay} of ${species.incubationDays}`;
   } else {
     statusText = "Status Unknown"; // Fallback
   }
+
+  const latestCandlingResult = batch.candlingResults?.length > 0 ? batch.candlingResults[batch.candlingResults.length - 1] : null;
+  const displayEggInfo = latestCandlingResult 
+    ? `${latestCandlingResult.fertile} fertile / ${batch.numberOfEggs} set`
+    : `${batch.numberOfEggs} eggs set`;
 
 
   return (
@@ -90,7 +95,7 @@ export function BatchCard({ batch }: BatchCardProps) {
           <SpeciesIcon speciesId={batch.speciesId} className="h-8 w-8 text-gray-400" />
         </div>
         <p className="text-sm text-muted-foreground flex items-center">
-           <Image src="/icon.png" alt="Eggs Icon" width={16} height={16} className="mr-2" /> {batch.numberOfEggs} eggs
+           <Image src="/icon.png" alt="Eggs Icon" width={16} height={16} className="mr-2" /> {displayEggInfo}
         </p>
         <p className="text-sm text-muted-foreground flex items-center">
           <CalendarDays className="mr-2 h-4 w-4" /> Set Date: {format(setDate, 'MMM d, yyyy')}
@@ -117,7 +122,7 @@ export function BatchCard({ batch }: BatchCardProps) {
         )}
         {isCompleted && batch.hatchedEggs !== undefined && (
           <p className="text-sm text-green-600 font-semibold mt-3">
-            Hatch successful: {batch.hatchedEggs} / {batch.numberOfEggs} chicks!
+            Hatch successful: {batch.hatchedEggs} / {latestCandlingResult ? latestCandlingResult.fertile : batch.numberOfEggs} chicks!
           </p>
         )}
          {isCompleted && batch.hatchedEggs === undefined && (
