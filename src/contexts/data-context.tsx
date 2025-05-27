@@ -32,6 +32,7 @@ interface DataContextType {
   getAllTasks: () => Task[];
   updateTask: (updatedTask: Task) => Promise<void>;
   addCandlingResult: (batchId: string, day: number, fertile: number, notes?: string) => Promise<void>;
+  deleteCandlingResult: (batchId: string, candlingResultId: string) => Promise<void>;
   setHatchedEggs: (batchId: string, count: number) => Promise<void>;
   loadingData: boolean;
 }
@@ -123,7 +124,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchName: batch.name,
         date: formattedDate,
         dayOfIncubation: day, // 1-indexed
-        description: `Lockdown. Stop turning/misting. Increase humidity.`,
+        description: `Lockdown procedures`,
         type: 'lockdown',
         completed: false,
       });
@@ -179,32 +180,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const userBatches = snapshot.docs.map(docSnapshot => {
         const batchDataFromDoc = docSnapshot.data();
-        const currentBatchName = batchDataFromDoc.name;
-
-        const updatedTasks = (batchDataFromDoc.tasks || []).map((task: Task) => {
-          let newDescription = task.description || '';
-          // This logic can be removed if descriptions are always generic from now on
-          // For existing tasks that might have old batch names in descriptions:
-          // This simple check assumes batch names are unique and don't contain parts of other batch names
-          // It also assumes descriptions follow a "Action for BATCH_NAME (Day X)" pattern
-          const descriptionBatchNameRegex = /for\s+(.+?)\s+\(Day\s+\d+\)/i;
-          const match = newDescription.match(descriptionBatchNameRegex);
-          const oldNameInDescription = match ? match[1] : null;
-
-          if (oldNameInDescription && oldNameInDescription !== currentBatchName && escapeRegExp(oldNameInDescription)) {
-             const escapedOldName = escapeRegExp(oldNameInDescription);
-             if (escapedOldName) { // Ensure it's not empty
-                newDescription = newDescription.replace(new RegExp(escapedOldName, 'gi'), currentBatchName);
-             }
-          }
-          
-          return {
-            ...task,
-            batchName: currentBatchName,
-            description: newDescription, // Use the potentially updated description
-          };
-        });
-
+        
         return {
           id: docSnapshot.id,
           ...batchDataFromDoc,
@@ -213,8 +189,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             : batchDataFromDoc.startDate,
           candlingResults: (batchDataFromDoc.candlingResults || []).map((cr: CandlingResult) => ({
             ...cr, 
+            id: cr.id || `candling-${cr.day}-${Math.random().toString(36).substring(2,9)}` // Ensure ID exists for older data
           })).sort((a,b) => a.day - b.day),
-          tasks: updatedTasks, 
+          tasks: (batchDataFromDoc.tasks || []).map((task: Task) => ({...task, batchName: batchDataFromDoc.name})), 
           incubatorType: batchDataFromDoc.incubatorType || 'manual',
           customCandlingDays: batchDataFromDoc.customCandlingDays || [], 
         } as Batch;
@@ -253,7 +230,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         incubatorType: batchData.incubatorType,
         customCandlingDays: batchData.customCandlingDays 
       });
-      await updateDoc(docRef, { tasks: newTasks }); 
+      await updateDoc(docRef, { tasks: newTasks }); // Tasks will have 1-indexed dayOfIncubation
     } catch (error) {
       console.error("Error adding batch:", error);
       toast({ title: "Error Adding Batch", description: String(error), variant: "destructive"});
@@ -271,7 +248,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       let tasksForUpdate = batchData.tasks || []; 
       const newBatchName = batchData.name;
-      const oldBatchName = existingBatchFromState?.name;
+      // const oldBatchName = existingBatchFromState?.name;
 
       const shouldRegenerateTasks = existingBatchFromState && (
           existingBatchFromState.startDate !== batchData.startDate ||
@@ -289,27 +266,21 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               incubatorType: batchData.incubatorType,
               customCandlingDays: batchData.customCandlingDays, 
           });
-      } else if (oldBatchName && newBatchName && oldBatchName !== newBatchName) {
-          const escapedOldName = escapeRegExp(oldBatchName);
-          if (escapedOldName) { // Ensure it's not empty string before creating regex
-            const oldNameRegex = new RegExp(escapedOldName, 'gi');
-            tasksForUpdate = (existingBatchFromState?.tasks || []).map(t => ({
-                ...t,
-                batchName: newBatchName,
-                description: (t.description || '').replace(oldNameRegex, newBatchName),
-            }));
-          } else {
-             tasksForUpdate = (existingBatchFromState?.tasks || []).map(t => ({
-                ...t,
-                batchName: newBatchName,
-            }));
-          }
+      } else {
+          // Ensure all existing tasks have the current batch name
+          tasksForUpdate = (existingBatchFromState?.tasks || []).map(t => ({
+              ...t,
+              batchName: newBatchName,
+          }));
       }
       
       const finalBatchDoc = {
         ...batchData, 
         tasks: tasksForUpdate, 
-        candlingResults: (batchData.candlingResults || []).sort((a,b) => a.day - b.day), 
+        candlingResults: (batchData.candlingResults || []).map(cr => ({ // Ensure IDs for new results during update
+            ...cr,
+            id: cr.id || `candling-${cr.day}-${Math.random().toString(36).substring(2,9)}`
+        })).sort((a,b) => a.day - b.day), 
         customCandlingDays: batchData.customCandlingDays || [], 
       };
       
@@ -338,28 +309,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [batches]);
 
   const getAllTasks = useCallback((): Task[] => {
-    return batches.flatMap(batch => {
-      const currentBatchName = batch.name;
-      return (batch.tasks || []).map(task => {
-        let newDescription = task.description || '';
-        const descriptionBatchNameRegex = /for\s+(.+?)\s+\(Day\s+\d+\)/i;
-        const match = newDescription.match(descriptionBatchNameRegex);
-        const oldNameInDescription = match ? match[1] : null;
-
-        if (oldNameInDescription && oldNameInDescription !== currentBatchName && escapeRegExp(oldNameInDescription)) {
-            const escapedOldName = escapeRegExp(oldNameInDescription);
-            if (escapedOldName) {
-                newDescription = newDescription.replace(new RegExp(escapedOldName, 'gi'), currentBatchName);
-            }
-        }
-
-        return {
-          ...task, 
-          batchName: currentBatchName, 
-          description: newDescription,
-        };
-      });
-    });
+    return batches.flatMap(batch => 
+        (batch.tasks || []).map(task => ({...task, batchName: batch.name}))
+    );
   }, [batches]);
 
   const getTasksForDate = useCallback((date: Date): Task[] => {
@@ -376,22 +328,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const targetBatch = batches.find(b => b.id === updatedTask.batchId);
       if (!targetBatch) throw new Error("Batch not found for task update.");
       
-      let newDescription = updatedTask.description || '';
-      const descriptionBatchNameRegex = /for\s+(.+?)\s+\(Day\s+\d+\)/i;
-      const match = newDescription.match(descriptionBatchNameRegex);
-      const oldNameInDescription = match ? match[1] : null;
-
-      if (oldNameInDescription && oldNameInDescription !== targetBatch.name && escapeRegExp(oldNameInDescription)) {
-          const escapedOldName = escapeRegExp(oldNameInDescription);
-          if (escapedOldName) {
-            newDescription = newDescription.replace(new RegExp(escapedOldName, 'gi'), targetBatch.name);
-          }
-      }
-      
       const taskWithCorrectedDetails = {
         ...updatedTask, 
         batchName: targetBatch.name,
-        description: newDescription,
       };
 
       const newTasks = (targetBatch.tasks || []).map(task => 
@@ -413,7 +352,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const targetBatch = batches.find(b => b.id === batchId);
       if (!targetBatch) throw new Error("Batch not found for candling result.");
 
-      const newResult: CandlingResult = { day, fertile, notes: notes || '' }; 
+      const newResult: CandlingResult = { 
+        id: `candling-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, // Generate unique ID
+        day, 
+        fertile, 
+        notes: notes || '' 
+      }; 
       const newResults = [...(targetBatch.candlingResults || []), newResult].sort((a,b) => a.day - b.day);
       
       await updateDoc(batchRef, { candlingResults: newResults });
@@ -423,6 +367,28 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [currentUser, toast, batches]);
   
+  const deleteCandlingResult = useCallback(async (batchId: string, candlingResultId: string) => {
+    if (!currentUser) {
+      toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" });
+      return;
+    }
+    try {
+      const batchRef = doc(db, 'users', currentUser.uid, 'batches', batchId);
+      const targetBatch = batches.find(b => b.id === batchId);
+      if (!targetBatch) {
+        toast({ title: "Error", description: "Batch not found.", variant: "destructive" });
+        return;
+      }
+
+      const updatedCandlingResults = (targetBatch.candlingResults || []).filter(cr => cr.id !== candlingResultId);
+      await updateDoc(batchRef, { candlingResults: updatedCandlingResults });
+      toast({ title: "Candling Result Deleted", description: "The candling result has been removed." });
+    } catch (error) {
+      console.error("Error deleting candling result:", error);
+      toast({ title: "Error Deleting Candling Result", description: String(error), variant: "destructive"});
+    }
+  }, [currentUser, toast, batches]);
+
   const setHatchedEggs = useCallback(async (batchId: string, count: number) => {
     if (!currentUser) {
       return;
@@ -447,7 +413,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       getTasksForDate, 
       getAllTasks, 
       updateTask, 
-      addCandlingResult, 
+      addCandlingResult,
+      deleteCandlingResult, 
       setHatchedEggs,
       loadingData
     }}>
@@ -463,5 +430,3 @@ export const useData = (): DataContextType => {
   }
   return context;
 };
-
-    

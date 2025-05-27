@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { useData } from '@/contexts/data-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Edit, Layers, CalendarDays, Thermometer, Lightbulb, BarChart3, Zap, Hand, ClipboardList } from 'lucide-react';
+import { ArrowLeft, Edit, Layers, CalendarDays, Thermometer, Lightbulb, BarChart3, Zap, Hand, ClipboardList, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { SPECIES_DATA } from '@/lib/constants';
 import { format, parseISO, differenceInDays, startOfDay, addDays } from 'date-fns';
@@ -27,6 +27,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -155,7 +166,7 @@ function HatchRateCalculator({ batchId }: { batchId: string }) {
 export default function BatchDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const { getBatchById, updateTask, addCandlingResult } = useData();
+  const { getBatchById, updateTask, addCandlingResult, deleteCandlingResult } = useData();
   const { toast } = useToast();
   const batchId = typeof params.id === 'string' ? params.id : '';
   const batch = getBatchById(batchId);
@@ -224,6 +235,13 @@ export default function BatchDetailPage() {
     addCandlingResult(batch.id, day, fertile, notes); // day is 1-indexed
     toast({ title: "Candling Result Added", description: `Day ${day}: ${fertile} fertile eggs recorded.`});
   };
+  
+  const handleDeleteCandling = (candlingResultId: string) => {
+    if (!batch) return;
+    deleteCandlingResult(batch.id, candlingResultId);
+    // Toast is handled within deleteCandlingResult in context
+  };
+
 
   const latestCandlingResult = batch.candlingResults?.length > 0 ? batch.candlingResults[batch.candlingResults.length - 1] : null;
 
@@ -337,15 +355,39 @@ export default function BatchDetailPage() {
                       <TableHead>Fertile Eggs</TableHead>
                       <TableHead>% Fertile (of Total Set)</TableHead>
                       <TableHead>Notes</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {batch.candlingResults.map((result, index) => (
-                      <TableRow key={index}>
+                    {batch.candlingResults.map((result) => (
+                      <TableRow key={result.id}>
                         <TableCell>Day {result.day}</TableCell>
                         <TableCell>{result.fertile} / {batch.numberOfEggs}</TableCell>
                         <TableCell>{batch.numberOfEggs > 0 ? ((result.fertile / batch.numberOfEggs) * 100).toFixed(1) : 'N/A'}%</TableCell>
                         <TableCell className="text-sm text-muted-foreground">{result.notes || '-'}</TableCell>
+                        <TableCell className="text-right">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" title="Delete Candling Result" className="text-destructive hover:text-destructive">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This action cannot be undone. This will permanently delete the candling result for Day {result.day}.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDeleteCandling(result.id)} className="bg-destructive hover:bg-destructive/90">
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
