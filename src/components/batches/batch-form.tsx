@@ -67,6 +67,7 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
         }
       : {
           name: "",
+          // speciesId is implicitly undefined here, will be set if user selects one
           startDate: new Date(), // Set date
           numberOfEggs: 10,
           incubatorType: 'manual',
@@ -97,6 +98,9 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
           form.setValue('customCandlingDaysInput', newFilteredInputString, { shouldValidate: true, shouldDirty: true });
         }
       }
+    } else { // If speciesId is cleared, clear custom days input and badges
+        setCustomDays([]);
+        form.setValue('customCandlingDaysInput', '', { shouldValidate: false });
     }
   }, [watchedSpeciesId, form, setCustomDays]);
 
@@ -140,6 +144,30 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
     ? `Incubation: ${currentSpecies.incubationDays} days (Day 1 to ${currentSpecies.incubationDays}). Day 1 is day after set. Default candling: Days ${currentSpecies.defaultCandlingDays.join(', ')} & ${currentSpecies.lockdownDay} (lockdown).`
     : 'Select the bird species for this batch.';
 
+  const handleCancel = () => {
+    if (initialData) {
+      // Reset logic for editing
+      form.reset({
+        ...initialData,
+        startDate: new Date(initialData.startDate),
+        incubatorType: initialData.incubatorType || 'manual',
+        customCandlingDaysInput: (initialData.customCandlingDays || []).join(', ') || '',
+      });
+      setCustomDays(initialData.customCandlingDays || []);
+    } else {
+      // Reset logic for creating (to default new batch values)
+      form.reset({
+        name: "",
+        speciesId: undefined, // This will clear the Select component
+        startDate: new Date(),
+        numberOfEggs: 10,
+        incubatorType: 'manual',
+        customCandlingDaysInput: '',
+        notes: '',
+      });
+      setCustomDays([]); // Also clear custom days badges
+    }
+  };
 
   return (
     <Form {...form}>
@@ -171,7 +199,7 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
                         field.onChange(value as SpeciesName);
                     }} 
                     defaultValue={field.value}
-                    value={field.value}
+                    value={field.value} // Ensure the Select is controlled
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -286,8 +314,8 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
                   placeholder="e.g., 4, 11, 17 (Day 1 is day after set)" 
                   value={field.value || ''}
                   onChange={(e) => {
-                      field.onChange(e);
-                      handleCustomDaysChange(e);
+                      field.onChange(e); // This updates react-hook-form's internal state for this field
+                      handleCustomDaysChange(e); // This updates the 'customDays' state for badge display & validation
                   }}
                   disabled={!form.getValues('speciesId')}
                 />
@@ -323,34 +351,14 @@ export function BatchForm({ onSubmit, initialData }: BatchFormProps) {
           )}
         />
 
-        <Button type="submit" className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
-          {initialData ? 'Save Changes' : 'Create Batch'}
-        </Button>
-        {initialData && (
-          <Button type="button" variant="outline" onClick={() => {
-            if (initialData) {
-                form.reset({
-                    ...initialData,
-                    startDate: new Date(initialData.startDate),
-                    incubatorType: initialData.incubatorType || 'manual',
-                    customCandlingDaysInput: (initialData.customCandlingDays || []).join(', ') || '',
-                });
-                setCustomDays(initialData.customCandlingDays || []);
-            } else {
-                form.reset({ 
-                    name: "", 
-                    startDate: new Date(), 
-                    numberOfEggs: 10, 
-                    incubatorType: 'manual', 
-                    customCandlingDaysInput: '', 
-                    notes: '' 
-                });
-                setCustomDays([]);
-            }
-          }} className="ml-2">
+        <div className="flex items-center">
+          <Button type="submit" className="w-full md:w-auto bg-primary hover:bg-primary/90 text-primary-foreground">
+            {initialData ? 'Save Changes' : 'Create Batch'}
+          </Button>
+          <Button type="button" variant="outline" onClick={handleCancel} className="ml-2">
             Cancel
           </Button>
-        )}
+        </div>
       </form>
     </Form>
   );
