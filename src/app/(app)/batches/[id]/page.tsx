@@ -137,9 +137,9 @@ function HatchRateCalculator({ batchId }: { batchId: string }) {
           </div>
           <Button onClick={handleSetHatched}>Set Hatched</Button>
         </div>
-        <p>Total Eggs Set: <Badge variant="secondary">{batch.numberOfEggs}</Badge></p>
-        <p>Fertile Eggs (at last candling): <Badge variant="secondary">{fertileAtLastCandling}</Badge></p>
-        <p>Hatched Eggs: <Badge>{hatched}</Badge></p>
+        <div>Total Eggs Set: <Badge variant="secondary">{batch.numberOfEggs}</Badge></div>
+        <div>Fertile Eggs (at last candling): <Badge variant="secondary">{fertileAtLastCandling}</Badge></div>
+        <div>Hatched Eggs: <Badge>{hatched}</Badge></div>
         
         <div className="mt-4 pt-4 border-t">
           <h4 className="font-semibold mb-2">Calculated Hatch Rates:</h4>
