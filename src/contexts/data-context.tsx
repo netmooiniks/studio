@@ -67,7 +67,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
     }
 
     // Misting eggs, from mistingStartDay up to and including lastMistingDay
-    if (day >= species.mistingStartDay && day <= lastMistingDay) {
+    if (species.mistingStartDay <= day && day <= lastMistingDay) { // Ensure mistingStartDay is a valid start
       tasks.push({
         id: `${batch.id}-mist-${day}`,
         batchId: batch.id,
@@ -179,7 +179,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           ? doc.data().startDate.toDate().toISOString().split('T')[0] 
           : doc.data().startDate,
         candlingResults: doc.data().candlingResults || [],
-        tasks: doc.data().tasks || [],
+        tasks: (doc.data().tasks || []).map((task: Task) => ({...task, batchName: doc.data().name})), // Ensure batchName is fresh
         incubatorType: doc.data().incubatorType || 'manual',
         customCandlingDays: doc.data().customCandlingDays || [],
       } as Batch));
@@ -200,18 +200,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
     try {
-      const batchDocData = {
-        ...batchData,
-        incubatorType: batchData.incubatorType || 'manual',
+      const batchDocDataBase = {
+        ...batchData, // name, speciesId, startDate, numberOfEggs, incubatorType, customCandlingDays, notes
         candlingResults: [],
-        hatchedEggs: 0, 
-        startDate: batchData.startDate,
-        customCandlingDays: batchData.customCandlingDays || [],
+        hatchedEggs: 0,
       };
-
-      const docRef = await addDoc(collection(db, 'users', currentUser.uid, 'batches'), batchDocData);
+      // Tasks will be generated after we have an ID
+      // Temporarily cast to Omit to satisfy addDoc, tasks will be added in updateDoc
+      const docRef = await addDoc(collection(db, 'users', currentUser.uid, 'batches'), Omit<typeof batchDocDataBase, 'tasks'>);
       
-      const newTasks = generateTasksForBatch({ ...batchData, id: docRef.id, customCandlingDays: batchData.customCandlingDays || [] });
+      const newTasks = generateTasksForBatch({ 
+        id: docRef.id, 
+        name: batchData.name, 
+        startDate: batchData.startDate, 
+        speciesId: batchData.speciesId,
+        incubatorType: batchData.incubatorType,
+        customCandlingDays: batchData.customCandlingDays 
+      });
       await updateDoc(docRef, { tasks: newTasks });
 
       toast({ title: "Batch Added", description: `Batch "${batchData.name}" created.` });
@@ -228,25 +233,48 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
     try {
       const batchRef = doc(db, 'users', currentUser.uid, 'batches', batchData.id);
-      const existingBatch = batches.find(b => b.id === batchData.id);
-      let tasksToUse = batchData.tasks;
+      const existingBatchFromState = batches.find(b => b.id === batchData.id);
 
-      if (existingBatch && (
-          existingBatch.startDate !== batchData.startDate || 
-          existingBatch.speciesId !== batchData.speciesId || 
-          existingBatch.incubatorType !== batchData.incubatorType || 
-          JSON.stringify(existingBatch.customCandlingDays || []) !== JSON.stringify(batchData.customCandlingDays || [])
-        )) {
-          const batchDataForTaskGen = { 
-            ...batchData, 
-            incubatorType: batchData.incubatorType || 'manual',
-            customCandlingDays: batchData.customCandlingDays || [],
-          };
-          tasksToUse = generateTasksForBatch(batchDataForTaskGen);
+      let tasksForUpdate = batchData.tasks || []; // Start with tasks from incoming batchData
+
+      const shouldRegenerateTasks = existingBatchFromState && (
+          existingBatchFromState.startDate !== batchData.startDate ||
+          existingBatchFromState.speciesId !== batchData.speciesId ||
+          existingBatchFromState.incubatorType !== batchData.incubatorType ||
+          JSON.stringify(existingBatchFromState.customCandlingDays || []) !== JSON.stringify(batchData.customCandlingDays || [])
+      );
+
+      if (shouldRegenerateTasks) {
+          // Regenerate tasks; they will pick up the new batchData.name
+          tasksForUpdate = generateTasksForBatch({
+              id: batchData.id,
+              name: batchData.name, // new name
+              startDate: batchData.startDate,
+              speciesId: batchData.speciesId,
+              incubatorType: batchData.incubatorType,
+              customCandlingDays: batchData.customCandlingDays,
+          });
+      } else if (existingBatchFromState && existingBatchFromState.name !== batchData.name) {
+          // Tasks are not regenerated, but the name has changed.
+          // Update batchName in existing tasks (which are in batchData.tasks at this point).
+          tasksForUpdate = (batchData.tasks || []).map(task => ({
+              ...task,
+              batchName: batchData.name, // Apply the new batch name
+          }));
       }
+      // If not regenerating and name didn't change, tasksForUpdate remains batchData.tasks
+      // (which contains the original tasks with their original batchName, which is correct).
       
-      await setDoc(batchRef, { ...batchData, tasks: tasksToUse, incubatorType: batchData.incubatorType || 'manual', customCandlingDays: batchData.customCandlingDays || [] });
-       toast({ title: "Batch Updated", description: `Batch "${batchData.name}" updated.` });
+      // Ensure the batchData object being saved is complete and correct.
+      // batchData comes from EditBatchPage and should be the full intended state.
+      const finalBatchDoc = {
+        ...batchData, // Contains new name, speciesId, dates, notes, etc. from form,
+                      // and old candlingResults, hatchedEggs from batchToEdit
+        tasks: tasksForUpdate, // Contains either regenerated tasks or old tasks with updated name
+      };
+      
+      await setDoc(batchRef, finalBatchDoc);
+      toast({ title: "Batch Updated", description: `Batch "${batchData.name}" updated.` });
     } catch (error) {
       console.error("Error updating batch:", error);
       toast({ title: "Error Updating Batch", description: String(error), variant: "destructive"});
@@ -261,6 +289,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const batchRef = doc(db, 'users', currentUser.uid, 'batches', batchId);
       await deleteDoc(batchRef);
+      // Toast is handled in the component calling deleteBatch
     } catch (error) {
       console.error("Error deleting batch:", error);
       toast({ title: "Error Deleting Batch", description: String(error), variant: "destructive"});
@@ -272,6 +301,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [batches]);
 
   const getAllTasks = useCallback((): Task[] => {
+    // Ensure tasks always have the latest batchName from the batches state
     return batches.flatMap(batch => (batch.tasks || []).map(task => ({...task, batchName: batch.name})));
   }, [batches]);
 
@@ -290,10 +320,14 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const targetBatch = batches.find(b => b.id === updatedTask.batchId);
       if (!targetBatch) throw new Error("Batch not found for task update.");
 
+      // Ensure the updatedTask also has the correct batchName if it might be stale
+      const taskWithCorrectBatchName = {...updatedTask, batchName: targetBatch.name };
+
       const newTasks = (targetBatch.tasks || []).map(task => 
-        task.id === updatedTask.id ? updatedTask : task
+        task.id === taskWithCorrectBatchName.id ? taskWithCorrectBatchName : task
       );
       await updateDoc(batchRef, { tasks: newTasks });
+      // Toast is handled in the component calling updateTask
     } catch (error) {
       console.error("Error updating task:", error);
       toast({ title: "Error Updating Task", description: String(error), variant: "destructive"});
@@ -314,7 +348,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const newResults = [...(targetBatch.candlingResults || []), newResult].sort((a,b) => a.day - b.day);
       
       await updateDoc(batchRef, { candlingResults: newResults });
-    } catch (error) {
+      // Toast is handled in the component
+    } catch (error)
+ {
       console.error("Error adding candling result:", error);
       toast({ title: "Error Adding Candling", description: String(error), variant: "destructive"});
     }
@@ -328,6 +364,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     try {
       const batchRef = doc(db, 'users', currentUser.uid, 'batches', batchId);
       await updateDoc(batchRef, { hatchedEggs: count });
+      // Toast is handled in the component
     } catch (error) {
       console.error("Error setting hatched eggs:", error);
       toast({ title: "Error Setting Hatched Eggs", description: String(error), variant: "destructive"});
@@ -361,3 +398,5 @@ export const useData = (): DataContextType => {
   }
   return context;
 };
+
+    
