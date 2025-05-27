@@ -5,7 +5,7 @@ import { useData } from '@/contexts/data-context';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PlusCircle, Edit, Trash2, Eye, Layers, CalendarDays, Egg, Home } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Eye, Layers, CalendarDays, Egg, Home, Lightbulb } from 'lucide-react';
 import { SPECIES_DATA } from '@/lib/constants';
 import { format, parseISO, differenceInDays, startOfDay, addDays } from 'date-fns';
 import SpeciesIcon from '@/components/shared/species-icon';
@@ -22,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils'; // Added import
+import { cn } from '@/lib/utils';
 
 export default function BatchesPage() {
   const { batches, deleteBatch } = useData();
@@ -84,7 +84,8 @@ export default function BatchesPage() {
                 <TableHead>Name</TableHead>
                 <TableHead>Species</TableHead>
                 <TableHead className="hidden md:table-cell">Set Date</TableHead>
-                <TableHead className="text-center">Eggs</TableHead>
+                <TableHead className="text-center">Set</TableHead>
+                <TableHead className="text-center">Fertile</TableHead>
                 <TableHead className="hidden lg:table-cell text-center">Status (Day)</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -93,9 +94,6 @@ export default function BatchesPage() {
               {batches.map((batch) => {
                 const species = SPECIES_DATA[batch.speciesId];
                 const setDate = startOfDay(parseISO(batch.startDate));
-                // daysElapsedSinceSet represents how many full days have passed since the setDate.
-                // If today is setDate, daysElapsedSinceSet = 0.
-                // If today is setDate + 1 day, daysElapsedSinceSet = 1 (this is Incubation Day 1).
                 const daysElapsedSinceSet = differenceInDays(today, setDate); 
                 
                 let statusLabel: string;
@@ -117,6 +115,10 @@ export default function BatchesPage() {
                     }
                 }
 
+                const latestCandlingResult = batch.candlingResults?.length > 0 
+                  ? batch.candlingResults[batch.candlingResults.length - 1] 
+                  : null;
+                const fertileEggsDisplay = latestCandlingResult ? latestCandlingResult.fertile : '-';
 
                 return (
                   <TableRow key={batch.id}>
@@ -129,6 +131,7 @@ export default function BatchesPage() {
                     <TableCell>{species?.name || 'Unknown'}</TableCell>
                     <TableCell className="hidden md:table-cell">{format(setDate, 'MMM d, yyyy')}</TableCell>
                     <TableCell className="text-center">{batch.numberOfEggs}</TableCell>
+                    <TableCell className="text-center">{fertileEggsDisplay}</TableCell>
                     <TableCell className="hidden lg:table-cell text-center">
                        <Badge 
                           variant={statusVariant} 
