@@ -9,7 +9,7 @@ import AppHeader from '@/components/layout/header';
 import AppNavigation from '@/components/layout/navigation';
 import { DataProvider, useData } from '@/contexts/data-context';
 import { useAuth } from '@/contexts/auth-context';
-import { EggIcon } from 'lucide-react';
+import { ChronoHatchIcon } from '@/components/shared/ChronoHatchIcon'; // Changed import
 
 // New component to handle loading state from DataContext
 function AppContent({ children }: { children: ReactNode }) {
@@ -19,7 +19,7 @@ function AppContent({ children }: { children: ReactNode }) {
   if (authLoading || (currentUser && loadingData)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-        <EggIcon className="h-16 w-16 text-primary mb-4 animate-spin" />
+        <ChronoHatchIcon className="h-16 w-16 text-primary mb-4 animate-spin" /> {/* Changed Icon */}
         <p className="text-muted-foreground text-lg">Loading Application Data...</p>
       </div>
     );
@@ -42,7 +42,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     // Show a global loading spinner here if you prefer
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-        <EggIcon className="h-16 w-16 text-primary mb-4 animate-spin" />
+        <ChronoHatchIcon className="h-16 w-16 text-primary mb-4 animate-spin" /> {/* Changed Icon */}
         <p className="text-muted-foreground text-lg">Authenticating...</p>
       </div>
     );

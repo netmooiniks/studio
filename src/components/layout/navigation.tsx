@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { EggIcon, LayoutDashboard, Layers, ClipboardList, Archive, PlusCircle, BookOpen } from 'lucide-react'; // Added BookOpen
+import { LayoutDashboard, Layers, ClipboardList, Archive, PlusCircle, BookOpen } from 'lucide-react'; // Added BookOpen
 import {
   SidebarHeader,
   SidebarContent,
@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { ChronoHatchIcon } from '@/components/shared/ChronoHatchIcon'; // Changed import
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -31,7 +32,7 @@ export default function AppNavigation() {
     <>
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-sidebar-foreground">
-          <EggIcon className="h-8 w-8 text-primary" />
+          <ChronoHatchIcon className="h-8 w-8 text-primary" /> {/* Changed Icon */}
           <span className="group-data-[collapsible=icon]:hidden">ChronoHatch<sup className="text-xs font-normal align-super">©</sup></span>
         </Link>
       </SidebarHeader>

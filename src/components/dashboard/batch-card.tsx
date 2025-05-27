@@ -7,9 +7,10 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { differenceInDays, parseISO, format, addDays, startOfDay } from 'date-fns';
-import { CalendarDays, Egg, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { CalendarDays, AlertTriangle, CheckCircle2 } from 'lucide-react'; // Removed Egg
 import SpeciesIcon from '@/components/shared/species-icon';
 import { useData } from '@/contexts/data-context';
+import { ChronoHatchIcon } from '@/components/shared/ChronoHatchIcon'; // Changed import
 
 interface BatchCardProps {
   batch: Batch;
@@ -89,7 +90,7 @@ export function BatchCard({ batch }: BatchCardProps) {
           <SpeciesIcon speciesId={batch.speciesId} className="h-8 w-8 text-gray-400" />
         </div>
         <p className="text-sm text-muted-foreground flex items-center">
-          <Egg className="mr-2 h-4 w-4" /> {batch.numberOfEggs} eggs
+          <ChronoHatchIcon className="mr-2 h-4 w-4" /> {batch.numberOfEggs} eggs {/* Changed Icon */}
         </p>
         <p className="text-sm text-muted-foreground flex items-center">
           <CalendarDays className="mr-2 h-4 w-4" /> Set Date: {format(setDate, 'MMM d, yyyy')}
@@ -134,4 +135,3 @@ export function BatchCard({ batch }: BatchCardProps) {
     </Card>
   );
 }
-

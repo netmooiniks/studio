@@ -2,13 +2,14 @@
 "use client";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { EggIcon, LogOut, Sun, Moon, AlertTriangle } from "lucide-react";
+import { LogOut, Sun, Moon, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/contexts/auth-context";
 import { useData } from '@/contexts/data-context';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { format, isBefore, startOfDay, parseISO } from 'date-fns';
 import { useState, useEffect } from 'react';
+import { ChronoHatchIcon } from '@/components/shared/ChronoHatchIcon'; // Changed import
 
 // import { useTheme } from "next-themes"; // if you add dark mode toggle
 
@@ -48,7 +49,7 @@ export default function AppHeader() {
         <div className="flex items-center gap-2">
           <SidebarTrigger className="md:hidden" />
          <Link href="/" className="flex items-center gap-2 text-lg font-semibold md:text-base text-primary">
-            <EggIcon className="h-6 w-6" />
+            <ChronoHatchIcon className="h-6 w-6" /> {/* Changed Icon */}
             <span className="sr-only">ChronoHatch</span>
           </Link>
         </div>
@@ -85,4 +86,3 @@ export default function AppHeader() {
     </div>
   );
 }
-

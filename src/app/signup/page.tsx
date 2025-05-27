@@ -5,7 +5,7 @@ import { SignupForm } from "@/components/auth/signup-form";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { EggIcon } from "lucide-react";
+import { ChronoHatchIcon } from "@/components/shared/ChronoHatchIcon"; // Changed import
 
 export default function SignupPage() {
   const { currentUser, loading } = useAuth();
@@ -21,7 +21,7 @@ export default function SignupPage() {
     // Show a loading state or nothing while redirecting
      return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-            <EggIcon className="h-12 w-12 text-primary mb-4 animate-pulse" />
+            <ChronoHatchIcon className="h-12 w-12 text-primary mb-4 animate-pulse" /> {/* Changed Icon */}
             <p className="text-muted-foreground">Loading...</p>
         </div>
     );
@@ -30,7 +30,7 @@ export default function SignupPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
        <div className="mb-8 text-center">
-        <EggIcon className="h-16 w-16 text-primary mx-auto mb-4" />
+        <ChronoHatchIcon className="h-16 w-16 text-primary mx-auto mb-4" /> {/* Changed Icon */}
         <h1 className="text-3xl font-bold text-primary">ChronoHatch<sup className="text-sm font-normal align-super">©</sup></h1>
         <p className="text-muted-foreground">Join ChronoHatch and Track Your Incubation Journey</p>
       </div>
@@ -38,4 +38,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
