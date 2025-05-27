@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Poultry Incubation Guide</title>
     <link rel="icon" href="/icon.png" type="image/png" />
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Visualization & Content Choices:
         - Core Principles: Presented in collapsible accordion sections for clarity and space management. Goal: Inform. Method: HTML/CSS, JS.
@@ -16,20 +17,14 @@
         - Justification: These choices prioritize interactivity and clear presentation of dense information, making it easier for users to find and understand specific details. Chart.js is used for simple comparisons. No SVG/Mermaid used, adhering to constraints.
     -->
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: hsl(var(--background, #FFFACD)); color: hsl(var(--foreground, #333)); }
-        header { background-color: hsl(var(--primary, #008080)); color: hsl(var(--primary-foreground, white)); }
-        nav { background-color: hsl(var(--primary), #006666); } /* Slightly darker teal */
+        body { font-family: 'Inter', sans-serif; }
         .tab-button.active {
-            border-color: hsl(var(--accent, #FF7F50)); 
-            background-color: hsl(var(--accent, #FF7F50));
-            color: hsl(var(--accent-foreground, white));
+            border-color: #0D9488; /* teal-600 */
+            background-color: #0D9488; /* teal-600 */
+            color: white;
         }
         .tab-button {
-            color: hsl(var(--primary-foreground, white));
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-        }
-        .tab-button:hover {
-            background-color: hsl(var(--accent, #FF7F50), 0.8); /* Slightly transparent accent or primary lighter shade */
         }
         .content-section { display: none; }
         .content-section.active { display: block; }
@@ -52,145 +47,15 @@
             overflow: hidden;
             transition: max-height 0.3s ease-out;
         }
-        details > summary {
-            list-style: none; /* Remove default marker */
-        }
-        details > summary::-webkit-details-marker {
-            display: none; /* Remove default marker for Chrome/Safari */
-        }
         .details-marker::before {
             content: '▶';
             margin-right: 0.5rem;
             display: inline-block;
             transition: transform 0.3s ease-out;
-            color: hsl(var(--primary, #008080));
         }
         .details-open .details-marker::before {
             transform: rotate(90deg);
         }
-        .bg-white { background-color: hsl(var(--card, white)); }
-        .text-neutral-800 { color: hsl(var(--card-foreground, #262626)); }
-        .text-neutral-700 { color: hsl(var(--card-foreground), 0.9); }
-        .text-neutral-600 { color: hsl(var(--card-foreground), 0.8); }
-        .text-neutral-500 { color: hsl(var(--muted-foreground, #737373)); }
-        .text-teal-700 { color: hsl(var(--primary, #008080)); }
-        .border-stone-300 { border-color: hsl(var(--border, #d6d3d1)); }
-        .shadow-sm { box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05); }
-        .shadow-lg { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
-        .rounded-lg { border-radius: 0.5rem; }
-        .p-3 { padding: 0.75rem; }
-        .p-4 { padding: 1rem; }
-        .p-5 { padding: 1.25rem; }
-        .p-6 { padding: 1.5rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
-        .mb-3 { margin-bottom: 0.75rem; }
-        .mb-4 { margin-bottom: 1rem; }
-        .mb-6 { margin-bottom: 1.5rem; }
-        .mt-2 { margin-top: 0.5rem; }
-        .mt-4 { margin-top: 1rem; }
-        .mt-6 { margin-top: 1.5rem; }
-        .mt-8 { margin-top: 2rem; }
-        .space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.25rem; }
-        .space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.5rem; }
-        .space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: 0.75rem; }
-        .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
-        .text-center { text-align: center; }
-        .font-semibold { font-weight: 600; }
-        .font-bold { font-weight: 700; }
-        .text-lg { font-size: 1.125rem; line-height: 1.75rem; }
-        .text-xl { font-size: 1.25rem; line-height: 1.75rem; }
-        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
-        .text-3xl { font-size: 1.875rem; line-height: 2.25rem; }
-        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
-        .text-xs { font-size: 0.75rem; line-height: 1rem; }
-        .container { width: 100%; }
-        @media (min-width: 640px) { .container { max-width: 640px; } }
-        @media (min-width: 768px) { .container { max-width: 768px; } }
-        @media (min-width: 1024px) { .container { max-width: 1024px; } }
-        @media (min-width: 1280px) { .container { max-width: 1280px; } }
-        .mx-auto { margin-left: auto; margin-right: auto; }
-        .grid { display: grid; }
-        .md\\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .gap-4 { gap: 1rem; }
-        .gap-6 { gap: 1.5rem; }
-        .flex { display: flex; }
-        .flex-wrap { flex-wrap: wrap; }
-        .justify-center { justify-content: center; }
-        .justify-between { justify-content: space-between; }
-        .items-center { align-items: center; }
-        .list-disc { list-style-type: disc; }
-        .list-decimal { list-style-type: decimal; }
-        .list-inside { list-style-position: inside; }
-        .sticky { position: sticky; }
-        .top-0 { top: 0; }
-        .z-50 { z-index: 50; }
-        .overflow-x-auto { overflow-x: auto; }
-        .min-w-full { min-width: 100%; }
-        .divide-y > :not([hidden]) ~ :not([hidden]) { border-top-width: 1px; border-bottom-width: 0px; }
-        .divide-stone-200 > :not([hidden]) ~ :not([hidden]) { border-color: hsl(var(--border, #e7e5e4)); }
-        .bg-stone-50 { background-color: hsl(var(--muted, #f5f5f4)); } /* Muted background */
-        .text-amber-700 { color: #b45309; } /* amber-700 */
-        .text-amber-800 { color: #92400e; } /* amber-800 */
-        .bg-amber-50 { background-color: #fffbeb; } /* amber-50 */
-        .text-red-600 { color: #dc2626; } /* red-600 */
-        .font-medium { font-weight: 500; }
-        .cursor-pointer { cursor: pointer; }
-        .max-w-md { max-width: 28rem; }
-        .w-full { width: 100%; }
-        .focus\\:ring-teal-500:focus { --tw-ring-color: #0d9488; box-shadow: var(--tw-ring-inset) 0 0 0 calc(3px + var(--tw-ring-offset-width)) var(--tw-ring-color); }
-        .focus\\:border-teal-500:focus { border-color: #0d9488; }
-        .rounded-md { border-radius: 0.375rem; }
-        .min-h-\\[150px\\] { min-height: 150px; }
-        .min-h-\\[300px\\] { min-height: 300px; }
-        .border { border-width: 1px; }
-        .border-stone-200 { border-color: hsl(var(--border, #e7e5e4)); }
-        .bg-rose-50 { background-color: #fff1f2; } /* rose-50 */
-        .border-red-400 { border-color: #f87171; } /* red-400 */
-        .bg-red-100 { background-color: #fee2e2; } /* red-100 */
-        .border-red-600 { border-color: #dc2626; } /* red-600 */
-        .bg-neutral-200 { background-color: #e5e5e5; } /* neutral-200 for late stage */
-        .border-neutral-600 { border-color: #525252; } /* neutral-600 for late stage border */
-        .bg-neutral-500 { background-color: #737373; } /* neutral-500 for late stage embryo */
-        .bg-sky-200 { background-color: #bae6fd; } /* sky-200 for air cell */
-        .opacity-70 { opacity: 0.7; }
-        .opacity-50 { opacity: 0.5; }
-        .rounded-full { border-radius: 9999px; }
-        .rounded-t-full { border-top-left-radius: 9999px; border-top-right-radius: 9999px; }
-        .rounded-b-full { border-bottom-left-radius: 9999px; border-bottom-right-radius: 9999px; }
-        .w-4 { width: 1rem; }
-        .h-6 { height: 1.5rem; }
-        .w-20 { width: 5rem; }
-        .h-28 { height: 7rem; }
-        .w-10 { width: 2.5rem; }
-        .h-10 { height: 2.5rem; }
-        .w-3 { width: 0.75rem; }
-        .h-3 { height: 0.75rem; }
-        .w-12 { width: 3rem; }
-        .h-12 { height: 3rem; }
-        .border-2 { border-width: 2px; }
-        .border-neutral-400 { border-color: #a3a3a3; }
-        .bg-yellow-100 { background-color: #fef9c3; }
-        .bg-yellow-300 { background-color: #fde047; }
-        .flex-col { flex-direction: column; }
-        .items-end { align-items: flex-end; }
-        .justify-end { justify-content: flex-end; }
-        .justify-start { justify-content: flex-start; }
-        .justify-around { justify-content: space-around; }
-        .flex-grow { flex-grow: 1; }
-        .relative { position: relative; }
-        .absolute { position: absolute; }
-        .top-1 { top: 0.25rem; }
-        .right-1 { right: 0.25rem; }
-        .h-1\\/3 { height: 33.333333%; }
-        /* Basic CSS equivalent of Tailwind classes for critical layout */
-        * { box-sizing: border-box; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { padding: 0.5rem 1rem; text-align: left; border-bottom: 1px solid hsl(var(--border, #e7e5e4)); }
-        thead th { background-color: hsl(var(--muted, #f5f5f4)); font-weight: 500; text-transform: uppercase; font-size: 0.75rem; }
-        tbody tr:nth-child(even) { background-color: hsl(var(--muted, #f5f5f4), 0.5); }
-
-        /* Ensure Chart.js canvas is visible */
-        canvas { display: block; max-width: 100%; height: auto; }
     </style>
 </head>
 <body class="bg-stone-100 text-neutral-800">
@@ -326,29 +191,29 @@
                  <div class="flex flex-wrap justify-around items-center gap-4">
                     <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Infertile (Clear)</p>
-                        <div class="w-20 h-28 border-2 border-neutral-400 rounded-full mx-auto bg-yellow-200 flex items-center justify-center"> {/* Darker yellow-100 */}
-                            <div class="w-10 h-10 bg-yellow-400 rounded-full opacity-50"></div> {/* Darker yellow-300 */}
+                        <div class="w-20 h-28 border-2 border-neutral-400 rounded-full mx-auto bg-yellow-200 flex items-center justify-center">
+                            <div class="w-10 h-10 bg-yellow-400 rounded-full opacity-60"></div>
                         </div>
                     </div>
                     <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Early Viable (Day 5-7)</p>
-                        <div class="w-20 h-28 border-2 border-red-400 rounded-full mx-auto bg-rose-100 flex flex-col items-center justify-end p-1 relative"> {/* Darker rose-50 */}
-                            <div class="absolute top-1 right-1 w-4 h-6 bg-sky-300 opacity-70 rounded-full"></div> {/* Darker sky-200 */}
-                            <div class="w-3 h-3 bg-red-500 rounded-full mb-1"></div>
-                            <div class="text-red-500 text-xs">Veins</div> {/* Replaced emoji */}
+                        <div class="w-20 h-28 border-2 border-red-500 rounded-full mx-auto bg-rose-100 flex flex-col items-center justify-end p-1 relative">
+                            <div class="absolute top-1 right-1 w-4 h-6 bg-sky-300 opacity-80 rounded-full"></div>
+                            <div class="w-3 h-3 bg-red-600 rounded-full mb-1"></div>
+                            <div class="text-red-600 text-xs">Veins</div>
                         </div>
                     </div>
                     <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Blood Ring</p>
-                        <div class="w-20 h-28 border-2 border-red-600 rounded-full mx-auto bg-red-200 flex items-center justify-center"> {/* Darker red-100 */}
-                            <div class="w-12 h-12 border-2 border-red-500 rounded-full"></div>
+                        <div class="w-20 h-28 border-2 border-red-700 rounded-full mx-auto bg-red-200 flex items-center justify-center">
+                            <div class="w-12 h-12 border-2 border-red-600 rounded-full"></div>
                         </div>
                     </div>
                      <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Late Stage (Pre-Lockdown)</p>
-                        <div class="w-20 h-28 border-2 border-neutral-600 rounded-full mx-auto bg-neutral-300 flex flex-col items-center justify-start p-1"> {/* Darker neutral-200 */}
-                            <div class="w-full h-1/3 bg-sky-300 opacity-70 rounded-t-full"></div> {/* Darker sky-200 */}
-                            <div class="flex-grow w-full bg-neutral-600 rounded-b-full"></div> {/* Darker neutral-500 */}
+                        <div class="w-20 h-28 border-2 border-neutral-700 rounded-full mx-auto bg-neutral-300 flex flex-col items-center justify-start p-1">
+                            <div class="w-full h-1/3 bg-sky-300 opacity-80 rounded-t-full"></div>
+                            <div class="flex-grow w-full bg-neutral-600 rounded-b-full"></div>
                         </div>
                          <p class="text-xs text-neutral-500 mt-1">Large air cell, dark embryo</p>
                     </div>
@@ -591,6 +456,9 @@
             const candlingTableBody = document.getElementById('candling-table-body');
             const troubleshootingTableBody = document.getElementById('troubleshooting-table-body');
 
+            const formatTextWithSuperscript = (text) => {
+                return text.replace(/(\d+(\.\d+)?)°C/g, '$1<sup>°</sup>C').replace(/(\d+(\.\d+)?)°F/g, '$1<sup>°</sup>F');
+            };
 
             // Populate species select
             for (const speciesName in speciesData) {
@@ -615,9 +483,9 @@
             troubleshootingData.forEach(item => {
                 const row = troubleshootingTableBody.insertRow();
                 row.innerHTML = `
-                    <td class="px-4 py-2">${item.symptom}</td>
-                    <td class="px-4 py-2">${item.causes}</td>
-                    <td class="px-4 py-2">${item.measures}</td>
+                    <td class="px-4 py-2">${formatTextWithSuperscript(item.symptom)}</td>
+                    <td class="px-4 py-2">${formatTextWithSuperscript(item.causes)}</td>
+                    <td class="px-4 py-2">${formatTextWithSuperscript(item.measures)}</td>
                 `;
             });
 
@@ -645,11 +513,11 @@
                         <h3 class="text-xl font-bold text-teal-700 mb-3">${selectedSpecies}</h3>
                         <div class="grid md:grid-cols-2 gap-4 text-neutral-700">
                             <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
-                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC.replace(/\^\\circ C/g, '<sup>°</sup>C')}</div>
-                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${data.stillAirTempC.replace(/\^\\circ C/g, '<sup>°</sup>C')}</div>
-                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${data.settingHumidity.replace(/\^\\circ C/g, '<sup>°</sup>C')}</div>
-                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${data.lockdownHumidity.replace(/\^\\circ C/g, '<sup>°</sup>C')}</div>
-                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${formatTextWithSuperscript(data.forcedAirTempC)}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${formatTextWithSuperscript(data.stillAirTempC)}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${formatTextWithSuperscript(data.settingHumidity)}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${formatTextWithSuperscript(data.lockdownHumidity)}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> Day ${data.turnStopDay}</div>
                             <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
                             <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
                         </div>
@@ -679,27 +547,23 @@
             accordionSummaries.forEach(summary => {
                 summary.addEventListener('click', (event) => {
                     const detailElement = summary.parentElement;
-                    // Toggle open class for marker styling
                     if (detailElement.hasAttribute('open')) {
-                        event.preventDefault(); // Prevent closing if already open by summary click
+                        event.preventDefault(); 
                         detailElement.removeAttribute('open');
                         summary.classList.remove('details-open');
                         detailElement.querySelector('.accordion-content').style.maxHeight = null;
                     } else {
-                        // For opening: default behavior of <details> handles 'open' attribute
                         summary.classList.add('details-open');
                         const content = detailElement.querySelector('.accordion-content');
                         content.style.maxHeight = content.scrollHeight + "px";
                     }
                 });
             });
-             // Set initial max-height for already open details elements (e.g. if user navigates back)
             document.querySelectorAll('details[open]').forEach(detailElement => {
                 detailElement.querySelector('summary').classList.add('details-open');
                 const content = detailElement.querySelector('.accordion-content');
-                content.style.maxHeight = content.scrollHeight + "px";
+                if (content) content.style.maxHeight = content.scrollHeight + "px";
             });
-
 
             // Incubation Periods Chart
             const speciesNames = Object.keys(speciesData);
@@ -712,7 +576,6 @@
             const chartColors = [
                 '#4F46E5', '#0D9488', '#DB2777', '#F59E0B', '#10B981', '#6366F1', '#EC4899' 
             ];
-
 
             new Chart(document.getElementById('incubationPeriodsChart'), {
                 type: 'bar',
@@ -741,7 +604,7 @@
                                 minRotation: 45,
                                 callback: function(value, index, values) {
                                     let label = this.getLabelForValue(value);
-                                    if (label.length > 10) {
+                                    if (label.length > 10) { 
                                         return label.match(/.{1,10}/g); 
                                     }
                                     return label;
@@ -761,20 +624,7 @@
                     }
                 }
             });
-             // Fix temperatures in dynamically generated species info
-            const originalSpeciesSelectChange = speciesSelect.onchange;
-            speciesSelect.onchange = function(event) {
-                if (originalSpeciesSelectChange) {
-                    originalSpeciesSelectChange.call(this, event);
-                }
-                // After original handler populates speciesInfoDiv, fix the temperatures
-                const speciesInfoDiv = document.getElementById('species-info');
-                if (speciesInfoDiv) {
-                    speciesInfoDiv.innerHTML = speciesInfoDiv.innerHTML.replace(/\^\\circ C/g, '<sup>°</sup>C');
-                }
-            };
         });
     </script>
 </body>
 </html>
-
