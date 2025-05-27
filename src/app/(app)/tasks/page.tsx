@@ -39,7 +39,8 @@ export default function TasksPage() {
       filteredTasks = allTasks.filter(task => task.date === formattedSelectedDate);
     }
 
-    return filteredTasks.sort((a, b) => {
+    // Ensure a new array is returned after sorting
+    return [...filteredTasks].sort((a, b) => {
       const dateA = parseISO(a.date).getTime();
       const dateB = parseISO(b.date).getTime();
       if (dateA !== dateB) return dateA - dateB; // Sort by date first
@@ -162,3 +163,4 @@ export default function TasksPage() {
     </div>
   );
 }
+
