@@ -40,6 +40,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 // Helper to escape special characters for RegExp
 const escapeRegExp = (string: string): string => {
+  if (typeof string !== 'string' || string.length === 0) return '';
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 };
 
@@ -65,7 +66,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchName: batch.name,
         date: formattedDate,
         dayOfIncubation: day, // 0-indexed
-        description: `Turn eggs for ${batch.name}`,
+        description: `Turn eggs`,
         type: 'turn',
         completed: false,
       });
@@ -79,7 +80,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchName: batch.name,
         date: formattedDate,
         dayOfIncubation: day, // 0-indexed
-        description: `Mist eggs for ${batch.name}`,
+        description: `Mist eggs`,
         type: 'mist',
         completed: false,
       });
@@ -93,7 +94,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchName: batch.name,
         date: formattedDate,
         dayOfIncubation: day, // 0-indexed
-        description: `Candle eggs for ${batch.name} (Day ${day})`,
+        description: `Candle eggs (Day ${day})`,
         type: 'candle',
         completed: false,
       });
@@ -107,7 +108,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchName: batch.name,
         date: formattedDate,
         dayOfIncubation: day, // 0-indexed
-        description: `Custom candle eggs for ${batch.name} (Day ${day})`,
+        description: `Custom candle eggs (Day ${day})`,
         type: 'candle',
         completed: false,
       });
@@ -121,7 +122,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchName: batch.name,
         date: formattedDate,
         dayOfIncubation: day, // 0-indexed
-        description: `Lockdown for ${batch.name}. Stop turning/misting. Increase humidity.`,
+        description: `Lockdown. Stop turning/misting. Increase humidity.`,
         type: 'lockdown',
         completed: false,
       });
@@ -132,7 +133,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
         batchName: batch.name,
         date: formattedDate,
         dayOfIncubation: day, // 0-indexed
-        description: `Final candling for ${batch.name} before lockdown (Day ${day})`,
+        description: `Final candling before lockdown (Day ${day})`,
         type: 'candle',
         completed: false,
       });
@@ -148,7 +149,7 @@ const generateTasksForBatch = (batch: Pick<Batch, 'id' | 'name' | 'startDate' | 
             batchName: batch.name,
             date: formattedDate,
             dayOfIncubation: day, // 0-indexed
-            description: `Check for hatching in ${batch.name} (Day ${day})`,
+            description: `Check for hatching (Day ${day})`,
             type: 'hatch_check',
             completed: false,
         });
@@ -188,21 +189,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             : batchDataFromDoc.startDate,
           candlingResults: batchDataFromDoc.candlingResults || [],
           tasks: (batchDataFromDoc.tasks || []).map((task: Task) => {
-            let updatedDescription = task.description;
-            // Ensure task.batchName (from DB) and task.description are valid strings
-            const taskBatchNameStr = typeof task.batchName === 'string' ? task.batchName : '';
-            const taskDescriptionStr = typeof task.description === 'string' ? task.description : '';
-
-            if (taskBatchNameStr && taskBatchNameStr !== currentBatchName) {
-              if (taskDescriptionStr.toLowerCase().includes(taskBatchNameStr.toLowerCase())) { // Case-insensitive check
-                const oldNameRegex = new RegExp(escapeRegExp(taskBatchNameStr), 'gi'); // Case-insensitive global replace
-                updatedDescription = taskDescriptionStr.replace(oldNameRegex, currentBatchName);
-              }
-            }
+            // Ensure task.batchName is current, description is left as is (or as generated)
             return {
               ...task, 
               batchName: currentBatchName,
-              description: updatedDescription 
             };
           }),
           incubatorType: batchDataFromDoc.incubatorType || 'manual',
@@ -244,7 +234,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
       await updateDoc(docRef, { tasks: newTasks });
 
-      toast({ title: "Batch Added", description: `Batch "${batchData.name}" created.` });
+      // toast({ title: "Batch Added", description: `Batch "${batchData.name}" created.` }); // Toast handled by new batch page
     } catch (error) {
       console.error("Error adding batch:", error);
       toast({ title: "Error Adding Batch", description: String(error), variant: "destructive"});
@@ -279,30 +269,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               customCandlingDays: batchData.customCandlingDays,
           });
       } else if (existingBatchFromState && existingBatchFromState.name !== batchData.name) {
-          const oldBatchName = existingBatchFromState.name;
+          // Only update batchName in tasks if name changed and tasks are not regenerated
           const newBatchName = batchData.name;
-          
-          // Ensure oldBatchName is a non-empty string before creating RegExp
-          if (typeof oldBatchName === 'string' && oldBatchName.trim() !== '') {
-            const escapedOldBatchName = escapeRegExp(oldBatchName);
-            const oldBatchNameRegex = new RegExp(escapedOldBatchName, 'gi'); // Case-insensitive global replacement
-
-            tasksForUpdate = (existingBatchFromState.tasks || []).map(t => {
-              const originalDescription = typeof t.description === 'string' ? t.description : '';
-              const updatedDescription = originalDescription.replace(oldBatchNameRegex, newBatchName);
-              return {
-                ...t,
-                batchName: newBatchName, 
-                description: updatedDescription, 
-              };
-            });
-          } else {
-            // If oldBatchName is invalid, just update task.batchName
-             tasksForUpdate = (existingBatchFromState.tasks || []).map(t => ({
-                ...t,
-                batchName: newBatchName,
-             }));
-          }
+          tasksForUpdate = (existingBatchFromState.tasks || []).map(t => ({
+              ...t,
+              batchName: newBatchName,
+              // Description remains as generated, or as it was
+          }));
       }
       
       const finalBatchDoc = {
@@ -311,7 +284,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       };
       
       await setDoc(batchRef, finalBatchDoc);
-      toast({ title: "Batch Updated", description: `Batch "${batchData.name}" updated.` });
+      // toast({ title: "Batch Updated", description: `Batch "${batchData.name}" updated.` }); // Toast handled by edit batch page
     } catch (error) {
       console.error("Error updating batch:", error);
       toast({ title: "Error Updating Batch", description: String(error), variant: "destructive"});
@@ -320,7 +293,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const deleteBatch = useCallback(async (batchId: string) => {
     if (!currentUser) {
-      toast({ title: "Not Authenticated", description: "You must be logged in to delete a batch.", variant: "destructive" });
+      // toast({ title: "Not Authenticated", description: "You must be logged in to delete a batch.", variant: "destructive" }); // Toast handled by batches page
       return;
     }
     try {
@@ -340,16 +313,8 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return batches.flatMap(batch => {
       const currentBatchName = batch.name;
       return (batch.tasks || []).map(task => {
-        let updatedDescription = typeof task.description === 'string' ? task.description : '';
-        const taskSpecificBatchName = typeof task.batchName === 'string' ? task.batchName : '';
-
-        if (taskSpecificBatchName && taskSpecificBatchName !== currentBatchName) {
-          if (updatedDescription.toLowerCase().includes(taskSpecificBatchName.toLowerCase())) {
-            const oldNameRegex = new RegExp(escapeRegExp(taskSpecificBatchName), 'gi');
-            updatedDescription = updatedDescription.replace(oldNameRegex, currentBatchName);
-          }
-        }
-        return {...task, batchName: currentBatchName, description: updatedDescription };
+        // Ensure task.batchName is current, description is left as is
+        return {...task, batchName: currentBatchName };
       });
     });
   }, [batches]);
@@ -361,7 +326,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateTask = useCallback(async (updatedTask: Task) => {
     if (!currentUser) {
-      toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" });
+      // toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" }); // Toast handled by caller
       return;
     }
     try {
@@ -370,20 +335,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!targetBatch) throw new Error("Batch not found for task update.");
       
       const currentBatchName = targetBatch.name;
-      let taskDescription = typeof updatedTask.description === 'string' ? updatedTask.description : '';
-      const taskSpecificBatchName = typeof updatedTask.batchName === 'string' ? updatedTask.batchName : '';
-      
-      if (taskSpecificBatchName && taskSpecificBatchName !== currentBatchName) {
-        if (taskDescription.toLowerCase().includes(taskSpecificBatchName.toLowerCase())) {
-            const oldNameRegex = new RegExp(escapeRegExp(taskSpecificBatchName), 'gi');
-            taskDescription = taskDescription.replace(oldNameRegex, currentBatchName);
-        }
-      }
-      
-      const taskWithCorrectBatchNameAndDesc = {...updatedTask, batchName: currentBatchName, description: taskDescription };
+      // Ensure task.batchName is current, description is left as is
+      const taskWithCorrectBatchName = {...updatedTask, batchName: currentBatchName };
 
       const newTasks = (targetBatch.tasks || []).map(task => 
-        task.id === taskWithCorrectBatchNameAndDesc.id ? taskWithCorrectBatchNameAndDesc : task
+        task.id === taskWithCorrectBatchName.id ? taskWithCorrectBatchName : task
       );
       await updateDoc(batchRef, { tasks: newTasks });
     } catch (error) {
@@ -394,7 +350,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const addCandlingResult = useCallback(async (batchId: string, day: number, fertile: number, notes?: string) => {
     if (!currentUser) {
-      toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" });
+      // toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" }); // Toast handled by caller
       return;
     }
     try {
@@ -415,7 +371,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   const setHatchedEggs = useCallback(async (batchId: string, count: number) => {
     if (!currentUser) {
-      toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" });
+      // toast({ title: "Not Authenticated", description: "You must be logged in.", variant: "destructive" }); // Toast handled by caller
       return;
     }
     try {
@@ -454,3 +410,6 @@ export const useData = (): DataContextType => {
   }
   return context;
 };
+
+
+    
