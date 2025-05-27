@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Poultry Incubation Guide</title>
-    <!-- Tailwind CSS is already part of the main Next.js app, so CDN link is removed -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Visualization & Content Choices:
         - Core Principles: Presented in collapsible accordion sections for clarity and space management. Goal: Inform. Method: HTML/CSS, JS.
@@ -16,32 +16,14 @@
         - Justification: These choices prioritize interactivity and clear presentation of dense information, making it easier for users to find and understand specific details. Chart.js is used for simple comparisons. No SVG/Mermaid used, adhering to constraints.
     -->
     <style>
-        body { font-family: 'Inter', sans-serif; color: hsl(var(--foreground)); background-color: hsl(var(--background)); }
+        body { font-family: 'Inter', sans-serif; }
         .tab-button.active {
-            border-color: hsl(var(--primary)); /* teal-600 */
-            background-color: hsl(var(--primary)); /* teal-600 */
-            color: hsl(var(--primary-foreground));
+            border-color: #0D9488; /* teal-600 */
+            background-color: #0D9488; /* teal-600 */
+            color: white;
         }
         .tab-button {
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
-            color: hsl(var(--primary-foreground));
-        }
-        .tab-button:hover {
-            background-color: hsl(var(--primary) / 0.8);
-        }
-        nav {
-            background-color: hsl(var(--primary) / 0.9); /* Slightly lighter primary for nav */
-        }
-        header {
-             background-color: hsl(var(--primary));
-             color: hsl(var(--primary-foreground));
-        }
-        footer {
-            background-color: hsl(var(--primary));
-            color: hsl(var(--primary-foreground) / 0.8);
-        }
-        h2, h3 {
-            color: hsl(var(--primary));
         }
         .content-section { display: none; }
         .content-section.active { display: block; }
@@ -64,14 +46,6 @@
             overflow: hidden;
             transition: max-height 0.3s ease-out;
         }
-        details {
-            background-color: hsl(var(--card));
-            color: hsl(var(--card-foreground));
-            border: 1px solid hsl(var(--border));
-        }
-        summary {
-            color: hsl(var(--card-foreground));
-        }
         .details-marker::before {
             content: '▶';
             margin-right: 0.5rem;
@@ -81,25 +55,6 @@
         .details-open .details-marker::before {
             transform: rotate(90deg);
         }
-        /* Tailwind classes from main app will apply, these are fallbacks or overrides if needed */
-        .bg-stone-100 { background-color: hsl(var(--background));}
-        .text-neutral-800 { color: hsl(var(--foreground));}
-        .bg-teal-700 { background-color: hsl(var(--primary));}
-        .text-white { color: hsl(var(--primary-foreground));}
-        .bg-teal-600 { background-color: hsl(var(--primary)/0.9); }
-        .text-neutral-700 { color: hsl(var(--card-foreground));}
-        .text-teal-700 { color: hsl(var(--primary));}
-        .bg-white { background-color: hsl(var(--card)); }
-        .text-neutral-600 { color: hsl(var(--card-foreground)/0.9); }
-        .border-stone-300 { border-color: hsl(var(--border)); }
-        .text-neutral-500 { color: hsl(var(--muted-foreground)); }
-        .bg-amber-500 { background-color: hsl(var(--accent)); }
-        .hover\:bg-amber-600:hover { background-color: hsl(var(--accent)/0.9); }
-        .border-stone-200 { border-color: hsl(var(--border)/0.8); }
-        .bg-stone-50 { background-color: hsl(var(--muted)/0.5); }
-        .text-amber-700 { color: hsl(var(--accent-foreground)); background-color: hsl(var(--accent)/0.7); padding: 0.25rem; border-radius: 0.25rem;} /* Adjusted for visibility */
-        .text-red-600 { color: hsl(var(--destructive)); }
-
     </style>
 </head>
 <body class="bg-stone-100 text-neutral-800">
@@ -109,12 +64,12 @@
 
     <nav class="bg-teal-600 p-4 sticky top-0 z-50 shadow">
         <ul class="flex flex-wrap justify-center space-x-2 sm:space-x-4">
-            <li><button data-tab="overview" class="tab-button active text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Overview</button></li>
-            <li><button data-tab="species" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Species Deep Dive</button></li>
-            <li><button data-tab="candling" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Candling Master</button></li>
-            <li><button data-tab="cooling" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Cooling & Misting</button></li>
-            <li><button data-tab="troubleshooting" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Troubleshooting</button></li>
-            <li><button data-tab="surehatch" class="tab-button text-sm sm:text-base font-medium hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">SureHatch Notes</button></li>
+            <li><button data-tab="overview" class="tab-button active text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Overview</button></li>
+            <li><button data-tab="species" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Species Deep Dive</button></li>
+            <li><button data-tab="candling" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Candling Master</button></li>
+            <li><button data-tab="cooling" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Cooling & Misting</button></li>
+            <li><button data-tab="troubleshooting" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">Troubleshooting</button></li>
+            <li><button data-tab="surehatch" class="tab-button text-sm sm:text-base font-medium text-white hover:bg-teal-500 py-2 px-3 sm:px-4 rounded-md">SureHatch Notes</button></li>
         </ul>
     </nav>
 
@@ -235,29 +190,29 @@
                  <div class="flex flex-wrap justify-around items-center gap-4">
                     <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Infertile (Clear)</p>
-                        <div class="w-20 h-28 border-2 border-neutral-400 rounded-full mx-auto bg-yellow-100 flex items-center justify-center">
-                            <div class="w-10 h-10 bg-yellow-300 rounded-full opacity-50"></div>
+                        <div class="w-20 h-28 border-2 border-neutral-400 rounded-full mx-auto bg-yellow-200 flex items-center justify-center">
+                            <div class="w-10 h-10 bg-yellow-400 rounded-full opacity-60"></div>
                         </div>
                     </div>
                     <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Early Viable (Day 5-7)</p>
-                        <div class="w-20 h-28 border-2 border-red-400 rounded-full mx-auto bg-rose-50 flex flex-col items-center justify-end p-1 relative">
-                            <div class="absolute top-1 right-1 w-4 h-6 bg-sky-200 opacity-70 rounded-full"></div>
-                            <div class="w-3 h-3 bg-red-500 rounded-full mb-1"></div>
-                            <div class="text-red-500 text-xs">🕸️ Veins</div>
+                        <div class="w-20 h-28 border-2 border-red-400 rounded-full mx-auto bg-rose-100 flex flex-col items-center justify-end p-1 relative">
+                            <div class="absolute top-1 right-1 w-4 h-6 bg-sky-300 opacity-70 rounded-full"></div>
+                            <div class="w-3 h-3 bg-red-600 rounded-full mb-1"></div>
+                            <div class="text-red-600 text-xs">Veins</div>
                         </div>
                     </div>
                     <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Blood Ring</p>
-                        <div class="w-20 h-28 border-2 border-red-600 rounded-full mx-auto bg-red-100 flex items-center justify-center">
+                        <div class="w-20 h-28 border-2 border-red-600 rounded-full mx-auto bg-red-200 flex items-center justify-center">
                             <div class="w-12 h-12 border-2 border-red-500 rounded-full"></div>
                         </div>
                     </div>
                      <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Late Stage (Pre-Lockdown)</p>
-                        <div class="w-20 h-28 border-2 border-neutral-600 rounded-full mx-auto bg-neutral-200 flex flex-col items-center justify-start p-1">
-                            <div class="w-full h-1/3 bg-sky-200 opacity-70 rounded-t-full"></div>
-                            <div class="flex-grow w-full bg-neutral-500 rounded-b-full"></div>
+                        <div class="w-20 h-28 border-2 border-neutral-600 rounded-full mx-auto bg-neutral-300 flex flex-col items-center justify-start p-1">
+                            <div class="w-full h-1/3 bg-sky-300 opacity-70 rounded-t-full"></div>
+                            <div class="flex-grow w-full bg-neutral-600 rounded-b-full"></div>
                         </div>
                          <p class="text-xs text-neutral-500 mt-1">Large air cell, dark embryo</p>
                     </div>
@@ -384,10 +339,10 @@
         const speciesData = {
             "Chicken": {
                 period: "21 days",
-                forcedAirTempC: "37.5-38.0<sup>°</sup>C",
-                stillAirTempC: "38.0-38.9<sup>°</sup>C (or graded)",
-                settingHumidity: "50-60% RH / 83-87<sup>°</sup>F WB (approx. 28.3-30.5<sup>°</sup>C WB)",
-                lockdownHumidity: "65-75% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
+                forcedAirTempC: "37.5-38.0°C",
+                stillAirTempC: "38.0-38.9°C (or graded)",
+                settingHumidity: "50-60% RH / 83-87°F WB (approx. 28.3-30.5°C WB)",
+                lockdownHumidity: "65-75% RH / 90°F WB (approx. 32.2°C WB)",
                 turnStopDay: "18",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "3-7, 14, 18",
@@ -395,10 +350,10 @@
             },
             "Turkey": {
                 period: "28 days",
-                forcedAirTempC: "37.2-37.5<sup>°</sup>C",
-                stillAirTempC: "37.8-38.6<sup>°</sup>C",
-                settingHumidity: "45-60% RH / 84-86<sup>°</sup>F WB (approx. 28.9-30<sup>°</sup>C WB)",
-                lockdownHumidity: "65-70% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
+                forcedAirTempC: "37.2-37.5°C",
+                stillAirTempC: "37.8-38.6°C",
+                settingHumidity: "45-60% RH / 84-86°F WB (approx. 28.9-30°C WB)",
+                lockdownHumidity: "65-70% RH / 90°F WB (approx. 32.2°C WB)",
                 turnStopDay: "25",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "7-10, 14, 25 (Air cell ~1/3)",
@@ -406,10 +361,10 @@
             },
             "Pekin Duck": {
                 period: "28 days",
-                forcedAirTempC: "37.4-37.7<sup>°</sup>C",
-                stillAirTempC: "38.0-38.9<sup>°</sup>C",
-                settingHumidity: "55-60% RH / 84.5-86<sup>°</sup>F WB (approx. 29.2-30<sup>°</sup>C WB)",
-                lockdownHumidity: "65-81% RH (staged) / 88-94<sup>°</sup>F WB (approx. 31.1-34.4<sup>°</sup>C WB)",
+                forcedAirTempC: "37.4-37.7°C",
+                stillAirTempC: "38.0-38.9°C",
+                settingHumidity: "55-60% RH / 84.5-86°F WB (approx. 29.2-30°C WB)",
+                lockdownHumidity: "65-81% RH (staged) / 88-94°F WB (approx. 31.1-34.4°C WB)",
                 turnStopDay: "25",
                 coolingMistingStart: "Yes (Day 7-10)",
                 candlingDays: "5-7, 10, 25 (Air cell ~1/3). Target 13-14% weight loss by Day 25.",
@@ -417,10 +372,10 @@
             },
             "Muscovy Duck": {
                 period: "33-37 days (avg. 35)",
-                forcedAirTempC: "37.5-37.6<sup>°</sup>C",
-                stillAirTempC: "38.1-38.9<sup>°</sup>C",
-                settingHumidity: "Highly Variable: 25-60% RH (Dry Hatch to 58%) / 85-86<sup>°</sup>F WB (approx. 29.4-30<sup>°</sup>C WB)",
-                lockdownHumidity: "Highly Variable: 66-83% RH or Baggie Method / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
+                forcedAirTempC: "37.5-37.6°C",
+                stillAirTempC: "38.1-38.9°C",
+                settingHumidity: "Highly Variable: 25-60% RH (Dry Hatch to 58%) / 85-86°F WB (approx. 29.4-30°C WB)",
+                lockdownHumidity: "Highly Variable: 66-83% RH or Baggie Method / 90°F WB (approx. 32.2°C WB)",
                 turnStopDay: "31-32",
                 coolingMistingStart: "Yes (Day 1-10, variable freq.)",
                 candlingDays: "7-10, then ~weekly, lockdown. Air cell ~1/3 by pip. Target 2.8% weekly weight loss.",
@@ -428,10 +383,10 @@
             },
             "Goose (General)": {
                 period: "28-35 days",
-                forcedAirTempC: "37.2-37.7<sup>°</sup>C",
-                stillAirTempC: "38.0-39.4<sup>°</sup>C (or graded)",
-                settingHumidity: "Highly Variable (Breed dependent): 20-55% RH / 86-88<sup>°</sup>F WB (approx. 30-31.1<sup>°</sup>C WB)",
-                lockdownHumidity: "65-75%+ RH / 90-92<sup>°</sup>F WB (approx. 32.2-33.3<sup>°</sup>C WB)",
+                forcedAirTempC: "37.2-37.7°C",
+                stillAirTempC: "38.0-39.4°C (or graded)",
+                settingHumidity: "Highly Variable (Breed dependent): 20-55% RH / 86-88°F WB (approx. 30-31.1°C WB)",
+                lockdownHumidity: "65-75%+ RH / 90-92°F WB (approx. 32.2-33.3°C WB)",
                 turnStopDay: "25-27",
                 coolingMistingStart: "Yes (Day 4-8)",
                 candlingDays: "5-7, 10, then ~weekly/daily near pip. Monitor air cell 'dip'. Target 14-17% weight loss by pip.",
@@ -439,10 +394,10 @@
             },
             "Coturnix Quail": {
                 period: "17-18 days",
-                forcedAirTempC: "37.5-37.8<sup>°</sup>C",
-                stillAirTempC: "38.0-38.3<sup>°</sup>C (or graded)",
-                settingHumidity: "40-55% RH / 85-86<sup>°</sup>F WB (approx. 29.4-30<sup>°</sup>C WB)",
-                lockdownHumidity: "50-75% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
+                forcedAirTempC: "37.5-37.8°C",
+                stillAirTempC: "38.0-38.3°C (or graded)",
+                settingHumidity: "40-55% RH / 85-86°F WB (approx. 29.4-30°C WB)",
+                lockdownHumidity: "50-75% RH / 90°F WB (approx. 32.2°C WB)",
                 turnStopDay: "14-15",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "7-10, 14 (if candled). Heartbeat Day 3, fully developed Day 15.",
@@ -450,10 +405,10 @@
             },
             "Bobwhite Quail": {
                 period: "23-24 days",
-                forcedAirTempC: "37.5-37.8<sup>°</sup>C",
-                stillAirTempC: "~38.9<sup>°</sup>C",
-                settingHumidity: "40-60% RH / 84-87<sup>°</sup>F WB (approx. 28.9-30.5<sup>°</sup>C WB)",
-                lockdownHumidity: "50-75% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
+                forcedAirTempC: "37.5-37.8°C",
+                stillAirTempC: "~38.9°C",
+                settingHumidity: "40-60% RH / 84-87°F WB (approx. 28.9-30.5°C WB)",
+                lockdownHumidity: "50-75% RH / 90°F WB (approx. 32.2°C WB)",
                 turnStopDay: "20-21",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "12-15. Pips into air cell Day 22.",
@@ -472,7 +427,7 @@
         ];
 
         const troubleshootingData = [
-            { symptom: "Clear Eggs (No Embryonic Development)", causes: "Infertile males; Old/improperly stored eggs; Environmental damage.", measures: "Improve breeder management; Use fresh eggs (store <7-10 days at 10-15<sup>°</sup>C, 60-75% RH)." },
+            { symptom: "Clear Eggs (No Embryonic Development)", causes: "Infertile males; Old/improperly stored eggs; Environmental damage.", measures: "Improve breeder management; Use fresh eggs (store <7-10 days at 10-15°C, 60-75% RH)." },
             { symptom: "Blood Rings in Eggs", causes: "Improper egg storage; Incorrect incubation temperatures (too high/low); Poor breeder nutrition.", measures: "Follow storage guidelines; Calibrate thermometer, maintain stable temp; Balanced breeder diet." },
             { symptom: "Early Embryonic Death (First Few Days)", causes: "Incorrect temp (often too high); Improper turning; Poor ventilation; Breeder diseases.", measures: "Stable, correct temp; Turn 3-5+ times/day; Adequate ventilation; Healthy stock." },
             { symptom: "Mid-Term Embryonic Death", causes: "Incorrect temp; Improper ventilation; Nutritional deficiencies; Contamination.", measures: "Stable, correct temp; Adequate ventilation; Balanced breeder diet; Incubator sanitation." },
