@@ -5,6 +5,7 @@ import { GeistSans } from 'geist/font/sans';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
+import GoogleAnalytics from '@/components/analytics/GoogleAnalytics';
 
 export const metadata: Metadata = {
   title: 'ChronoHatch© - Egg Incubation Manager',
@@ -19,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${GeistSans.variable} font-sans antialiased`}>
+        {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics />}
         <AuthProvider>
           {children}
           <Toaster />
@@ -27,4 +29,3 @@ export default function RootLayout({
     </html>
   );
 }
-
