@@ -10,7 +10,14 @@ import AppNavigation from '@/components/layout/navigation';
 import { DataProvider, useData } from '@/contexts/data-context';
 import { useAuth } from '@/contexts/auth-context';
 import Image from 'next/image';
-import { AlertCircle } from 'lucide-react';
+import { Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // New component to handle loading state from DataContext
 function AppContent({ children }: { children: ReactNode }) {
@@ -49,6 +56,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     );
   }
 
+  const disclaimerText = "ChronoHatch© is intended for informational and tracking purposes only. It has been designed using common best practices for egg incubation management. However, always consult multiple expert sources and adapt procedures to your specific equipment, environment, and species. The developers are not responsible for any outcomes resulting from the use of this application. Use with your own discretion.";
+
   return (
     <DataProvider>
       <SidebarProvider>
@@ -60,19 +69,25 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <main className="flex-1 p-4 md:p-6 lg:p-8">
             <AppContent>{children}</AppContent>
           </main>
-          <footer className="px-4 md:px-6 lg:px-8 pb-4">
-            <div className="mt-8 p-4 border border-border rounded-md bg-card text-sm text-muted-foreground shadow">
-              <div className="flex items-start">
-                <AlertCircle className="h-5 w-5 mr-3 mt-1 flex-shrink-0 text-primary" />
-                <div>
-                  <strong className="font-semibold text-card-foreground">Disclaimer:</strong> ChronoHatch&copy; is intended for informational and tracking purposes only. It has been designed using common best practices for egg incubation management. However, always consult multiple expert sources and adapt procedures to your specific equipment, environment, and species. The developers are not responsible for any outcomes resulting from the use of this application. Use with your own discretion.
-                </div>
-              </div>
+          <TooltipProvider delayDuration={300}>
+            <div className="fixed bottom-4 right-4 z-50">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" className="rounded-full w-8 h-8 sm:w-10 sm:h-10 shadow-lg bg-background hover:bg-muted">
+                    <Info className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <span className="sr-only">Disclaimer Information</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="end" className="max-w-xs sm:max-w-sm p-3 bg-popover text-popover-foreground shadow-xl rounded-md border border-border">
+                  <p className="text-xs sm:text-sm leading-relaxed">
+                    <strong className="font-semibold">Disclaimer:</strong> {disclaimerText}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
             </div>
-          </footer>
+          </TooltipProvider>
         </SidebarInset>
       </SidebarProvider>
     </DataProvider>
   );
 }
-
