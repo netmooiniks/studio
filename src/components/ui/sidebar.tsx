@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
-import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet" // Added SheetDescription
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
@@ -210,6 +210,7 @@ const Sidebar = React.forwardRef<
           >
             <VisuallyHidden>
               <SheetTitle>Main Navigation</SheetTitle>
+              <SheetDescription>Use the links below to navigate the application sections.</SheetDescription>
             </VisuallyHidden>
             <div className="flex h-full w-full flex-col">{children}</div>
           </SheetContent>
@@ -766,3 +767,4 @@ export {
   SidebarTrigger,
   useSidebar,
 }
+
