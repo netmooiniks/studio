@@ -1,6 +1,6 @@
 
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app"; // Added FirebaseApp
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
@@ -17,7 +17,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp;
+let app: FirebaseApp; // Type annotation added
 
 if (!getApps().length) {
   // Check if all required config values are present, especially the API key
