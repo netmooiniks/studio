@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${GeistSans.variable} font-sans antialiased`}>
+      <body className={`${GeistSans.variable} font-sans antialiased select-none`}>
         {process.env.NEXT_PUBLIC_GA_ID && <GoogleAnalytics />}
         <AuthProvider>
           {children}
