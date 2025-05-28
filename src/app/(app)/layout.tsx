@@ -33,7 +33,7 @@ function AppContent({ children }: { children: ReactNode }) {
           width={64}
           height={64}
           className="mb-4 animate-spin"
-          priority // Add priority for LCP
+          data-ai-hint="loader spin"
         />
         <p className="text-muted-foreground text-lg">Loading Application Data...</p>
       </div>
@@ -83,7 +83,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           width={64}
           height={64}
           className="mb-4 animate-spin"
-          priority // Add priority for LCP
+          data-ai-hint="loader spin"
         />
         <p className="text-muted-foreground text-lg">Authenticating...</p>
       </div>
@@ -134,7 +134,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   href={adConfig.linkUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full h-full"
+                  className="block w-full h-full relative" // Added 'relative' class here
                   aria-label={adConfig.altText}
                 >
                   {showAdImage ? (
