@@ -36,14 +36,15 @@ function AppContent({ children }: { children: ReactNode }) {
 }
 
 // Configuration for the advertisement banner
-// To edit the ad, change the imageUrl, linkUrl, and altText here.
-// Set enabled to false to hide the banner.
+// To use a local image:
+// 1. Create a folder in `public`, e.g., `public/ads/`
+// 2. Place your ad image in that folder, e.g., `public/ads/ad-banner.png`
+// 3. Update imageUrl below to `/ads/ad-banner.png` (or your actual path and filename)
 const adConfig = {
-  imageUrl: 'https://placehold.co/1200x100.png', // Using placeholder image
+  imageUrl: '/ads/ad-banner.png', // EXAMPLE: Path to local image in public/ads/
   linkUrl: 'https://www.netmooiniks.com', // Link where the ad navigates
   altText: 'Advertisement - Click to learn more!',
   enabled: true, // Set to false to hide the banner
-  imageHint: 'advertisement banner' // data-ai-hint for placeholder
 };
 
 const adBannerHeightClass = "h-16"; // Tailwind class for 64px height (4rem)
@@ -107,7 +108,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   alt={adConfig.altText}
                   layout="fill"
                   objectFit="cover"
-                  data-ai-hint={adConfig.imageHint}
                   className="cursor-pointer"
                 />
               </a>
