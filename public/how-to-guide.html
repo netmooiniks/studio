@@ -3,158 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Poultry Incubation Guide - ChronoHatch</title>
+    <title>Interactive Poultry Incubation Guide</title>
     <link rel="icon" href="/icon.png" type="image/png" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* CSS Variables for theme alignment (light mode) */
         :root {
-            --page-bg: hsl(210 60% 97%); /* Very Light Blue */
-            --text-color: hsl(204 16% 26%); /* Charcoal Grey */
-            --card-bg: hsl(0 0% 100%); /* White */
-            --card-fg: hsl(204 16% 26%); /* Charcoal Grey */
-            --border-color: hsl(216 13% 78%); /* Light Cool Grey */
-            --primary: hsl(210 100% 50%); /* Bright Sky Blue */
-            --primary-fg: hsl(0 0% 100%); /* White */
-            --accent: hsl(39 100% 50%); /* Bright Orange */
-            --accent-fg: hsl(0 0% 100%); /* White */
-            --header-bg: hsl(220 70% 22%); /* Deep Sapphire for header */
-            --header-fg: hsl(220 20% 90%); /* Light text for header */
-            --nav-bg: hsl(220 60% 30%); /* Lighter Sapphire for nav */
-            --nav-fg: hsl(220 20% 95%); /* Light text for nav */
-            --link-color: hsl(210 100% 50%);
+            --app-bg: hsl(210, 60%, 97%); /* Very Light Blue from app */
+            --app-fg: hsl(204, 16%, 26%); /* Charcoal Grey from app */
+            --card-bg: hsl(0, 0%, 100%); /* White from app */
+            --card-fg: hsl(204, 16%, 26%); /* Charcoal Grey from app */
+            --primary-color: hsl(210, 100%, 50%); /* Bright Sky Blue from app */
+            --primary-fg: hsl(0, 0%, 100%); /* White from app */
+            --accent-color: hsl(39, 100%, 50%); /* Bright Orange from app */
+            --border-color: hsl(216, 13%, 78%); /* Light Cool Grey for borders */
+            --muted-fg: hsl(216, 10%, 55%); /* Mid Cool Grey for muted text */
+            --header-bg: hsl(220, 70%, 22%); /* Deep Sapphire for header/footer */
+            --nav-bg: hsl(220, 60%, 30%); /* Lighter Sapphire for nav */
+            --nav-button-bg-default: hsl(220, 50%, 40%); /* Slightly lighter for inactive nav buttons */
+            --nav-text-color: hsl(0, 0%, 100%);
         }
+
         body {
             font-family: 'Inter', sans-serif;
-            background-color: var(--page-bg);
-            color: var(--text-color);
-            margin: 0;
+            background-color: var(--app-bg);
+            color: var(--app-fg);
         }
-        /* General styling for elements that should use card background/foreground */
-        .content-section > div, .content-section > .overflow-x-auto, /* Target table container */
-        #species-info, .chart-container, #candling-details, #candling-visuals-container,
-        details {
-            background-color: var(--card-bg);
-            color: var(--card-fg);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem; /* rounded-lg */
-            padding: 1.25rem; /* p-5 / p-6 */
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1); /* shadow / shadow-lg */
-            margin-bottom: 1.5rem; /* mb-6 */
-        }
-        /* Ensure direct p, ul, ol, h3, h4 children get the card-fg */
-        .content-section > div > p, .content-section > div > ul, .content-section > div > ol, .content-section > div > h3, .content-section > div > h4,
-        #species-info > p, #species-info > div > div > strong, #species-info h3,
-        #candling-details > p, #candling-details h3, #candling-details h4,
-        details > div > p, details > div > ul, details > div > h3, details > div > h4,
-        #candling-visuals-container h4,
-        .bg-white > p, .bg-white > ul, .bg-white > ol, .bg-white h3, .bg-white h4 { /* Keep .bg-white for legacy if any exist */
-             color: var(--card-fg);
-        }
-        /* Target table text color */
-        table, th, td {
-            color: var(--card-fg);
-        }
-        /* Specific overrides for candling diagram elements */
-        #candling-visuals-container .text-neutral-600 { color: #52525B !important; } /* neutral-600 */
-        #candling-visuals-container .text-neutral-500 { color: #71717A !important; } /* neutral-500 */
-        #candling-visuals-container .text-xs { font-size: 0.75rem !important; }
-        #candling-visuals-container .border-neutral-400 { border-color: #A1A1AA !important; } /* neutral-400 */
-        #candling-visuals-container .bg-yellow-100 { background-color: #FEF9C3 !important; } /* yellow-100 */
-        #candling-visuals-container .bg-yellow-300 { background-color: #FDE047 !important; } /* yellow-300 */
-        #candling-visuals-container .border-red-400 { border-color: #F87171 !important; } /* red-400 */
-        #candling-visuals-container .bg-rose-50 { background-color: #FFF1F2 !important; } /* rose-50 */
-        #candling-visuals-container .bg-red-500 { background-color: #EF4444 !important; } /* red-500 */
-        #candling-visuals-container .text-red-500 { color: #EF4444 !important; } /* red-500 */
-        #candling-visuals-container .border-red-600 { border-color: #DC2626 !important; } /* red-600 */
-        #candling-visuals-container .bg-red-100 { background-color: #FEE2E2 !important; } /* red-100 */
-        #candling-visuals-container .border-neutral-600 { border-color: #52525B !important; } /* neutral-600 */
-        #candling-visuals-container .bg-neutral-200 { background-color: #E5E5E5 !important; } /* neutral-200 */
-        #candling-visuals-container .bg-sky-200 { background-color: #BAE6FD !important; } /* sky-200 */
-        #candling-visuals-container .bg-neutral-500 { background-color: #737373 !important; } /* neutral-500 */
-
-        header.main-header {
+        header, footer {
             background-color: var(--header-bg);
-            color: var(--header-fg);
-            padding: 1.5rem; /* p-6 */
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* shadow-md */
+            color: var(--nav-text-color);
         }
-        header.main-header h1 {
-            font-size: 1.875rem; /* text-3xl */
-            font-weight: 700; /* font-bold */
-            text-align: center;
-        }
-        nav.top-nav {
+        nav {
             background-color: var(--nav-bg);
-            padding: 1rem; /* p-4 */
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1); /* shadow */
         }
-        nav.top-nav ul {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 0.5rem; /* space-x-2 */
-            list-style: none;
-            margin:0; padding:0;
+        .tab-button {
+            color: var(--nav-text-color);
+            background-color: var(--nav-button-bg-default); /* Default background for inactive tabs */
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
-        nav.top-nav .tab-button {
-            background-color: hsl(220, 50%, 40%); /* Slightly lighter than nav-bg to be distinct */
-            color: var(--nav-fg); 
-            padding: 0.5rem 0.75rem; 
-            border-radius: 0.375rem; 
-            font-weight: 500; 
-            border: 1px solid transparent; 
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-            font-size: 0.875rem; 
+        .tab-button.active, .tab-button:hover {
+            border-color: var(--primary-color);
+            background-color: var(--primary-color);
+            color: var(--primary-fg);
         }
-        @media (min-width: 640px) { /* sm breakpoint */
-            nav.top-nav .tab-button {
-                padding: 0.5rem 1rem; /* sm:px-4 */
-                font-size: 1rem; /* sm:text-base */
-            }
-        }
-        nav.top-nav .tab-button:hover {
-            background-color: var(--primary); 
-            color: var(--primary-fg); 
-            border-color: var(--primary);
-        }
-        nav.top-nav .tab-button.active {
-            background-color: var(--primary); 
-            color: var(--primary-fg); 
-            border-color: var(--primary); 
-        }
-
-        .content-section { display: none; margin-top: 1.5rem; }
+        .content-section { display: none; }
         .content-section.active { display: block; }
-        .content-section h2 {
-            font-size: 1.5rem; /* text-2xl */
-            font-weight: 600; /* font-semibold */
-            color: var(--primary); /* Use primary color for section titles */
-            margin-bottom: 1rem; /* mb-4 */
-        }
-         .content-section h3 {
-            font-size: 1.25rem; /* text-xl */
-            font-weight: 600; /* font-semibold */
-            color: hsl(var(--card-fg) / 0.9);
-            margin-bottom: 0.75rem; /* mb-3 */
-        }
-        .content-section p, .content-section ul, .content-section ol {
-            margin-bottom: 1rem; /* mb-4 or space-y-2 */
-            line-height: 1.6;
-        }
-        .content-section ul, .content-section ol {
-            padding-left: 1.5rem; /* list-inside style often adds padding */
-        }
-        .content-section strong {
-            font-weight: 600;
-        }
-        .content-section .text-amber-700 { color: var(--accent); } /* Themed accent */
-        .content-section .text-red-600 { color: hsl(var(--destructive)); } /* Themed destructive */
-
         .chart-container {
             position: relative;
             width: 100%;
@@ -164,78 +57,69 @@
             height: 300px;
             max-height: 400px;
         }
-        @media (min-width: 768px) { /* md breakpoint */
-            .chart-container {
-                height: 350px;
-            }
+        @media (min-width: 768px) {
+            .chart-container { height: 350px; }
         }
         .accordion-content {
             max-height: 0;
             overflow: hidden;
             transition: max-height 0.3s ease-out;
-            margin-top: 0.5rem; /* mt-2 */
         }
         details > summary {
-            font-weight: 600; /* font-semibold */
-            font-size: 1.125rem; /* text-lg */
-            cursor: pointer;
-            list-style: none; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            color: var(--card-fg); /* Ensure summary text uses card foreground */
         }
-        details > summary::-webkit-details-marker { 
-            display: none;
+        details > summary:hover {
+            text-decoration: underline;
+        }
+        details[open] > summary {
+            /* Styles for open summary if needed */
+        }
+        details .accordion-content {
+            color: var(--card-fg); /* Ensure accordion content uses card foreground */
         }
         .details-marker::before {
             content: '▶';
             margin-right: 0.5rem;
             display: inline-block;
             transition: transform 0.3s ease-out;
+            color: var(--primary-color);
         }
-        details[open] > summary .details-marker::before { 
+        .details-open .details-marker::before {
             transform: rotate(90deg);
         }
-        /* Table styling */
-        table {
-            width: 100%; /* min-w-full */
-            border-collapse: collapse; /* divide-y */
-        }
-        th, td {
-            border: 1px solid var(--border-color); /* divide-stone-200 */
-            padding: 0.75rem 1rem; /* px-4 py-3 or py-2 */
-            text-align: left;
-            vertical-align: top;
-        }
-        thead {
-            background-color: hsl(var(--border-color) / 0.1); /* bg-stone-50 like */
-        }
-        th {
-            font-size: 0.75rem; /* text-xs */
-            font-weight: 500; /* font-medium */
-            text-transform: uppercase;
-            letter-spacing: 0.05em; /* tracking-wider */
-            color: hsl(var(--card-fg) / 0.7); /* text-neutral-500 like */
-        }
-        tbody {
-             font-size: 0.875rem; /* text-sm */
-        }
-        footer.main-footer {
-            text-align: center;
-            padding: 1.5rem; /* p-6 */
-            margin-top: 2rem; /* mt-8 */
-            background-color: var(--header-bg);
-            color: var(--header-fg); 
-            font-size: 0.875rem; /* text-sm */
-        }
-        footer.main-footer a {
-            color: var(--primary); 
-            text-decoration: underline;
-        }
-        footer.main-footer a:hover {
-            opacity: 0.8;
-        }
-        /* Styles for interactive candling visuals - to ensure they are not overridden by general styles */
+        .bg-white { background-color: var(--card-bg) !important; }
+        .text-neutral-700, .text-neutral-600, .text-neutral-500 { color: var(--card-fg) !important; }
+        .text-teal-700 { color: var(--primary-color) !important; }
+        .border-stone-300, .border-stone-200 { border-color: var(--border-color) !important; }
+        .bg-stone-50 { background-color: hsl(var(--muted)) !important; opacity: 0.6; } /* Lighter than card for contrast */
+        .bg-amber-500, .candling-stage-btn { background-color: var(--accent-color) !important; color: var(--primary-fg) !important; }
+        .bg-amber-500:hover, .candling-stage-btn:hover { background-color: hsl(var(--accent-color) / 0.8) !important; }
+        .text-amber-700, .text-amber-800 { color: hsl(var(--accent-color) / 0.9) !important; } /* Darker shade of accent for text */
+        .bg-amber-50 { background-color: hsl(var(--accent-color) / 0.1) !important; }
+        .text-red-600 { color: hsl(0, 72%, 51%) !important; } /* Destructive red */
+        
+        /* Candling Diagram Specific Styles - Ensure these are not broadly overridden */
+        /* Using !important here to ensure these specific diagram styles take precedence */
+        #candling-visuals-container .bg-yellow-100 { background-color: #FEF9C3 !important; }
+        #candling-visuals-container .border-neutral-400 { border-color: #A3A3A3 !important; }
+        #candling-visuals-container .bg-yellow-300 { background-color: #FDE047 !important; }
+        #candling-visuals-container .border-red-400 { border-color: #F87171 !important; }
+        #candling-visuals-container .bg-rose-50 { background-color: #FFF1F2 !important; }
+        #candling-visuals-container .bg-sky-200 { background-color: #BAE6FD !important; }
+        #candling-visuals-container .bg-red-500 { background-color: #EF4444 !important; }
+        #candling-visuals-container .text-red-500 { color: #EF4444 !important; }
+        #candling-visuals-container .border-red-600 { border-color: #DC2626 !important; }
+        #candling-visuals-container .bg-red-100 { background-color: #FEE2E2 !important; }
+        #candling-visuals-container .border-neutral-600 { border-color: #525252 !important; }
+        #candling-visuals-container .bg-neutral-200 { background-color: #E5E5E5 !important; }
+        #candling-visuals-container .bg-neutral-500 { background-color: #737373 !important; }
+
+        /* Restore text colors within diagrams if they were unintentionally made white by broader rules */
+        #candling-visuals-container .text-neutral-600 { color: #525252 !important; } /* Example, adjust if needed */
+        #candling-visuals-container .text-xs { font-size: 0.75rem !important; }
+        #candling-visuals-container .text-neutral-500 { color: #737373 !important; }
+
+        /* Layout classes for diagrams - ensure they are applied */
         #candling-visuals-container .w-20 { width: 5rem !important; }
         #candling-visuals-container .h-28 { height: 7rem !important; }
         #candling-visuals-container .border-2 { border-width: 2px !important; }
@@ -244,6 +128,8 @@
         #candling-visuals-container .flex { display: flex !important; }
         #candling-visuals-container .items-center { align-items: center !important; }
         #candling-visuals-container .justify-center { justify-content: center !important; }
+        #candling-visuals-container .w-10 { width: 2.5rem !important; }
+        #candling-visuals-container .h-10 { height: 2.5rem !important; }
         #candling-visuals-container .opacity-50 { opacity: 0.5 !important; }
         #candling-visuals-container .flex-col { flex-direction: column !important; }
         #candling-visuals-container .justify-end { justify-content: flex-end !important; }
@@ -262,47 +148,40 @@
         #candling-visuals-container .h-12 { height: 3rem !important; }
         #candling-visuals-container .justify-start { justify-content: flex-start !important; }
         #candling-visuals-container .w-full { width: 100% !important; }
-        #candling-visuals-container .h-1\\/3 { height: 33.333333% !important; } /* Escaped slash */
+        #candling-visuals-container .h-1\/3 { height: 33.333333% !important; }
         #candling-visuals-container .rounded-t-full { border-top-left-radius: 9999px !important; border-top-right-radius: 9999px !important; }
         #candling-visuals-container .flex-grow { flex-grow: 1 !important; }
         #candling-visuals-container .rounded-b-full { border-bottom-left-radius: 9999px !important; border-bottom-right-radius: 9999px !important; }
         #candling-visuals-container .mt-1 { margin-top: 0.25rem !important; }
-        #candling-visuals-container .font-medium { font-weight: 500 !important; }
-        #candling-visuals-container .mb-2 { margin-bottom: 0.5rem !important; }
-        #candling-visuals-container .flex-wrap { flex-wrap: wrap !important; }
-        #candling-visuals-container .justify-around { justify-content: space-around !important; }
-        #candling-visuals-container .gap-4 { gap: 1rem !important; }
-        #candling-visuals-container .text-center { text-align: center !important; }
-        #candling-visuals-container .mt-4 { margin-top: 1rem !important; }
     </style>
 </head>
-<body class="text-text-color"> <!-- Ensure this class is applied if needed, or remove if body style handles it -->
-    <header class="main-header">
-        <h1>Interactive Poultry Incubation Guide</h1>
+<body class="bg-stone-100 text-neutral-800">
+    <header class="bg-teal-700 text-white p-6 shadow-md">
+        <h1 class="text-3xl font-bold text-center">Interactive Poultry Incubation Guide</h1>
     </header>
 
-    <nav class="top-nav">
-        <ul>
-            <li><button data-tab="overview" class="tab-button active">Overview</button></li>
-            <li><button data-tab="species" class="tab-button">Species Deep Dive</button></li>
-            <li><button data-tab="candling" class="tab-button">Candling Master</button></li>
-            <li><button data-tab="cooling" class="tab-button">Cooling & Misting</button></li>
-            <li><button data-tab="troubleshooting" class="tab-button">Troubleshooting</button></li>
+    <nav class="bg-teal-600 p-4 sticky top-0 z-50 shadow">
+        <ul class="flex flex-wrap justify-center space-x-2 sm:space-x-4">
+            <li><button data-tab="overview" class="tab-button active text-sm sm:text-base font-medium py-2 px-3 sm:px-4 rounded-md">Overview</button></li>
+            <li><button data-tab="species" class="tab-button text-sm sm:text-base font-medium py-2 px-3 sm:px-4 rounded-md">Species Deep Dive</button></li>
+            <li><button data-tab="candling" class="tab-button text-sm sm:text-base font-medium py-2 px-3 sm:px-4 rounded-md">Candling Master</button></li>
+            <li><button data-tab="cooling" class="tab-button text-sm sm:text-base font-medium py-2 px-3 sm:px-4 rounded-md">Cooling & Misting</button></li>
+            <li><button data-tab="troubleshooting" class="tab-button text-sm sm:text-base font-medium py-2 px-3 sm:px-4 rounded-md">Troubleshooting</button></li>
         </ul>
     </nav>
 
     <main class="container mx-auto p-4 sm:p-6 lg:p-8">
         <section id="overview" class="content-section active">
-            <h2 >I. Principles of Artificial Incubation</h2>
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">I. Principles of Artificial Incubation</h2>
             <p class="mb-4">This section outlines the fundamental principles crucial for successful artificial egg incubation. Understanding these core concepts will help you manage your incubator effectively and maximize hatch rates. Key areas include core environmental factors, incubator types, egg handling, and biosecurity.</p>
 
             <div class="space-y-3">
-                <details class="group">
-                    <summary class="flex justify-between items-center group details-marker">
+                <details class="bg-white p-4 rounded-lg shadow group">
+                    <summary class="font-semibold text-lg cursor-pointer flex justify-between items-center group details-marker">
                         A. Core Environmental Factors: Temperature, Humidity, Ventilation, Turning
                         <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
-                    <div class="accordion-content space-y-2">
+                    <div class="accordion-content mt-2 space-y-2">
                         <p><strong>Temperature:</strong> The most critical factor. Optimal temperature varies by species and incubator type. Consistently high temperatures are more damaging than low ones, leading to early, weak hatches or mortality. Low temperatures cause late hatches and weak chicks. Target ranges are typically 37.2-37.5<sup>°</sup>C for forced-air and 37.8-38.9<sup>°</sup>C for still-air incubators for many species.</p>
                         <p><strong>Humidity:</strong> Controls moisture loss from the egg, crucial for air cell development. Setting humidity is usually 50-65% RH, increasing to 70-90% RH for lockdown. Incorrect humidity leads to dehydrated or drowned chicks.</p>
                         <p><strong>Ventilation:</strong> Supplies oxygen (O<sub>2</sub>) and removes carbon dioxide (CO<sub>2</sub>). Needs increase as embryos grow. Poor ventilation causes oxygen starvation or CO<sub>2</sub> poisoning.</p>
@@ -311,35 +190,35 @@
                     </div>
                 </details>
 
-                <details class="group">
-                    <summary class="flex justify-between items-center group details-marker">
+                <details class="bg-white p-4 rounded-lg shadow group">
+                    <summary class="font-semibold text-lg cursor-pointer flex justify-between items-center group details-marker">
                         B. Incubator Types: Forced-Air vs. Still-Air
                          <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
-                    <div class="accordion-content space-y-2">
+                    <div class="accordion-content mt-2 space-y-2">
                         <p><strong>Forced-Air Incubators:</strong> Use a fan for uniform temperature and humidity. Generally operate at slightly lower temperatures (e.g., 37.2-37.5<sup>°</sup>C). Easier to manage.</p>
                         <p><strong>Still-Air Incubators:</strong> Rely on natural convection, leading to temperature stratification (warmer at top). Operate at higher temperatures (e.g., 37.8-38.9<sup>°</sup>C) measured at the top of the eggs. More challenging to manage humidity.</p>
                     </div>
                 </details>
 
-                <details class="group">
-                    <summary class="flex justify-between items-center group details-marker">
+                <details class="bg-white p-4 rounded-lg shadow group">
+                    <summary class="font-semibold text-lg cursor-pointer flex justify-between items-center group details-marker">
                         C. Egg Selection, Storage, and Handling
                          <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
-                    <div class="accordion-content space-y-2">
+                    <div class="accordion-content mt-2 space-y-2">
                         <p><strong>Selection:</strong> Choose clean, well-shaped eggs of typical size. Avoid cracked, double-yolked, or misshapen eggs. Generally, do not wash eggs to preserve the protective bloom.</p>
                         <p><strong>Storage:</strong> If not setting immediately, store at 13-18<sup>°</sup>C with 70-75% RH, pointed end down. Set within 7-10 days for best results. Turn eggs daily if stored over a week.</p>
                         <p><strong>Handling:</strong> Warm eggs to room temperature before incubating to prevent sweating. Handle gently, especially in the first week.</p>
                     </div>
                 </details>
 
-                <details class="group">
-                    <summary class="flex justify-between items-center group details-marker">
+                <details class="bg-white p-4 rounded-lg shadow group">
+                    <summary class="font-semibold text-lg cursor-pointer flex justify-between items-center group details-marker">
                         D. Biosecurity in the Hatchery Environment
                          <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
-                    <div class="accordion-content space-y-2">
+                    <div class="accordion-content mt-2 space-y-2">
                         <p>Crucial to prevent disease. Clean and disinfect incubators and equipment between hatches. Source eggs from healthy flocks. Wash hands before handling eggs. Avoid setting dirty or cracked eggs. Do not mix waterfowl eggs with other poultry eggs in the same incubator due to differing pathogen risks.</p>
                     </div>
                 </details>
@@ -347,7 +226,7 @@
         </section>
 
         <section id="species" class="content-section">
-            <h2>II. Species Deep Dive</h2>
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">II. Species Deep Dive</h2>
             <p class="mb-6">Select a poultry species from the dropdown below to view its specific incubation parameters, including temperature, humidity, turning schedule, and any special considerations like cooling or misting. This information is crucial as optimal conditions vary significantly between species.</p>
             
             <div class="mb-6">
@@ -357,13 +236,13 @@
                 </select>
             </div>
 
-            <div id="species-info" class="mt-6 min-h-[300px]">
-                <p class="text-center">Select a species to see its incubation details.</p>
+            <div id="species-info" class="mt-6 bg-white p-6 rounded-lg shadow-lg min-h-[300px]">
+                <p class="text-neutral-500 text-center">Select a species to see its incubation details.</p>
             </div>
             
             <div class="mt-8">
-                <h3 class="text-xl font-semibold mb-3">Incubation Period Comparison</h3>
-                <div class="chart-container p-4">
+                <h3 class="text-xl font-semibold text-teal-700 mb-3">Incubation Period Comparison</h3>
+                <div class="chart-container bg-white p-4 rounded-lg shadow">
                     <canvas id="incubationPeriodsChart"></canvas>
                 </div>
                 <p class="text-sm mt-2 text-center">This chart visually compares the typical incubation periods for different poultry species.</p>
@@ -371,16 +250,16 @@
         </section>
 
         <section id="candling" class="content-section">
-            <h2>III. The Art and Science of Egg Candling</h2>
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">III. The Art and Science of Egg Candling</h2>
             <p class="mb-6">Egg candling involves shining a light through the egg to observe internal development. It's vital for checking fertility, monitoring embryo growth, assessing air cell size (an indicator of humidity), and removing non-viable eggs. This section guides you through the process.</p>
 
             <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                    <h3>A. Candling Equipment and Basic Technique</h3>
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-3">A. Candling Equipment and Basic Technique</h3>
                     <p>Use a bright LED flashlight or a commercial egg candler. Perform candling in a darkened room. Hold the light against the large end of the egg. Gently rotate to view contents. Minimize time out of incubator (max 10 mins). Brown eggs are harder to candle; may need to wait longer.</p>
                 </div>
-                <div>
-                    <h3>B. Interpreting Air Cell Development</h3>
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-3">B. Interpreting Air Cell Development</h3>
                     <p>The air cell (at the broad end) enlarges as moisture evaporates. Its size indicates if humidity is correct.</p>
                     <ul class="list-disc list-inside mt-2 space-y-1">
                         <li><strong>Air Cell Too Large:</strong> Too much moisture lost (humidity too low). Increase incubator humidity.</li>
@@ -390,22 +269,22 @@
                 </div>
             </div>
 
-            <div class="mt-6">
-                <h3>C. Candling Timeline & Observations</h3>
+            <div class="mt-6 bg-white p-5 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-3">C. Candling Timeline & Observations</h3>
                 <p class="mb-4">Click on a stage to see typical observations. Note: Timings are general; refer to species-specific data for precise days.</p>
                 <div class="flex flex-wrap gap-2 mb-4">
-                    <button class="candling-stage-btn bg-accent hover:opacity-80 text-accent-fg py-2 px-4 rounded-md" data-stage="early">Early Development (First Week)</button>
-                    <button class="candling-stage-btn bg-accent hover:opacity-80 text-accent-fg py-2 px-4 rounded-md" data-stage="mid">Mid-Incubation</button>
-                    <button class="candling-stage-btn bg-accent hover:opacity-80 text-accent-fg py-2 px-4 rounded-md" data-stage="late">Late Incubation / Pre-Lockdown</button>
+                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="early">Early Development (First Week)</button>
+                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="mid">Mid-Incubation</button>
+                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="late">Late Incubation / Pre-Lockdown</button>
                 </div>
                 <div id="candling-details" class="p-4 border border-stone-200 rounded-md bg-stone-50 min-h-[150px]">
                     <p>Select a stage to view details.</p>
                 </div>
             </div>
             
-            <div id="candling-visuals-container" class="mt-6">
-                 <h4>Visual Guide (Simplified)</h4>
-                 <div class="flex flex-wrap justify-around items-center gap-4">
+            <div id="candling-visuals-container" class="mt-6 bg-white p-5 rounded-lg shadow">
+                 <h4 class="text-lg font-semibold mb-2">Visual Guide (Simplified)</h4>
+                 <div class="flex flex-nowrap justify-center items-center gap-4 overflow-x-auto">
                     <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Infertile (Clear)</p>
                         <div class="w-20 h-28 border-2 border-neutral-400 rounded-full mx-auto bg-yellow-100 flex items-center justify-center">
@@ -438,8 +317,8 @@
                  <p class="text-xs text-neutral-500 mt-4 text-center">Note: These are highly simplified representations. Actual candling appearance varies.</p>
             </div>
 
-            <div class="mt-6">
-                <h3>D. Identifying Non-Viable Eggs</h3>
+            <div class="mt-6 bg-white p-5 rounded-lg shadow">
+                <h3 class="text-xl font-semibold mb-3">D. Identifying Non-Viable Eggs</h3>
                 <ul class="list-disc list-inside space-y-1">
                     <li><strong>Clears (Infertile):</strong> Translucent, only yolk shadow visible. No blood vessels. Remove.</li>
                     <li><strong>Blood Rings:</strong> Distinct blood ring. Embryo died very early. Remove.</li>
@@ -448,8 +327,8 @@
             </div>
             
             <div class="mt-6">
-                 <h3 class="text-xl font-semibold mb-3">E. General Candling Timeline Table (Summary)</h3>
-                 <div class="overflow-x-auto rounded-lg shadow">
+                 <h3 class="text-xl font-semibold text-teal-700 mb-3">E. General Candling Timeline Table (Summary)</h3>
+                 <div class="overflow-x-auto bg-white rounded-lg shadow">
                     <table class="min-w-full divide-y divide-stone-200">
                         <thead class="bg-stone-50">
                             <tr>
@@ -459,7 +338,7 @@
                                 <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Late/Pre-Lockdown (Day(s))</th>
                             </tr>
                         </thead>
-                        <tbody id="candling-table-body" class="divide-y divide-stone-200 text-sm">
+                        <tbody id="candling-table-body" class="bg-white divide-y divide-stone-200 text-sm">
                             </tbody>
                     </table>
                 </div>
@@ -467,12 +346,12 @@
         </section>
 
         <section id="cooling" class="content-section">
-            <h2>IV. Cooling and Misting Eggs</h2>
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">IV. Cooling and Misting Eggs</h2>
             <p class="mb-6">Cooling and misting are essential for waterfowl (ducks, geese) and not standard for other poultry like chickens, turkeys, or quail. These practices mimic natural behaviors and address the unique physiology of waterfowl eggs.</p>
 
             <div class="space-y-4">
-                <div>
-                    <h3>A. Rationale for Waterfowl</h3>
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-3">A. Rationale for Waterfowl</h3>
                     <ul class="list-disc list-inside space-y-2">
                         <li><strong>Mimics Natural Behavior:</strong> Mother bird leaves nest, returns with damp feathers.</li>
                         <li><strong>Cuticle Management:</strong> Helps degrade thick, waxy cuticle on waterfowl eggs, improving permeability.</li>
@@ -484,8 +363,8 @@
                     <p class="mt-2 text-sm text-amber-700">Proper cooling/misting can improve waterfowl hatchability significantly.</p>
                 </div>
 
-                <div>
-                    <h3>B. General Protocols (Ducks & Geese)</h3>
+                <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-3">B. General Protocols (Ducks & Geese)</h3>
                     <p>Refer to specific species data for precise start days and durations, but general steps include:</p>
                     <ul class="list-disc list-inside space-y-2">
                         <li><strong>Start Day:</strong> Typically Day 7-10 for ducks, Day 4-8 for geese.</li>
@@ -501,17 +380,17 @@
                         <li><strong>Cessation:</strong> Stop cooling and misting at lockdown (2-4 days before hatch).</li>
                     </ul>
                 </div>
-                 <div>
-                    <h3>C. Muscovy Duck Specifics</h3>
+                 <div class="bg-white p-5 rounded-lg shadow">
+                    <h3 class="text-xl font-semibold mb-3">C. Muscovy Duck Specifics</h3>
                     <p>Muscovies generally benefit from cooling/misting. Start misting around Day 7, cooling around Day 10, daily for ~30 mins (cool to ~30<sup>°</sup>C), until lockdown (Day 31-32). An alternative "dry hatch" with a "baggie method" at hatch exists but is less common.</p>
                 </div>
             </div>
         </section>
 
         <section id="troubleshooting" class="content-section">
-            <h2>V. Troubleshooting Common Incubation Problems</h2>
+            <h2 class="text-2xl font-semibold text-teal-700 mb-4">V. Troubleshooting Common Incubation Problems</h2>
             <p class="mb-6">Even with care, issues can arise. This section lists common problems, their probable causes, and corrective measures. Accurate record-keeping and candling are key to diagnosis.</p>
-            <div class="overflow-x-auto rounded-lg shadow">
+            <div class="overflow-x-auto bg-white rounded-lg shadow">
                 <table class="min-w-full divide-y divide-stone-200">
                     <thead class="bg-stone-50">
                         <tr>
@@ -520,16 +399,16 @@
                             <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Corrective Measure(s)</th>
                         </tr>
                     </thead>
-                    <tbody id="troubleshooting-table-body" class="divide-y divide-stone-200 text-sm">
+                    <tbody id="troubleshooting-table-body" class="bg-white divide-y divide-stone-200 text-sm">
                         </tbody>
                 </table>
             </div>
         </section>
+
     </main>
 
-    <footer class="main-footer">
-        <p>&copy; 2025 Interactive Incubation Guide. Compiled by NetMooiNiks. <a href="https://www.netmooiniks.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-opacity-80">www.netmooiniks.com</a>.<br/>Content adapted from "A Comprehensive Guide to Artificial Egg Incubation".</p>
-        <p>This guide is for informational purposes. Always consult multiple sources and adapt to your specific equipment and conditions.</p>
+    <footer class="text-center p-6 mt-8">
+        <p>© 2025 Interactive Incubation Guide. Compiled by NetMooiNiks. <a href="https://www.netmooiniks.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-opacity-80">www.netmooiniks.com</a>.<br/>Content adapted from "A Comprehensive Guide to Artificial Egg Incubation".</p>
     </footer>
 
     <script>
@@ -665,10 +544,10 @@
             candlingTimelineTableData.forEach(item => {
                 const row = candlingTableBody.insertRow();
                 row.innerHTML = `
-                    <td class="whitespace-nowrap">${item.species}</td>
-                    <td>${item.first}</td>
-                    <td>${item.mid}</td>
-                    <td>${item.late}</td>
+                    <td class="px-4 py-2 whitespace-nowrap">${item.species}</td>
+                    <td class="px-4 py-2">${item.first}</td>
+                    <td class="px-4 py-2">${item.mid}</td>
+                    <td class="px-4 py-2">${item.late}</td>
                 `;
             });
 
@@ -676,9 +555,9 @@
             troubleshootingData.forEach(item => {
                 const row = troubleshootingTableBody.insertRow();
                 row.innerHTML = `
-                    <td>${item.symptom}</td>
-                    <td>${item.causes}</td>
-                    <td>${item.measures}</td>
+                    <td class="px-4 py-2">${item.symptom}</td>
+                    <td class="px-4 py-2">${item.causes}</td>
+                    <td class="px-4 py-2">${item.measures}</td>
                 `;
             });
 
@@ -703,7 +582,7 @@
                 if (selectedSpecies && speciesData[selectedSpecies]) {
                     const data = speciesData[selectedSpecies];
                     speciesInfoDiv.innerHTML = `
-                        <h3 class="text-xl font-bold mb-3">${selectedSpecies}</h3>
+                        <h3 class="text-xl font-bold text-teal-700 mb-3">${selectedSpecies}</h3>
                         <div class="grid md:grid-cols-2 gap-4">
                             <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
                             <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC}</div>
@@ -714,12 +593,12 @@
                             <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
                             <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
                         </div>
-                        <div class="mt-4 bg-amber-100 p-3 rounded-md text-amber-800 text-sm">
+                        <div class="mt-4 bg-amber-50 p-3 rounded-md text-amber-800 text-sm">
                             <strong>Key Notes:</strong> ${data.notes}
                         </div>
                     `;
                 } else {
-                    speciesInfoDiv.innerHTML = '<p class="text-center">Select a species to see its incubation details.</p>';
+                    speciesInfoDiv.innerHTML = '<p class="text-neutral-500 text-center">Select a species to see its incubation details.</p>';
                 }
             });
 
@@ -731,11 +610,6 @@
             };
             candlingStageButtons.forEach(button => {
                 button.addEventListener('click', () => {
-                    candlingStageButtons.forEach(btn => btn.classList.remove('bg-primary', 'text-primary-fg')); // Assuming primary is active color
-                    candlingStageButtons.forEach(btn => btn.classList.add('bg-accent', 'text-accent-fg')); // Assuming accent is default
-                    button.classList.remove('bg-accent', 'text-accent-fg');
-                    button.classList.add('bg-primary', 'text-primary-fg');
-
                     const stage = button.getAttribute('data-stage');
                     candlingDetailsDiv.innerHTML = candlingContent[stage] || '<p>Details for this stage.</p>';
                 });
@@ -746,32 +620,19 @@
                 summary.addEventListener('click', (event) => {
                     const detailElement = summary.parentElement;
                     if (detailElement.hasAttribute('open')) {
-                        // Already open, prevent summary click from closing if we want to control with JS
-                        // event.preventDefault(); // Uncomment if you want full JS control
-                        // detailElement.removeAttribute('open');
-                        // detailElement.querySelector('.accordion-content').style.maxHeight = null;
+                        event.preventDefault(); 
+                        detailElement.removeAttribute('open');
+                        summary.classList.remove('details-open');
+                        detailElement.querySelector('.accordion-content').style.maxHeight = null;
                     } else {
-                        // Opening
+                        summary.classList.add('details-open');
                         const content = detailElement.querySelector('.accordion-content');
-                        // Wait for 'open' attribute to be set by browser, then set max-height
-                        requestAnimationFrame(() => {
-                             content.style.maxHeight = content.scrollHeight + "px";
-                        });
-                    }
-                });
-                 // For closing, listen to toggle event on details
-                const detailElement = summary.parentElement;
-                detailElement.addEventListener('toggle', () => {
-                    const content = detailElement.querySelector('.accordion-content');
-                    if (!detailElement.open) {
-                        content.style.maxHeight = null;
-                    } else {
-                         content.style.maxHeight = content.scrollHeight + "px";
+                        content.style.maxHeight = content.scrollHeight + "px";
                     }
                 });
             });
-             // Set initial max-height for already open details elements (e.g. if user navigates back)
             document.querySelectorAll('details[open]').forEach(detailElement => {
+                detailElement.querySelector('summary').classList.add('details-open');
                 const content = detailElement.querySelector('.accordion-content');
                 content.style.maxHeight = content.scrollHeight + "px";
             });
@@ -785,14 +646,8 @@
                 return daysMatch ? parseInt(daysMatch[1]) : 0;
             });
 
-             const chartColorValues = [
-                getComputedStyle(document.documentElement).getPropertyValue('--primary').trim(),
-                getComputedStyle(document.documentElement).getPropertyValue('--accent').trim(),
-                'hsl(173, 58%, 39%)', /* chart-2 like */
-                'hsl(197, 37%, 24%)', /* chart-3 like */
-                'hsl(43, 74%, 66%)',  /* chart-4 like */
-                'hsl(27, 87%, 67%)',  /* chart-5 like */
-                'hsl(12, 76%, 61%)'   /* chart-1 like */
+            const chartColors = [
+                '#4F46E5', '#0D9488', '#DB2777', '#F59E0B', '#10B981', '#6366F1', '#EC4899' 
             ];
 
 
@@ -803,8 +658,8 @@
                     datasets: [{
                         label: 'Typical Incubation Period (Days)',
                         data: incubationDays,
-                        backgroundColor: speciesNames.map((_, i) => chartColorValues[i % chartColorValues.length]),
-                        borderColor: speciesNames.map((_, i) => chartColorValues[i % chartColorValues.length]),
+                        backgroundColor: speciesNames.map((_, i) => chartColors[i % chartColors.length]),
+                        borderColor: speciesNames.map((_, i) => chartColors[i % chartColors.length]),
                         borderWidth: 1
                     }]
                 },
@@ -814,25 +669,21 @@
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: 'Days' },
-                            grid: { color: 'hsl(var(--border-color) / 0.5)' },
-                            ticks: { color: 'hsl(var(--card-fg))' }
+                            title: { display: true, text: 'Days' }
                         },
                         x: {
                             ticks: {
                                 autoSkip: false,
                                 maxRotation: 45,
                                 minRotation: 45,
-                                color: 'hsl(var(--card-fg))',
-                                callback: function(value, index, values) {
+                                callback: function(value) { // Removed index, values as they are not used
                                     let label = this.getLabelForValue(value);
-                                    if (label.length > 10) { 
-                                        return label.match(/.{1,10}/g); 
+                                    if (label.length > 10) {
+                                        return label.match(/.{1,10}/g);
                                     }
                                     return label;
                                 }
-                            },
-                             grid: { color: 'hsl(var(--border-color) / 0.5)' }
+                            }
                         }
                     },
                     plugins: {
@@ -851,3 +702,5 @@
     </script>
 </body>
 </html>
+
+    
