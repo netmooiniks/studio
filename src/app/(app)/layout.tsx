@@ -146,7 +146,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       className="cursor-pointer object-contain"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-accent text-accent-foreground p-2 transition-opacity duration-500">
+                    <div className="w-full h-full flex items-center justify-center bg-background text-accent p-2 transition-opacity duration-500">
                       <span className="text-center font-semibold text-sm sm:text-base">
                         {adHostname ? `Visit ${adHostname}!` : 'Learn More!'}
                       </span>
