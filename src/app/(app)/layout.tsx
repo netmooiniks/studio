@@ -142,7 +142,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       src={adConfig.imageUrl}
                       alt={adConfig.altText}
                       fill
-                      priority
                       className="cursor-pointer object-contain"
                     />
                   ) : (
