@@ -32,7 +32,7 @@ export default function AppNavigation() {
     <>
       <SidebarHeader className="p-4">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-sidebar-foreground">
-          <Image src="/icon.png" alt="ChronoHatch Logo" width={32} height={32} />
+          <Image src="/icon.png" alt="ChronoHatch Logo" width={32} height={32} priority />
           <span className="group-data-[collapsible=icon]:hidden">ChronoHatch<sup className="text-xs font-normal align-super">©</sup></span>
         </Link>
       </SidebarHeader>

@@ -49,7 +49,7 @@ export default function AppHeader() {
         <div className="flex items-center gap-2">
           <SidebarTrigger className="md:hidden" />
          <Link href="/" className="flex items-center gap-2 text-lg font-semibold md:text-base text-primary">
-            <Image src="/icon.png" alt="ChronoHatch Logo" width={32} height={32} />
+            <Image src="/icon.png" alt="ChronoHatch Logo" width={32} height={32} priority />
             <span className="sr-only">ChronoHatch</span>
           </Link>
         </div>

@@ -21,7 +21,7 @@ export default function LoginPage() {
     // Show a loading state or nothing while redirecting
     return (
         <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-            <Image src="/icon.png" alt="Authenticating Icon" width={48} height={48} className="mb-4 animate-pulse" />
+            <Image src="/icon.png" alt="Authenticating Icon" width={48} height={48} className="mb-4 animate-pulse" priority />
             <p className="text-muted-foreground">Loading...</p>
         </div>
     );
@@ -30,7 +30,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <div className="mb-8 text-center">
-        <Image src="/icon.png" alt="ChronoHatch Logo" width={64} height={64} className="mx-auto mb-4" />
+        <Image src="/icon.png" alt="ChronoHatch Logo" width={64} height={64} className="mx-auto mb-4" priority />
         <h1 className="text-3xl font-bold text-primary">ChronoHatch<sup className="text-sm font-normal align-super">©</sup></h1>
         <p className="text-muted-foreground">Your Smart Incubation Companion</p>
       </div>
