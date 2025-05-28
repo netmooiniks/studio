@@ -4,48 +4,48 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Poultry Incubation Guide - ChronoHatch</title>
-    <link rel="icon" href="/icon.png" type="image/png" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" href="/icon.png" type="image/png" />
     <style>
         :root {
             --guide-bg: hsl(210, 60%, 97%); /* Very Light Blue */
             --guide-text: hsl(204, 16%, 26%); /* Charcoal Grey */
             --guide-header-bg: hsl(220, 70%, 22%); /* Deep Sapphire */
             --guide-header-text: hsl(220, 20%, 90%); /* Light Grey/White Text */
+            --guide-nav-bg: hsl(220, 60%, 30%); /* Lighter Sapphire for Nav */
             --guide-primary: hsl(210, 100%, 50%); /* Bright Sky Blue */
             --guide-accent: hsl(39, 100%, 50%); /* Bright Orange */
             --guide-card-bg: hsl(0, 0%, 100%); /* White */
             --guide-border: hsl(216, 13%, 78%); /* Light Cool Grey */
+            --guide-footer-bg: hsl(220, 70%, 22%); /* Deep Sapphire for Footer */
+            --guide-footer-text: hsl(220, 20%, 80%); /* Lighter Grey for Footer Text */
         }
 
-        body { 
-            font-family: 'Inter', sans-serif; 
+        body {
+            font-family: 'Inter', sans-serif;
             background-color: var(--guide-bg);
             color: var(--guide-text);
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
+            user-select: none; /* Make text non-selectable */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+ */
         }
-        header, footer {
-            background-color: var(--guide-header-bg);
-            color: var(--guide-header-text);
-        }
-        nav {
-            background-color: hsl(220, 60%, 30%); /* Slightly Lighter Sapphire for nav */
-        }
+        header { background-color: var(--guide-header-bg); color: var(--guide-header-text); }
+        nav { background-color: var(--guide-nav-bg); }
+        footer { background-color: var(--guide-footer-bg); color: var(--guide-footer-text); }
+
         .tab-button {
             color: var(--guide-header-text);
             transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
         }
+        .tab-button:hover {
+            background-color: hsl(220, 60%, 40%); /* Slightly lighter hover for nav buttons */
+        }
         .tab-button.active {
-            border-color: var(--guide-primary); 
+            border-color: var(--guide-primary);
             background-color: var(--guide-primary);
             color: white;
-        }
-        .tab-button:hover {
-            background-color: hsl(210, 100%, 60%); /* Lighter primary blue for hover */
         }
         .content-section { display: none; }
         .content-section.active { display: block; }
@@ -63,16 +63,17 @@
                 height: 350px;
             }
         }
-        .accordion-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
         details {
             background-color: var(--guide-card-bg);
             border: 1px solid var(--guide-border);
         }
-        details > summary {
+        details summary {
+             color: var(--guide-text);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
             color: var(--guide-text);
         }
         .details-marker::before {
@@ -80,67 +81,46 @@
             margin-right: 0.5rem;
             display: inline-block;
             transition: transform 0.3s ease-out;
+            color: var(--guide-primary);
         }
         .details-open .details-marker::before {
             transform: rotate(90deg);
         }
-        h2, h3, h4 {
-            color: var(--guide-primary);
-        }
-        /* Ensuring diagram specific colors are not overridden */
-        .diagram-egg-clear { background-color: #FEF3C7 !important; } /* bg-yellow-100 */
-        .diagram-yolk-clear { background-color: #FCD34D !important; opacity: 0.5 !important; } /* bg-yellow-300 opacity-50 */
-        .diagram-border-neutral { border-color: #A3A3A3 !important; } /* border-neutral-400 */
-        .diagram-egg-viable { background-color: #FFF1F2 !important; } /* bg-rose-50 */
-        .diagram-aircell-viable { background-color: #BAE6FD !important; opacity: 0.7 !important; } /* bg-sky-200 opacity-70 */
-        .diagram-embryo-viable { background-color: #F43F5E !important; } /* bg-red-500 */
-        .diagram-veins-text { color: #F43F5E !important; } /* text-red-500 */
-        .diagram-border-viable { border-color: #F87171 !important; } /* border-red-400 */
-        .diagram-egg-bloodring { background-color: #FEE2E2 !important; } /* bg-red-100 */
-        .diagram-bloodring-border { border-color: #DC2626 !important; } /* border-red-600 */
-        .diagram-bloodring-inner { border-color: #EF4444 !important; } /* border-red-500 */
-        .diagram-egg-late { background-color: #E5E5E5 !important; } /* bg-neutral-200 */
-        .diagram-border-late { border-color: #737373 !important; } /* border-neutral-600 */
-        .diagram-aircell-late { background-color: #BAE6FD !important; opacity: 0.7 !important; } /* bg-sky-200 opacity-70 */
-        .diagram-embryo-late { background-color: #525252 !important; } /* bg-neutral-500 */
-        .diagram-text-muted { color: #737373 !important; } /* text-neutral-500 */
-        .candling-stage-btn {
-            background-color: var(--guide-accent) !important; /* Bright Orange */
-        }
-        .candling-stage-btn:hover {
-            filter: brightness(0.9);
-        }
-        .w-20 { width: 5rem !important; }
-        .h-28 { height: 7rem !important; }
-        .border-2 { border-width: 2px !important; }
-        .rounded-full { border-radius: 9999px !important; }
-        .mx-auto { margin-left: auto !important; margin-right: auto !important; }
-        .flex { display: flex !important; }
-        .flex-col { flex-direction: column !important; }
-        .items-center { align-items: center !important; }
-        .justify-center { justify-content: center !important; }
-        .justify-end { justify-content: flex-end !important; }
-        .justify-start { justify-content: flex-start !important; }
-        .p-1 { padding: 0.25rem !important; }
-        .absolute { position: absolute !important; }
-        .top-1 { top: 0.25rem !important; }
-        .right-1 { right: 0.25rem !important; }
-        .w-4 { width: 1rem !important; }
-        .h-6 { height: 1.5rem !important; }
-        .w-3 { width: 0.75rem !important; }
-        .h-3 { height: 0.75rem !important; }
-        .mb-1 { margin-bottom: 0.25rem !important; }
-        .text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
-        .w-10 { width: 2.5rem !important; }
-        .h-10 { height: 2.5rem !important; }
-        .w-12 { width: 3rem !important; }
-        .h-12 { height: 3rem !important; }
-        .w-full { width: 100% !important; }
-        .h-1\/3 { height: 33.333333% !important; }
-        .rounded-t-full { border-top-left-radius: 9999px !important; border-top-right-radius: 9999px !important; }
-        .flex-grow { flex-grow: 1 !important; }
-        .rounded-b-full { border-bottom-left-radius: 9999px !important; border-bottom-right-radius: 9999px !important; }
-        .mt-1 { margin-top: 0.25rem !important; }
+        h2, h3 { color: var(--guide-primary); }
+        label, .font-medium { color: var(--guide-text); }
+        
+        /* Styles for specific diagram elements to ensure their colors are not overridden by general theme */
+        #candling-visuals-container .bg-yellow-100 { background-color: #FEF9C3 !important; }
+        #candling-visuals-container .bg-yellow-300 { background-color: #FDE047 !important; }
+        #candling-visuals-container .border-neutral-400 { border-color: #A3A3A3 !important; }
+        #candling-visuals-container .bg-rose-50 { background-color: #FFF1F2 !important; }
+        #candling-visuals-container .border-red-400 { border-color: #F87171 !important; }
+        #candling-visuals-container .text-red-500 { color: #EF4444 !important; }
+        #candling-visuals-container .bg-red-500 { background-color: #EF4444 !important; }
+        #candling-visuals-container .bg-sky-200 { background-color: #BAE6FD !important; }
+        #candling-visuals-container .bg-red-100 { background-color: #FEE2E2 !important; }
+        #candling-visuals-container .border-red-600 { border-color: #DC2626 !important; }
+        #candling-visuals-container .border-red-500 { border-color: #EF4444 !important; }
+        #candling-visuals-container .bg-neutral-200 { background-color: #E5E5E5 !important; }
+        #candling-visuals-container .border-neutral-600 { border-color: #525252 !important; }
+        #candling-visuals-container .bg-neutral-500 { background-color: #737373 !important; }
+        #candling-visuals-container .text-neutral-600 { color: #525252 !important; } /* Diagram specific text */
+        #candling-visuals-container .text-neutral-500 { color: #737373 !important; } /* Diagram specific caption text */
+
+        #species-info .bg-stone-50 { background-color: hsl(210, 60%, 95%) !important; } /* Lighter than main bg for species info cards */
+        #species-info .text-teal-700 { color: var(--guide-primary) !important; }
+        #species-info .text-neutral-700 { color: var(--guide-text) !important; }
+        #species-info .bg-amber-50 { background-color: hsl(39, 100%, 95%) !important; }
+        #species-info .text-amber-800 { color: hsl(39, 80%, 30%) !important; }
+
+        .candling-stage-btn { background-color: var(--guide-accent) !important; color: white !important; }
+        .candling-stage-btn:hover { background-color: hsl(39, 100%, 60%) !important; }
+        #candling-details { background-color: hsl(210, 60%, 95%) !important; border-color: var(--guide-border) !important; }
+
+        table th { color: var(--guide-text) !important; }
+        table td { color: var(--guide-text) !important; }
+        table thead.bg-stone-50 { background-color: hsl(210, 60%, 95%) !important; }
+        table.divide-stone-200, table .divide-stone-200 { border-color: var(--guide-border) !important; }
     </style>
 </head>
 <body class="select-none">
@@ -167,21 +147,19 @@
                 <details class="p-4 rounded-lg shadow group">
                     <summary class="font-semibold text-lg cursor-pointer flex justify-between items-center group details-marker">
                         A. Core Environmental Factors: Temperature, Humidity, Ventilation, Turning
-                        <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content mt-2 space-y-2">
                         <p><strong>Temperature:</strong> The most critical factor. Optimal temperature varies by species and incubator type. Consistently high temperatures are more damaging than low ones, leading to early, weak hatches or mortality. Low temperatures cause late hatches and weak chicks. Target ranges are typically 37.2-37.5<sup>°</sup>C for forced-air and 37.8-38.9<sup>°</sup>C for still-air incubators for many species.</p>
                         <p><strong>Humidity:</strong> Controls moisture loss from the egg, crucial for air cell development. Setting humidity is usually 50-65% RH, increasing to 70-90% RH for lockdown. Incorrect humidity leads to dehydrated or drowned chicks.</p>
                         <p><strong>Ventilation:</strong> Supplies oxygen (O<sub>2</sub>) and removes carbon dioxide (CO<sub>2</sub>). Needs increase as embryos grow. Poor ventilation causes oxygen starvation or CO<sub>2</sub> poisoning.</p>
                         <p><strong>Turning:</strong> Prevents embryo adhesion to the shell and promotes proper development. Turn eggs 3-5+ times daily, stopping 2-4 days before hatch (lockdown).</p>
-                        <p class="mt-2 text-sm" style="color: var(--guide-accent);">These factors are interconnected. For example, increasing ventilation can lower humidity. Careful monitoring and adjustment are key.</p>
+                        <p class="mt-2 text-sm" style="color: var(--guide-accent) !important;">These factors are interconnected. For example, increasing ventilation can lower humidity. Careful monitoring and adjustment are key.</p>
                     </div>
                 </details>
 
                 <details class="p-4 rounded-lg shadow group">
                     <summary class="font-semibold text-lg cursor-pointer flex justify-between items-center group details-marker">
                         B. Incubator Types: Forced-Air vs. Still-Air
-                         <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content mt-2 space-y-2">
                         <p><strong>Forced-Air Incubators:</strong> Use a fan for uniform temperature and humidity. Generally operate at slightly lower temperatures (e.g., 37.2-37.5<sup>°</sup>C). Easier to manage.</p>
@@ -192,7 +170,6 @@
                 <details class="p-4 rounded-lg shadow group">
                     <summary class="font-semibold text-lg cursor-pointer flex justify-between items-center group details-marker">
                         C. Egg Selection, Storage, and Handling
-                         <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content mt-2 space-y-2">
                         <p><strong>Selection:</strong> Choose clean, well-shaped eggs of typical size. Avoid cracked, double-yolked, or misshapen eggs. Generally, do not wash eggs to preserve the protective bloom.</p>
@@ -204,7 +181,6 @@
                 <details class="p-4 rounded-lg shadow group">
                     <summary class="font-semibold text-lg cursor-pointer flex justify-between items-center group details-marker">
                         D. Biosecurity in the Hatchery Environment
-                         <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content mt-2 space-y-2">
                         <p>Crucial to prevent disease. Clean and disinfect incubators and equipment between hatches. Source eggs from healthy flocks. Wash hands before handling eggs. Avoid setting dirty or cracked eggs. Do not mix waterfowl eggs with other poultry eggs in the same incubator due to differing pathogen risks.</p>
@@ -225,15 +201,15 @@
             </div>
 
             <div id="species-info" class="mt-6 p-6 rounded-lg shadow-lg min-h-[300px]" style="background-color: var(--guide-card-bg); border: 1px solid var(--guide-border);">
-                <p class="text-center" style="color: var(--guide-text-muted);">Select a species to see its incubation details.</p>
+                <p class="text-center" style="color: var(--guide-text);">Select a species to see its incubation details.</p>
             </div>
             
             <div class="mt-8">
                 <h3 class="text-xl font-semibold mb-3">Incubation Period Comparison</h3>
-                <div class="chart-container p-4 rounded-lg shadow" style="background-color: var(--guide-card-bg); border: 1px solid var(--guide-border);">
+                <div class="chart-container p-4 rounded-lg shadow" style="background-color: var(--guide-card-bg);">
                     <canvas id="incubationPeriodsChart"></canvas>
                 </div>
-                <p class="text-sm mt-2 text-center">This chart visually compares the typical incubation periods for different poultry species.</p>
+                <p class="text-sm mt-2 text-center" style="color: var(--guide-text) !important;">This chart visually compares the typical incubation periods for different poultry species.</p>
             </div>
         </section>
 
@@ -261,50 +237,52 @@
                 <h3 class="text-xl font-semibold mb-3">C. Candling Timeline & Observations</h3>
                 <p class="mb-4">Click on a stage to see typical observations. Note: Timings are general; refer to species-specific data for precise days.</p>
                 <div class="flex flex-wrap gap-2 mb-4">
-                    <button class="candling-stage-btn text-white py-2 px-4 rounded-md" data-stage="early">Early Development (First Week)</button>
-                    <button class="candling-stage-btn text-white py-2 px-4 rounded-md" data-stage="mid">Mid-Incubation</button>
-                    <button class="candling-stage-btn text-white py-2 px-4 rounded-md" data-stage="late">Late Incubation / Pre-Lockdown</button>
+                    <button class="candling-stage-btn py-2 px-4 rounded-md">Early Development (First Week)</button>
+                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="mid">Mid-Incubation</button>
+                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="late">Late Incubation / Pre-Lockdown</button>
                 </div>
-                <div id="candling-details" class="p-4 border rounded-md min-h-[150px]" style="background-color: hsl(210, 60%, 98%); border-color: var(--guide-border);">
-                    <p style="color: var(--guide-text-muted);">Select a stage to view details.</p>
+                <div id="candling-details" class="p-4 border rounded-md min-h-[150px]">
+                    <p>Select a stage to view details.</p>
                 </div>
             </div>
             
             <div id="candling-visuals-container" class="mt-6 p-5 rounded-lg shadow" style="background-color: var(--guide-card-bg); border: 1px solid var(--guide-border);">
-                 <h4 class="text-lg font-semibold mb-2">Visual Guide (Simplified)</h4>
-                 <div class="flex flex-nowrap justify-center items-center gap-4 overflow-x-auto py-2"> {/* Added py-2 for a bit of vertical padding if scrollbar appears */}
-                    <div class="text-center flex-shrink-0">
-                        <p class="font-medium mb-1 diagram-text-muted">Infertile (Clear)</p>
-                        <div class="w-20 h-28 border-2 diagram-border-neutral rounded-full mx-auto diagram-egg-clear flex items-center justify-center">
-                            <div class="w-10 h-10 diagram-yolk-clear rounded-full"></div>
+                 <h4 class="text-lg font-semibold mb-2" style="color: var(--guide-text) !important;">Visual Guide (Simplified)</h4>
+                 <div class="flex flex-nowrap justify-center overflow-x-auto items-center gap-4">
+                    <div class="text-center">
+                        <p class="font-medium text-neutral-600 mb-1" style="color: var(--guide-text) !important;">Infertile (Clear)</p>
+                        <div class="w-20 h-28 border-2 border-neutral-400 rounded-full mx-auto bg-yellow-100 flex items-center justify-center !important">
+                            <div class="w-10 h-10 bg-yellow-300 rounded-full opacity-50 !important"></div>
                         </div>
                     </div>
-                    <div class="text-center flex-shrink-0">
-                        <p class="font-medium mb-1 diagram-text-muted">Early Viable (Day 5-7)</p>
-                        <div class="w-20 h-28 border-2 diagram-border-viable rounded-full mx-auto diagram-egg-viable flex flex-col items-center justify-end p-1 relative">
-                            <div class="absolute top-1 right-1 w-4 h-6 diagram-aircell-viable rounded-full"></div>
-                            <div class="w-3 h-3 diagram-embryo-viable rounded-full mb-1"></div>
-                            <div class="text-xs diagram-veins-text">Veins</div>
+                    <div class="text-center">
+                        <p class="font-medium text-neutral-600 mb-1" style="color: var(--guide-text) !important;">Early Viable (Day 5-7)</p>
+                        <div class="w-20 h-28 border-2 border-red-400 rounded-full mx-auto bg-rose-50 flex flex-col items-center justify-end p-1 relative !important">
+                            <div class="absolute top-1 right-1 w-4 h-6 bg-sky-200 opacity-70 rounded-full !important"></div>
+                            <div class="w-3 h-3 bg-red-500 rounded-full mb-1 !important"></div>
+                            <div class="text-red-500 text-xs !important">Veins</div>
                         </div>
                     </div>
-                    <div class="text-center flex-shrink-0">
-                        <p class="font-medium mb-1 diagram-text-muted">Blood Ring</p>
-                        <div class="w-20 h-28 border-2 diagram-bloodring-border rounded-full mx-auto diagram-egg-bloodring flex items-center justify-center">
-                            <div class="w-12 h-12 border-2 diagram-bloodring-inner rounded-full"></div>
+                    <div class="text-center">
+                        <p class="font-medium text-neutral-600 mb-1" style="color: var(--guide-text) !important;">Blood Ring</p>
+                        <div class="w-20 h-28 border-2 border-red-600 rounded-full mx-auto bg-red-100 flex items-center justify-center !important">
+                            <div class="w-12 h-12 border-2 border-red-500 rounded-full !important"></div>
                         </div>
                     </div>
-                    <div class="flex items-center flex-shrink-0"> {/* New flex container for diagram + text */}
+                    <div class="flex items-center">
                         <div class="text-center">
-                             <p class="font-medium mb-1 diagram-text-muted">Late Stage (Pre-Lockdown)</p>
-                             <div class="w-20 h-28 border-2 diagram-border-late rounded-full mx-auto diagram-egg-late flex flex-col items-center justify-start p-1">
-                                 <div class="w-full h-1/3 diagram-aircell-late rounded-t-full"></div>
-                                 <div class="flex-grow w-full diagram-embryo-late rounded-b-full"></div>
-                             </div>
+                            <p class="font-medium text-neutral-600 mb-1" style="color: var(--guide-text) !important;">Late Stage (Pre-Lockdown)</p>
+                            <div class="w-20 h-28 border-2 border-neutral-600 rounded-full mx-auto bg-neutral-200 flex flex-col items-center justify-start p-1 !important">
+                                <div class="w-full h-1/3 bg-sky-200 opacity-70 rounded-t-full !important"></div>
+                                <div class="flex-grow w-full bg-neutral-500 rounded-b-full !important"></div>
+                            </div>
                         </div>
-                        <p class="text-xs diagram-text-muted ml-2 w-24">Large air cell, dark embryo</p> {/* Added ml-2 and w-24 for spacing and wrap */}
+                        <div class="ml-4">
+                            <p class="text-xs text-neutral-500 mt-1" style="color: var(--guide-text) !important;">Large air cell, dark embryo</p>
+                        </div>
                     </div>
                  </div>
-                 <p class="text-xs mt-4 text-center diagram-text-muted">Note: These are highly simplified representations. Actual candling appearance varies.</p>
+                 <p class="text-xs text-neutral-500 mt-4 text-center" style="color: var(--guide-text) !important;">Note: These are highly simplified representations. Actual candling appearance varies.</p>
             </div>
 
             <div class="mt-6 p-5 rounded-lg shadow" style="background-color: var(--guide-card-bg); border: 1px solid var(--guide-border);">
@@ -318,17 +296,17 @@
             
             <div class="mt-6">
                  <h3 class="text-xl font-semibold mb-3">E. General Candling Timeline Table (Summary)</h3>
-                 <div class="overflow-x-auto rounded-lg shadow" style="background-color: var(--guide-card-bg); border: 1px solid var(--guide-border);">
-                    <table class="min-w-full divide-y" style="border-color: var(--guide-border);">
-                        <thead style="background-color: hsl(210, 60%, 98%);">
+                 <div class="overflow-x-auto rounded-lg shadow" style="background-color: var(--guide-card-bg);">
+                    <table class="min-w-full divide-y divide-stone-200">
+                        <thead class="bg-stone-50">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--guide-text-muted);">Species</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--guide-text-muted);">First Candling (Day)</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--guide-text-muted);">Mid-Incubation (Day(s))</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--guide-text-muted);">Late/Pre-Lockdown (Day(s))</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Species</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">First Candling (Day)</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Mid-Incubation (Day(s))</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Late/Pre-Lockdown (Day(s))</th>
                             </tr>
                         </thead>
-                        <tbody id="candling-table-body" class="divide-y" style="background-color: var(--guide-card-bg); border-color: var(--guide-border); font-size: 0.875rem; color: var(--guide-text);">
+                        <tbody id="candling-table-body" class="bg-white divide-y divide-stone-200 text-sm">
                         </tbody>
                     </table>
                 </div>
@@ -350,7 +328,7 @@
                         <li><strong>Improved Shell Brittleness & Membrane Softening:</strong> Eases pipping and zipping.</li>
                         <li><strong>Dissipation of Metabolic Heat:</strong> Prevents overheating of large, developing embryos.</li>
                     </ul>
-                    <p class="mt-2 text-sm" style="color: var(--guide-accent);">Proper cooling/misting can improve waterfowl hatchability significantly.</p>
+                    <p class="mt-2 text-sm" style="color: var(--guide-accent) !important;">Proper cooling/misting can improve waterfowl hatchability significantly.</p>
                 </div>
 
                 <div class="p-5 rounded-lg shadow" style="background-color: var(--guide-card-bg); border: 1px solid var(--guide-border);">
@@ -380,16 +358,16 @@
         <section id="troubleshooting" class="content-section">
             <h2 class="text-2xl font-semibold mb-4">V. Troubleshooting Common Incubation Problems</h2>
             <p class="mb-6">Even with care, issues can arise. This section lists common problems, their probable causes, and corrective measures. Accurate record-keeping and candling are key to diagnosis.</p>
-            <div class="overflow-x-auto rounded-lg shadow" style="background-color: var(--guide-card-bg); border: 1px solid var(--guide-border);">
-                <table class="min-w-full divide-y" style="border-color: var(--guide-border);">
-                    <thead style="background-color: hsl(210, 60%, 98%);">
+            <div class="overflow-x-auto rounded-lg shadow" style="background-color: var(--guide-card-bg);">
+                <table class="min-w-full divide-y divide-stone-200">
+                    <thead class="bg-stone-50">
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--guide-text-muted);">Symptom</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--guide-text-muted);">Probable Cause(s)</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider" style="color: var(--guide-text-muted);">Corrective Measure(s)</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Symptom</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Probable Cause(s)</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Corrective Measure(s)</th>
                         </tr>
                     </thead>
-                    <tbody id="troubleshooting-table-body" class="divide-y" style="background-color: var(--guide-card-bg); border-color: var(--guide-border); font-size: 0.875rem; color: var(--guide-text);">
+                    <tbody id="troubleshooting-table-body" class="bg-white divide-y divide-stone-200 text-sm">
                     </tbody>
                 </table>
             </div>
@@ -397,17 +375,17 @@
     </main>
 
     <footer class="text-center p-6 mt-8 text-sm">
-        <p>&copy; 2025 Interactive Incubation Guide. Compiled by NetMooiNiks. <a href="https://www.netmooiniks.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-opacity-80" style="color: var(--guide-header-text);">www.netmooiniks.com</a>.<br/>Content adapted from "A Comprehensive Guide to Artificial Egg Incubation".</p>
+        <p>© 2025 Interactive Incubation Guide. Compiled by NetMooiNiks. <a href="https://www.netmooiniks.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-opacity-80" style="color: var(--guide-header-text) !important;">www.netmooiniks.com</a>.<br/>Content adapted from "A Comprehensive Guide to Artificial Egg Incubation".</p>
     </footer>
 
     <script>
         const speciesData = {
             "Chicken": {
                 period: "21 days",
-                forcedAirTempC: "37.5-38.0°C",
-                stillAirTempC: "38.0-38.9°C (or graded)",
-                settingHumidity: "50-60% RH / 83-87°F WB (approx. 28.3-30.5°C WB)",
-                lockdownHumidity: "65-75% RH / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.5-38.0<sup>°</sup>C",
+                stillAirTempC: "38.0-38.9<sup>°</sup>C (or graded)",
+                settingHumidity: "50-60% RH / 83-87<sup>°</sup>F WB (approx. 28.3-30.5<sup>°</sup>C WB)",
+                lockdownHumidity: "65-75% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "18",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "3-7, 14, 18",
@@ -415,10 +393,10 @@
             },
             "Turkey": {
                 period: "28 days",
-                forcedAirTempC: "37.2-37.5°C",
-                stillAirTempC: "37.8-38.6°C",
-                settingHumidity: "45-60% RH / 84-86°F WB (approx. 28.9-30°C WB)",
-                lockdownHumidity: "65-70% RH / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.2-37.5<sup>°</sup>C",
+                stillAirTempC: "37.8-38.6<sup>°</sup>C",
+                settingHumidity: "45-60% RH / 84-86<sup>°</sup>F WB (approx. 28.9-30<sup>°</sup>C WB)",
+                lockdownHumidity: "65-70% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "25",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "7-10, 14, 25 (Air cell ~1/3)",
@@ -426,10 +404,10 @@
             },
             "Pekin Duck": {
                 period: "28 days",
-                forcedAirTempC: "37.4-37.7°C",
-                stillAirTempC: "38.0-38.9°C",
-                settingHumidity: "55-60% RH / 84.5-86°F WB (approx. 29.2-30°C WB)",
-                lockdownHumidity: "65-81% RH (staged) / 88-94°F WB (approx. 31.1-34.4°C WB)",
+                forcedAirTempC: "37.4-37.7<sup>°</sup>C",
+                stillAirTempC: "38.0-38.9<sup>°</sup>C",
+                settingHumidity: "55-60% RH / 84.5-86<sup>°</sup>F WB (approx. 29.2-30<sup>°</sup>C WB)",
+                lockdownHumidity: "65-81% RH (staged) / 88-94<sup>°</sup>F WB (approx. 31.1-34.4<sup>°</sup>C WB)",
                 turnStopDay: "25",
                 coolingMistingStart: "Yes (Day 7-10)",
                 candlingDays: "5-7, 10, 25 (Air cell ~1/3). Target 13-14% weight loss by Day 25.",
@@ -437,10 +415,10 @@
             },
             "Muscovy Duck": {
                 period: "33-37 days (avg. 35)",
-                forcedAirTempC: "37.5-37.6°C",
-                stillAirTempC: "38.1-38.9°C",
-                settingHumidity: "Highly Variable: 25-60% RH (Dry Hatch to 58%) / 85-86°F WB (approx. 29.4-30°C WB)",
-                lockdownHumidity: "Highly Variable: 66-83% RH or Baggie Method / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.5-37.6<sup>°</sup>C",
+                stillAirTempC: "38.1-38.9<sup>°</sup>C",
+                settingHumidity: "Highly Variable: 25-60% RH (Dry Hatch to 58%) / 85-86<sup>°</sup>F WB (approx. 29.4-30<sup>°</sup>C WB)",
+                lockdownHumidity: "Highly Variable: 66-83% RH or Baggie Method / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "31-32",
                 coolingMistingStart: "Yes (Day 1-10, variable freq.)",
                 candlingDays: "7-10, then ~weekly, lockdown. Air cell ~1/3 by pip. Target 2.8% weekly weight loss.",
@@ -448,10 +426,10 @@
             },
             "Goose (General)": {
                 period: "28-35 days",
-                forcedAirTempC: "37.2-37.7°C",
-                stillAirTempC: "38.0-39.4°C (or graded)",
-                settingHumidity: "Highly Variable (Breed dependent): 20-55% RH / 86-88°F WB (approx. 30-31.1°C WB)",
-                lockdownHumidity: "65-75%+ RH / 90-92°F WB (approx. 32.2-33.3°C WB)",
+                forcedAirTempC: "37.2-37.7<sup>°</sup>C",
+                stillAirTempC: "38.0-39.4<sup>°</sup>C (or graded)",
+                settingHumidity: "Highly Variable (Breed dependent): 20-55% RH / 86-88<sup>°</sup>F WB (approx. 30-31.1<sup>°</sup>C WB)",
+                lockdownHumidity: "65-75%+ RH / 90-92<sup>°</sup>F WB (approx. 32.2-33.3<sup>°</sup>C WB)",
                 turnStopDay: "25-27",
                 coolingMistingStart: "Yes (Day 4-8)",
                 candlingDays: "5-7, 10, then ~weekly/daily near pip. Monitor air cell 'dip'. Target 14-17% weight loss by pip.",
@@ -459,10 +437,10 @@
             },
             "Coturnix Quail": {
                 period: "17-18 days",
-                forcedAirTempC: "37.5-37.8°C",
-                stillAirTempC: "38.0-38.3°C (or graded)",
-                settingHumidity: "40-55% RH / 85-86°F WB (approx. 29.4-30°C WB)",
-                lockdownHumidity: "50-75% RH / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.5-37.8<sup>°</sup>C",
+                stillAirTempC: "38.0-38.3<sup>°</sup>C (or graded)",
+                settingHumidity: "40-55% RH / 85-86<sup>°</sup>F WB (approx. 29.4-30<sup>°</sup>C WB)",
+                lockdownHumidity: "50-75% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "14-15",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "7-10, 14 (if candled). Heartbeat Day 3, fully developed Day 15.",
@@ -470,10 +448,10 @@
             },
             "Bobwhite Quail": {
                 period: "23-24 days",
-                forcedAirTempC: "37.5-37.8°C",
-                stillAirTempC: "~38.9°C",
-                settingHumidity: "40-60% RH / 84-87°F WB (approx. 28.9-30.5°C WB)",
-                lockdownHumidity: "50-75% RH / 90°F WB (approx. 32.2°C WB)",
+                forcedAirTempC: "37.5-37.8<sup>°</sup>C",
+                stillAirTempC: "~38.9<sup>°</sup>C",
+                settingHumidity: "40-60% RH / 84-87<sup>°</sup>F WB (approx. 28.9-30.5<sup>°</sup>C WB)",
+                lockdownHumidity: "50-75% RH / 90<sup>°</sup>F WB (approx. 32.2<sup>°</sup>C WB)",
                 turnStopDay: "20-21",
                 coolingMistingStart: "No (Standard)",
                 candlingDays: "12-15. Pips into air cell Day 22.",
@@ -508,16 +486,6 @@
             { symptom: "Exploders (Eggs Bursting)", causes: "Bacterial contamination (dirty/cracked eggs).", measures: "Set only clean, uncracked eggs; Strict sanitation; Remove non-viable eggs promptly." },
             { symptom: "Short Down on Chicks", causes: "High temp; Low humidity; Excessive ventilation.", measures: "Correct temp/humidity; Moderate ventilation." }
         ];
-        
-        function formatTemp(tempStr) {
-            if (!tempStr || typeof tempStr !== 'string') return tempStr;
-            return tempStr.replace(/(\d+(\.\d+)?)°C/g, '$1<sup>°</sup>C');
-        }
-        
-        function formatGas(gasStr) {
-            if (!gasStr || typeof gasStr !== 'string') return gasStr;
-            return gasStr.replace(/CO2/g, 'CO<sub>2</sub>').replace(/O2/g, 'O<sub>2</sub>');
-        }
 
         document.addEventListener('DOMContentLoaded', () => {
             const tabs = document.querySelectorAll('.tab-button');
@@ -581,31 +549,25 @@
                 if (selectedSpecies && speciesData[selectedSpecies]) {
                     const data = speciesData[selectedSpecies];
                     speciesInfoDiv.innerHTML = `
-                        <h3 class="text-xl font-bold mb-3" style="color: var(--guide-primary);">${selectedSpecies}</h3>
-                        <div class="grid md:grid-cols-2 gap-4" style="color: var(--guide-text);">
-                            <div class="p-3 rounded-md shadow-sm" style="background-color: hsl(210,60%,98%);"><strong>Incubation Period:</strong> ${formatTemp(data.period)}</div>
-                            <div class="p-3 rounded-md shadow-sm" style="background-color: hsl(210,60%,98%);"><strong>Forced-Air Temp:</strong> ${formatTemp(data.forcedAirTempC)}</div>
-                            <div class="p-3 rounded-md shadow-sm" style="background-color: hsl(210,60%,98%);"><strong>Still-Air Temp:</strong> ${formatTemp(data.stillAirTempC)}</div>
-                            <div class="p-3 rounded-md shadow-sm" style="background-color: hsl(210,60%,98%);"><strong>Setting Humidity:</strong> ${formatTemp(data.settingHumidity)}</div>
-                            <div class="p-3 rounded-md shadow-sm" style="background-color: hsl(210,60%,98%);"><strong>Lockdown Humidity:</strong> ${formatTemp(data.lockdownHumidity)}</div>
-                            <div class="p-3 rounded-md shadow-sm" style="background-color: hsl(210,60%,98%);"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
-                            <div class="p-3 rounded-md shadow-sm" style="background-color: hsl(210,60%,98%);"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
-                            <div class="p-3 rounded-md shadow-sm md:col-span-2" style="background-color: hsl(210,60%,98%);"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
+                        <h3 class="text-xl font-bold mb-3">${selectedSpecies}</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${data.stillAirTempC}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${data.settingHumidity}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${data.lockdownHumidity}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
                         </div>
-                        <div class="mt-4 p-3 rounded-md text-sm" style="background-color: hsl(40, 100%, 95%); color: hsl(39, 80%, 40%);">
+                        <div class="mt-4 bg-amber-50 p-3 rounded-md text-sm">
                             <strong>Key Notes:</strong> ${data.notes}
                         </div>
                     `;
                 } else {
-                    speciesInfoDiv.innerHTML = '<p class="text-center" style="color: var(--guide-text-muted);">Select a species to see its incubation details.</p>';
+                    speciesInfoDiv.innerHTML = '<p class="text-center">Select a species to see its incubation details.</p>';
                 }
             });
-            
-            // Apply formatting to initially displayed text
-            document.querySelectorAll('.accordion-content p, #species-info p, #candling-details p, #troubleshooting-table-body td, #cooling p, #overview p').forEach(el => {
-                el.innerHTML = formatGas(formatTemp(el.innerHTML));
-            });
-
 
             // Candling stage details
             const candlingContent = {
@@ -616,7 +578,7 @@
             candlingStageButtons.forEach(button => {
                 button.addEventListener('click', () => {
                     const stage = button.getAttribute('data-stage');
-                    candlingDetailsDiv.innerHTML = candlingContent[stage] ? formatGas(formatTemp(candlingContent[stage])) : '<p>Details for this stage.</p>';
+                    candlingDetailsDiv.innerHTML = candlingContent[stage] || '<p>Details for this stage.</p>';
                 });
             });
             
@@ -642,7 +604,6 @@
                 content.style.maxHeight = content.scrollHeight + "px";
             });
 
-
             // Incubation Periods Chart
             const speciesNames = Object.keys(speciesData);
             const incubationDays = speciesNames.map(name => {
@@ -652,11 +613,14 @@
             });
 
             const chartColors = [
-                'hsl(210, 100%, 50%)', 'hsl(39, 100%, 50%)', 'hsl(170, 100%, 35%)', 
-                'hsl(280, 60%, 55%)', 'hsl(10, 70%, 50%)', 'hsl(200, 80%, 60%)', 
-                'hsl(330, 70%, 60%)' 
+                'hsl(210, 100%, 50%)', // guide-primary
+                'hsl(39, 100%, 50%)',  // guide-accent
+                'hsl(220, 60%, 60%)', // a shade of primary
+                'hsl(39, 100%, 70%)',  // a shade of accent
+                'hsl(210, 80%, 60%)',
+                'hsl(39, 80%, 60%)',
+                'hsl(200, 100%, 50%)'
             ];
-
 
             new Chart(document.getElementById('incubationPeriodsChart'), {
                 type: 'bar',
@@ -678,7 +642,7 @@
                             beginAtZero: true,
                             title: { display: true, text: 'Days', color: 'var(--guide-text)' },
                             ticks: { color: 'var(--guide-text)' },
-                            grid: { color: 'var(--guide-border)' }
+                            grid: { color: 'var(--guide-border)'}
                         },
                         x: {
                             ticks: {
@@ -694,7 +658,7 @@
                                     return label;
                                 }
                             },
-                             grid: { display: false }
+                             grid: { color: 'var(--guide-border)'}
                         }
                     },
                     plugins: {
@@ -709,14 +673,6 @@
                     }
                 }
             });
-            
-            // Initial formatting run for static content
-             document.querySelectorAll('p, li, strong, span, div, td, th').forEach(el => {
-                if (el.children.length === 0) { // Process only leaf nodes or nodes with direct text
-                    el.innerHTML = formatGas(formatTemp(el.innerHTML));
-                }
-            });
-
         });
     </script>
 </body>
