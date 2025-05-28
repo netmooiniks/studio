@@ -121,9 +121,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       src={adConfig.imageUrl}
                       alt={adConfig.altText}
                       fill
-                      style={{ objectFit: "cover" }}
                       priority
-                      className="cursor-pointer"
+                      className="cursor-pointer object-contain"
                     />
                   </a>
                 </div>
