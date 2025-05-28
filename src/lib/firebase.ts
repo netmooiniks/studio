@@ -14,7 +14,7 @@ const firebaseConfig = {
   storageBucket: "hatchwise.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_GA_ID // Use environment variable
+  measurementId: process.env.NEXT_PUBLIC_GA_ID
 };
 
 // Initialize Firebase
@@ -33,16 +33,18 @@ if (!getApps().length) {
 }
 
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = getFirestore(app); // Initialize Firestore
 
 // Initialize Firebase Analytics if in a browser environment
 let analytics;
+// Check if window is defined (i.e., we're in a browser environment)
+// and if NEXT_PUBLIC_GA_ID is present
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GA_ID) {
   // Ensure app is initialized before calling getAnalytics
-  if (app) {
+  if (app) { 
     analytics = getAnalytics(app);
   }
 }
 
-export { app, analytics };
+export { app, analytics }; // Export app and analytics
 export default app;
