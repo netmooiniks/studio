@@ -27,7 +27,14 @@ function AppContent({ children }: { children: ReactNode }) {
   if (authLoading || (currentUser && loadingData)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-        <Image src="/icon.png" alt="Loading Application Data Icon" width={64} height={64} className="mb-4 animate-spin" />
+        <Image
+          src="/icon.png"
+          alt="Loading Application Data Icon"
+          width={64}
+          height={64}
+          className="mb-4 animate-spin"
+          priority // Add priority for LCP
+        />
         <p className="text-muted-foreground text-lg">Loading Application Data...</p>
       </div>
     );
@@ -63,7 +70,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   if (authLoading || (!authLoading && !currentUser)) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
-        <Image src="/icon.png" alt="Authenticating Icon" width={64} height={64} className="mb-4 animate-spin" />
+        <Image
+          src="/icon.png"
+          alt="Authenticating Icon"
+          width={64}
+          height={64}
+          className="mb-4 animate-spin"
+          priority // Add priority for LCP
+        />
         <p className="text-muted-foreground text-lg">Authenticating...</p>
       </div>
     );
@@ -94,7 +108,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </div>
 
           {adConfig.enabled && (
-            <div className={`fixed bottom-0 left-0 right-0 ${adBannerHeightClass} bg-card border-t border-border z-40`}>
+            <div className={`fixed bottom-0 left-0 right-0 relative ${adBannerHeightClass} bg-card border-t border-border z-40`}> {/* Add relative position */}
               {/* The banner will stretch to the width of its nearest positioned ancestor (SidebarInset), which is correct. */}
               <a
                 href={adConfig.linkUrl}
@@ -106,8 +120,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Image
                   src={adConfig.imageUrl}
                   alt={adConfig.altText}
-                  layout="fill"
-                  objectFit="cover"
+                  fill // Use fill instead of layout="fill"
+                  style={{ objectFit: "cover" }} // Use style prop for objectFit
+                  priority // Add priority for LCP
                   className="cursor-pointer"
                 />
               </a>
