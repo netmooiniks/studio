@@ -2,7 +2,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // Added useState
 import { useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import AppHeader from '@/components/layout/header';
@@ -48,6 +48,7 @@ const adConfig = {
   linkUrl: 'https://www.netmooiniks.com', // Link where the ad navigates
   altText: 'Advertisement - Click to learn more!',
   enabled: true, // Set to false to hide the banner
+  flashInterval: 3500, // Interval in milliseconds for flashing effect
 };
 
 const adBannerHeightClass = "h-16"; // Tailwind class for 64px height (4rem)
@@ -56,12 +57,22 @@ const adBannerHeightValue = "4rem"; // CSS value for calculations, matching the 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { currentUser, loading: authLoading } = useAuth();
   const router = useRouter();
+  const [showAdImage, setShowAdImage] = useState(true);
 
   useEffect(() => {
     if (!authLoading && !currentUser) {
       router.push('/login');
     }
   }, [currentUser, authLoading, router]);
+
+  useEffect(() => {
+    if (adConfig.enabled && adConfig.flashInterval > 0) {
+      const intervalId = setInterval(() => {
+        setShowAdImage(prev => !prev);
+      }, adConfig.flashInterval);
+      return () => clearInterval(intervalId);
+    }
+  }, []); // Empty dependency array ensures this runs once on mount
 
   if (authLoading || (!authLoading && !currentUser)) {
     return (
@@ -88,6 +99,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     ? "pb-20 md:pb-[5.5rem] lg:pb-24" // Includes space for the ad banner
     : "pb-4 md:pb-6 lg:pb-8";
 
+  let adHostname = '';
+  if (adConfig.linkUrl) {
+    try {
+      adHostname = new URL(adConfig.linkUrl).hostname;
+    } catch (e) {
+      // console.warn("Invalid adConfig.linkUrl:", adConfig.linkUrl);
+    }
+  }
+
+
   return (
     <DataProvider>
       <>
@@ -109,14 +130,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             {/* Fixed ad banner at the bottom of the SidebarInset */}
             {adConfig.enabled && (
               <div className={`fixed bottom-0 left-0 right-0 ${adBannerHeightClass} bg-card border-t border-border z-40`}>
-                <div className="relative w-full h-full">
-                  <a
-                    href={adConfig.linkUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block w-full h-full"
-                    aria-label={adConfig.altText}
-                  >
+                <a
+                  href={adConfig.linkUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full h-full"
+                  aria-label={adConfig.altText}
+                >
+                  {showAdImage ? (
                     <Image
                       src={adConfig.imageUrl}
                       alt={adConfig.altText}
@@ -124,8 +145,14 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                       priority
                       className="cursor-pointer object-contain"
                     />
-                  </a>
-                </div>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-accent text-accent-foreground p-2 transition-opacity duration-500">
+                      <span className="text-center font-semibold text-sm sm:text-base">
+                        {adHostname ? `Visit ${adHostname}!` : 'Learn More!'}
+                      </span>
+                    </div>
+                  )}
+                </a>
               </div>
             )}
 
