@@ -41,7 +41,7 @@ function AppContent({ children }: { children: ReactNode }) {
 // 2. Place your ad image in that folder, e.g., `public/ads/ad-banner.png`
 // 3. Update imageUrl below to `/ads/ad-banner.png` (or your actual path and filename)
 const adConfig = {
-  imageUrl: '/ads/ad-banner.png', // EXAMPLE: Path to local image in public/ads/
+  imageUrl: '/public/ads/ad-banner.png', // EXAMPLE: Path to local image in public/ads/
   linkUrl: 'https://www.netmooiniks.com', // Link where the ad navigates
   altText: 'Advertisement - Click to learn more!',
   enabled: true, // Set to false to hide the banner
