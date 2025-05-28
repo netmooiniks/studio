@@ -19,7 +19,6 @@ export default function EditBatchPage() {
   const batchToEdit = getBatchById(batchId);
 
   // The BatchForm's onSubmit provides data where startDate is already a string.
-  // Omit<Batch, ...> also types startDate as string.
   const handleSubmit = (data: Omit<Batch, 'id' | 'candlingResults' | 'tasks' | 'hatchedEggs'> & { customCandlingDays?: number[] }) => {
     if (!batchToEdit) return;
     
