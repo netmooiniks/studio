@@ -1,6 +1,6 @@
 
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app"; // Added FirebaseApp
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
@@ -17,12 +17,12 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-let app: FirebaseApp; // Type annotation added
+let app: FirebaseApp;
 
 if (!getApps().length) {
   // Check if all required config values are present, especially the API key
   if (!firebaseConfig.apiKey) {
-    const errorMessage = "CRITICAL ERROR: Firebase API Key is MISSING or EMPTY. Please ensure NEXT_PUBLIC_FIREBASE_API_KEY is correctly set with a valid value in your Firebase App Hosting backend's environment variable settings and then REDEPLOY your application. App cannot initialize.";
+    const errorMessage = "CRITICAL ERROR: Firebase API Key (NEXT_PUBLIC_FIREBASE_API_KEY) is MISSING or EMPTY in the deployment environment. Please ensure it is correctly set with a valid value in your Firebase App Hosting backend's environment variable settings and then REDEPLOY your application. App cannot initialize.";
     console.error(errorMessage);
     // Throw an error to halt initialization if the key is critical
     throw new Error(errorMessage);
