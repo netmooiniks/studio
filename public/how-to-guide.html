@@ -21,8 +21,8 @@
             --accent-fg: hsl(0 0% 100%); /* White */
             --header-bg: hsl(220 70% 22%); /* Deep Sapphire for header */
             --header-fg: hsl(220 20% 90%); /* Light text for header */
-            --nav-bg: hsl(220 70% 22%); /* Deep Sapphire for nav - updated to match header as per last working */
-            --nav-fg: hsl(220 20% 90%); /* Light text for nav - updated to match header as per last working */
+            --nav-button-bg: hsl(220 50% 40%); /* Lighter Sapphire for nav button default */
+            --nav-button-fg: hsl(220 20% 95%); /* Light text for nav button */
             --link-color: hsl(210 100% 50%);
         }
         body {
@@ -36,8 +36,7 @@
             -ms-user-select: none; /* IE10+ */
         }
         /* General styling for elements that should use card background/foreground */
-        .content-section > div:not(.grid):not(.flex), /* Exclude direct grid/flex containers if they should not have card styling */
-        .content-section > .overflow-x-auto,
+        .content-section > div, .content-section > .overflow-x-auto, /* Target table container */
         #species-info, .chart-container, #candling-details, #candling-visuals-container,
         details {
             background-color: var(--card-bg);
@@ -48,42 +47,76 @@
             box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1); /* shadow / shadow-lg */
             margin-bottom: 1.5rem; /* mb-6 */
         }
-        #candling-visuals-container { /* Candling visuals container needs specific padding if it's a card */
-             padding: 1.25rem;
-        }
         /* Ensure direct p, ul, ol, h3, h4 children get the card-fg */
-        .content-section > div:not(.grid):not(.flex) > p, 
-        .content-section > div:not(.grid):not(.flex) > ul, 
-        .content-section > div:not(.grid):not(.flex) > ol, 
-        .content-section > div:not(.grid):not(.flex) > h3, 
-        .content-section > div:not(.grid):not(.flex) > h4,
+        .content-section > div > p, .content-section > div > ul, .content-section > div > ol, .content-section > div > h3, .content-section > div > h4,
         #species-info > p, #species-info > div > div > strong, #species-info h3,
-        #candling-details > p,
+        #candling-details > p, #candling-details h3, #candling-details h4,
         details > div > p, details > div > ul, details > div > h3, details > div > h4,
-        #candling-visuals-container h4 {
+        #candling-visuals-container h4,
+        .bg-white > p, .bg-white > ul, .bg-white > ol, .bg-white h3, .bg-white h4 { /* Keep .bg-white for legacy if any exist */
              color: var(--card-fg);
         }
         /* Target table text color */
         table, th, td {
             color: var(--card-fg);
         }
-        /* Specific overrides for candling diagram elements */
-        #candling-visuals-container .text-neutral-600 { color: #52525B !important; } /* neutral-600 */
-        #candling-visuals-container .text-neutral-500 { color: #71717A !important; } /* neutral-500 */
-        #candling-visuals-container .text-xs { font-size: 0.75rem !important; }
-        #candling-visuals-container .border-neutral-400 { border-color: #A1A1AA !important; } /* neutral-400 */
-        #candling-visuals-container .bg-yellow-100 { background-color: #FEF9C3 !important; } /* yellow-100 */
-        #candling-visuals-container .bg-yellow-300 { background-color: #FDE047 !important; } /* yellow-300 */
-        #candling-visuals-container .border-red-400 { border-color: #F87171 !important; } /* red-400 */
-        #candling-visuals-container .bg-rose-50 { background-color: #FFF1F2 !important; } /* rose-50 */
-        #candling-visuals-container .bg-red-500 { background-color: #EF4444 !important; } /* red-500 */
-        #candling-visuals-container .text-red-500 { color: #EF4444 !important; } /* red-500 */
-        #candling-visuals-container .border-red-600 { border-color: #DC2626 !important; } /* red-600 */
-        #candling-visuals-container .bg-red-100 { background-color: #FEE2E2 !important; } /* red-100 */
-        #candling-visuals-container .border-neutral-600 { border-color: #52525B !important; } /* neutral-600 */
-        #candling-visuals-container .bg-neutral-200 { background-color: #E5E5E5 !important; } /* neutral-200 */
-        #candling-visuals-container .bg-sky-200 { background-color: #BAE6FD !important; } /* sky-200 */
-        #candling-visuals-container .bg-neutral-500 { background-color: #737373 !important; } /* neutral-500 */
+        /* Specific overrides for candling diagram elements to ensure they are not overridden */
+        #candling-visuals-container .text-neutral-600 { color: #52525B !important; }
+        #candling-visuals-container .text-neutral-500 { color: #71717A !important; }
+        #candling-visuals-container .text-xs { font-size: 0.75rem !important; line-height: 1rem !important; }
+        #candling-visuals-container .border-neutral-400 { border-color: #A1A1AA !important; }
+        #candling-visuals-container .bg-yellow-100 { background-color: #FEF9C3 !important; }
+        #candling-visuals-container .bg-yellow-300 { background-color: #FDE047 !important; }
+        #candling-visuals-container .border-red-400 { border-color: #F87171 !important; }
+        #candling-visuals-container .bg-rose-50 { background-color: #FFF1F2 !important; }
+        #candling-visuals-container .bg-red-500 { background-color: #EF4444 !important; }
+        #candling-visuals-container .text-red-500 { color: #EF4444 !important; }
+        #candling-visuals-container .border-red-600 { border-color: #DC2626 !important; }
+        #candling-visuals-container .bg-red-100 { background-color: #FEE2E2 !important; }
+        #candling-visuals-container .border-neutral-600 { border-color: #52525B !important; }
+        #candling-visuals-container .bg-neutral-200 { background-color: #E5E5E5 !important; }
+        #candling-visuals-container .bg-sky-200 { background-color: #BAE6FD !important; }
+        #candling-visuals-container .bg-neutral-500 { background-color: #737373 !important; }
+        /* Styles for interactive candling visuals - layout */
+        #candling-visuals-container .w-20 { width: 5rem !important; }
+        #candling-visuals-container .h-28 { height: 7rem !important; }
+        #candling-visuals-container .border-2 { border-width: 2px !important; }
+        #candling-visuals-container .rounded-full { border-radius: 9999px !important; }
+        #candling-visuals-container .mx-auto { margin-left: auto !important; margin-right: auto !important; }
+        #candling-visuals-container .flex { display: flex !important; }
+        #candling-visuals-container .items-center { align-items: center !important; }
+        #candling-visuals-container .items-start { align-items: flex-start !important; }
+        #candling-visuals-container .justify-center { justify-content: center !important; }
+        #candling-visuals-container .opacity-50 { opacity: 0.5 !important; }
+        #candling-visuals-container .flex-col { flex-direction: column !important; }
+        #candling-visuals-container .justify-end { justify-content: flex-end !important; }
+        #candling-visuals-container .p-1 { padding: 0.25rem !important; }
+        #candling-visuals-container .relative { position: relative !important; }
+        #candling-visuals-container .absolute { position: absolute !important; }
+        #candling-visuals-container .top-1 { top: 0.25rem !important; }
+        #candling-visuals-container .right-1 { right: 0.25rem !important; }
+        #candling-visuals-container .w-4 { width: 1rem !important; }
+        #candling-visuals-container .h-6 { height: 1.5rem !important; }
+        #candling-visuals-container .opacity-70 { opacity: 0.7 !important; }
+        #candling-visuals-container .w-3 { width: 0.75rem !important; }
+        #candling-visuals-container .h-3 { height: 0.75rem !important; }
+        #candling-visuals-container .mb-1 { margin-bottom: 0.25rem !important; }
+        #candling-visuals-container .w-12 { width: 3rem !important; }
+        #candling-visuals-container .h-12 { height: 3rem !important; }
+        #candling-visuals-container .justify-start { justify-content: flex-start !important; }
+        #candling-visuals-container .w-full { width: 100% !important; }
+        #candling-visuals-container .h-1\\/3 { height: 33.333333% !important; }
+        #candling-visuals-container .rounded-t-full { border-top-left-radius: 9999px !important; border-top-right-radius: 9999px !important; }
+        #candling-visuals-container .flex-grow { flex-grow: 1 !important; }
+        #candling-visuals-container .rounded-b-full { border-bottom-left-radius: 9999px !important; border-bottom-right-radius: 9999px !important; }
+        #candling-visuals-container .mt-1 { margin-top: 0.25rem !important; }
+        #candling-visuals-container .font-medium { font-weight: 500 !important; }
+        #candling-visuals-container .mb-2 { margin-bottom: 0.5rem !important; }
+        #candling-visuals-container .flex-nowrap { flex-wrap: nowrap !important; }
+        #candling-visuals-container .overflow-x-auto { overflow-x: auto !important; }
+        #candling-visuals-container .gap-4 { gap: 1rem !important; }
+        #candling-visuals-container .text-center { text-align: center !important; }
+        #candling-visuals-container .mt-4 { margin-top: 1rem !important; }
 
         header.main-header {
             background-color: var(--header-bg);
@@ -97,7 +130,7 @@
             text-align: center;
         }
         nav.top-nav {
-            background-color: var(--nav-bg); /* Uses Deep Sapphire */
+            background-color: var(--header-bg); /* Same as main header for consistency */
             padding: 1rem; /* p-4 */
             position: sticky;
             top: 0;
@@ -113,14 +146,14 @@
             margin:0; padding:0;
         }
         nav.top-nav .tab-button {
-            background-color: hsl(220, 60%, 30%); /* Lighter Sapphire for distinct inactive tabs */
-            color: var(--nav-fg); 
-            padding: 0.5rem 0.75rem; 
-            border-radius: 0.375rem; 
-            font-weight: 500; 
-            border: 1px solid transparent; 
+            background-color: var(--nav-button-bg);
+            color: var(--nav-button-fg);
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border: 1px solid transparent;
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-            font-size: 0.875rem; 
+            font-size: 0.875rem;
         }
         @media (min-width: 640px) { /* sm breakpoint */
             nav.top-nav .tab-button {
@@ -128,36 +161,30 @@
                 font-size: 1rem; /* sm:text-base */
             }
         }
-        nav.top-nav .tab-button:hover {
-            background-color: var(--primary); 
-            color: var(--primary-fg); 
-            border-color: var(--primary);
-        }
+        nav.top-nav .tab-button:hover,
         nav.top-nav .tab-button.active {
-            background-color: var(--primary); 
-            color: var(--primary-fg); 
-            border-color: var(--primary); 
-        }
-
-        .candling-stage-btn {
-            background-color: hsl(220, 60%, 30%); /* Default inactive, matches top nav inactive */
-            color: var(--nav-fg);
-            padding: 0.5rem 1rem; /* py-2 px-4 */
-            border-radius: 0.375rem; /* rounded-md */
-            font-weight: 500;
-            border: 1px solid transparent;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        }
-        .candling-stage-btn:hover {
             background-color: var(--primary);
             color: var(--primary-fg);
             border-color: var(--primary);
         }
+
+        /* Candling Timeline Stage Buttons */
+        .candling-stage-btn {
+            background-color: var(--nav-button-bg); /* Default like nav buttons */
+            color: var(--nav-button-fg);
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .candling-stage-btn:hover,
         .candling-stage-btn.active-stage {
             background-color: var(--primary);
             color: var(--primary-fg);
             border-color: var(--primary);
         }
+
 
         .content-section { display: none; margin-top: 1.5rem; }
         .content-section.active { display: block; }
@@ -170,30 +197,24 @@
          .content-section h3 {
             font-size: 1.25rem; /* text-xl */
             font-weight: 600; /* font-semibold */
-            color: hsl(var(--card-fg) / 0.9);
+            color: var(--card-fg); /* Ensuring h3 uses card foreground */
+            opacity: 0.9;
             margin-bottom: 0.75rem; /* mb-3 */
-        }
-         /* Ensure h4 within #candling-visuals-container is styled by its parent card theme */
-        #candling-visuals-container h4 {
-            font-size: 1.125rem; /* text-lg */
-            font-weight: 600; /* font-semibold */
-            margin-bottom: 0.5rem; /* mb-2 */
         }
         .content-section p, .content-section ul, .content-section ol {
             margin-bottom: 1rem; /* mb-4 or space-y-2 */
             line-height: 1.6;
+             color: var(--card-fg); /* Ensure p, ul, ol in content sections use card-fg */
         }
         .content-section ul, .content-section ol {
             padding-left: 1.5rem; /* list-inside style often adds padding */
         }
         .content-section strong {
             font-weight: 600;
+            color: var(--card-fg); /* Strong text should also use card-fg */
         }
-        .content-section .text-amber-700 { color: var(--accent) !important; } /* Themed accent */
-        .content-section .text-red-600 { color: hsl(var(--destructive)) !important; } /* Themed destructive */
-        #species-info .bg-amber-100 { background-color: hsl(var(--accent) / 0.1) !important; }
-        #species-info .text-amber-800 { color: hsl(var(--accent) / 0.9) !important; }
-
+        .content-section .text-amber-700 { color: var(--accent) !important; } /* Themed accent with !important */
+        .content-section .text-red-600 { color: hsl(0, 72%, 51%) !important; } /* A general red for warnings, destructive-like */
 
         .chart-container {
             position: relative;
@@ -219,12 +240,13 @@
             font-weight: 600; /* font-semibold */
             font-size: 1.125rem; /* text-lg */
             cursor: pointer;
-            list-style: none; 
+            list-style: none;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            color: var(--card-fg); /* Summary text */
         }
-        details > summary::-webkit-details-marker { 
+        details > summary::-webkit-details-marker {
             display: none;
         }
         .details-marker::before {
@@ -232,8 +254,9 @@
             margin-right: 0.5rem;
             display: inline-block;
             transition: transform 0.3s ease-out;
+            color: var(--primary); /* Marker color */
         }
-        details[open] > summary .details-marker::before { 
+        details[open] > summary .details-marker::before {
             transform: rotate(90deg);
         }
         /* Table styling */
@@ -246,16 +269,17 @@
             padding: 0.75rem 1rem; /* px-4 py-3 or py-2 */
             text-align: left;
             vertical-align: top;
+            color: var(--card-fg); /* Table text */
         }
         thead {
-            background-color: hsl(var(--border-color) / 0.1); /* bg-stone-50 like */
+            background-color: hsl(var(--page-bg) / 0.7); /* Lighter than card, derived from page-bg */
         }
         th {
             font-size: 0.75rem; /* text-xs */
             font-weight: 500; /* font-medium */
             text-transform: uppercase;
             letter-spacing: 0.05em; /* tracking-wider */
-            color: hsl(var(--card-fg) / 0.7); /* text-neutral-500 like */
+            color: hsl(var(--card-fg) / 0.8); /* Table header text, slightly muted */
         }
         tbody {
              font-size: 0.875rem; /* text-sm */
@@ -265,72 +289,19 @@
             padding: 1.5rem; /* p-6 */
             margin-top: 2rem; /* mt-8 */
             background-color: var(--header-bg);
-            color: var(--header-fg); 
+            color: var(--header-fg);
             font-size: 0.875rem; /* text-sm */
         }
         footer.main-footer a {
-            color: var(--primary); 
+            color: var(--primary);
             text-decoration: underline;
         }
         footer.main-footer a:hover {
             opacity: 0.8;
         }
-        /* Styles for interactive candling visuals - to ensure they are not overridden by general styles */
-        #candling-visuals-container .w-20 { width: 5rem !important; }
-        #candling-visuals-container .h-28 { height: 7rem !important; }
-        #candling-visuals-container .border-2 { border-width: 2px !important; }
-        #candling-visuals-container .rounded-full { border-radius: 9999px !important; }
-        #candling-visuals-container .mx-auto { margin-left: auto !important; margin-right: auto !important; }
-        #candling-visuals-container .flex { display: flex !important; }
-        #candling-visuals-container .items-center { align-items: center !important; }
-        #candling-visuals-container .justify-center { justify-content: center !important; }
-        #candling-visuals-container .opacity-50 { opacity: 0.5 !important; }
-        #candling-visuals-container .flex-col { flex-direction: column !important; }
-        #candling-visuals-container .justify-end { justify-content: flex-end !important; }
-        #candling-visuals-container .p-1 { padding: 0.25rem !important; }
-        #candling-visuals-container .relative { position: relative !important; }
-        #candling-visuals-container .absolute { position: absolute !important; }
-        #candling-visuals-container .top-1 { top: 0.25rem !important; }
-        #candling-visuals-container .right-1 { right: 0.25rem !important; }
-        #candling-visuals-container .w-4 { width: 1rem !important; }
-        #candling-visuals-container .h-6 { height: 1.5rem !important; }
-        #candling-visuals-container .opacity-70 { opacity: 0.7 !important; }
-        #candling-visuals-container .w-3 { width: 0.75rem !important; }
-        #candling-visuals-container .h-3 { height: 0.75rem !important; }
-        #candling-visuals-container .mb-1 { margin-bottom: 0.25rem !important; }
-        #candling-visuals-container .w-12 { width: 3rem !important; }
-        #candling-visuals-container .h-12 { height: 3rem !important; }
-        #candling-visuals-container .justify-start { justify-content: flex-start !important; }
-        #candling-visuals-container .w-full { width: 100% !important; }
-        #candling-visuals-container .h-1\\/3 { height: 33.333333% !important; } /* Escaped slash */
-        #candling-visuals-container .rounded-t-full { border-top-left-radius: 9999px !important; border-top-right-radius: 9999px !important; }
-        #candling-visuals-container .flex-grow { flex-grow: 1 !important; }
-        #candling-visuals-container .rounded-b-full { border-bottom-left-radius: 9999px !important; border-bottom-right-radius: 9999px !important; }
-        #candling-visuals-container .mt-1 { margin-top: 0.25rem !important; }
-        #candling-visuals-container .font-medium { font-weight: 500 !important; }
-        #candling-visuals-container .mb-2 { margin-bottom: 0.5rem !important; }
-        /* Ensure this is flex-nowrap and centered */
-        #candling-visuals-container > .flex {
-             display: flex !important;
-             flex-wrap: nowrap !important; /* Changed from wrap */
-             justify-content: center !important; /* Changed from around for better control with gap */
-             align-items: flex-start !important; /* Changed from center for consistent top alignment */
-             gap: 1rem !important;
-             overflow-x: auto !important; /* Allow horizontal scroll if needed */
-        }
-        #candling-visuals-container .text-center { text-align: center !important; }
-        #candling-visuals-container .mt-4 { margin-top: 1rem !important; }
-
-        /* Make body text non-selectable */
-        body {
-            user-select: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-        }
     </style>
 </head>
-<body class="text-text-color">
+<body class="select-none">
     <header class="main-header">
         <h1>Interactive Poultry Incubation Guide</h1>
     </header>
@@ -348,13 +319,12 @@
     <main class="container mx-auto p-4 sm:p-6 lg:p-8">
         <section id="overview" class="content-section active">
             <h2 >I. Principles of Artificial Incubation</h2>
-            <p class="mb-4">This section outlines the fundamental principles crucial for successful artificial egg incubation. Understanding these core concepts will help you manage your incubator effectively and maximize hatch rates. Key areas include core environmental factors, incubator types, egg handling, and biosecurity.</p>
+            <p>This section outlines the fundamental principles crucial for successful artificial egg incubation. Understanding these core concepts will help you manage your incubator effectively and maximize hatch rates. Key areas include core environmental factors, incubator types, egg handling, and biosecurity.</p>
 
             <div class="space-y-3">
                 <details class="group">
-                    <summary class="flex justify-between items-center group details-marker">
+                    <summary class="details-marker">
                         A. Core Environmental Factors: Temperature, Humidity, Ventilation, Turning
-                        <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content space-y-2">
                         <p><strong>Temperature:</strong> The most critical factor. Optimal temperature varies by species and incubator type. Consistently high temperatures are more damaging than low ones, leading to early, weak hatches or mortality. Low temperatures cause late hatches and weak chicks. Target ranges are typically 37.2-37.5<sup>°</sup>C for forced-air and 37.8-38.9<sup>°</sup>C for still-air incubators for many species.</p>
@@ -366,9 +336,8 @@
                 </details>
 
                 <details class="group">
-                    <summary class="flex justify-between items-center group details-marker">
+                    <summary class="details-marker">
                         B. Incubator Types: Forced-Air vs. Still-Air
-                         <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content space-y-2">
                         <p><strong>Forced-Air Incubators:</strong> Use a fan for uniform temperature and humidity. Generally operate at slightly lower temperatures (e.g., 37.2-37.5<sup>°</sup>C). Easier to manage.</p>
@@ -377,9 +346,8 @@
                 </details>
 
                 <details class="group">
-                    <summary class="flex justify-between items-center group details-marker">
+                    <summary class="details-marker">
                         C. Egg Selection, Storage, and Handling
-                         <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content space-y-2">
                         <p><strong>Selection:</strong> Choose clean, well-shaped eggs of typical size. Avoid cracked, double-yolked, or misshapen eggs. Generally, do not wash eggs to preserve the protective bloom.</p>
@@ -389,9 +357,8 @@
                 </details>
 
                 <details class="group">
-                    <summary class="flex justify-between items-center group details-marker">
+                    <summary class="details-marker">
                         D. Biosecurity in the Hatchery Environment
-                         <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content space-y-2">
                         <p>Crucial to prevent disease. Clean and disinfect incubators and equipment between hatches. Source eggs from healthy flocks. Wash hands before handling eggs. Avoid setting dirty or cracked eggs. Do not mix waterfowl eggs with other poultry eggs in the same incubator due to differing pathogen risks.</p>
@@ -402,11 +369,11 @@
 
         <section id="species" class="content-section">
             <h2>II. Species Deep Dive</h2>
-            <p class="mb-6">Select a poultry species from the dropdown below to view its specific incubation parameters, including temperature, humidity, turning schedule, and any special considerations like cooling or misting. This information is crucial as optimal conditions vary significantly between species.</p>
+            <p>Select a poultry species from the dropdown below to view its specific incubation parameters, including temperature, humidity, turning schedule, and any special considerations like cooling or misting. This information is crucial as optimal conditions vary significantly between species.</p>
             
             <div class="mb-6">
                 <label for="species-select" class="block text-lg font-medium mb-2">Select Species:</label>
-                <select id="species-select" class="w-full max-w-md p-3 border-stone-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500 bg-white">
+                <select id="species-select" class="w-full max-w-md p-3 border focus:ring-primary focus:border-primary bg-card-bg text-card-fg rounded-lg shadow-sm">
                     <option value="">-- Select a Species --</option>
                 </select>
             </div>
@@ -416,7 +383,7 @@
             </div>
             
             <div class="mt-8">
-                <h3 class="text-xl font-semibold mb-3">Incubation Period Comparison</h3>
+                <h3 class="mb-3">Incubation Period Comparison</h3>
                 <div class="chart-container p-4">
                     <canvas id="incubationPeriodsChart"></canvas>
                 </div>
@@ -426,14 +393,14 @@
 
         <section id="candling" class="content-section">
             <h2>III. The Art and Science of Egg Candling</h2>
-            <p class="mb-6">Egg candling involves shining a light through the egg to observe internal development. It's vital for checking fertility, monitoring embryo growth, assessing air cell size (an indicator of humidity), and removing non-viable eggs. This section guides you through the process.</p>
+            <p>Egg candling involves shining a light through the egg to observe internal development. It's vital for checking fertility, monitoring embryo growth, assessing air cell size (an indicator of humidity), and removing non-viable eggs. This section guides you through the process.</p>
 
             <div class="grid md:grid-cols-2 gap-6">
-                <div> <!-- This div will get card styling from CSS -->
+                <div>
                     <h3>A. Candling Equipment and Basic Technique</h3>
                     <p>Use a bright LED flashlight or a commercial egg candler. Perform candling in a darkened room. Hold the light against the large end of the egg. Gently rotate to view contents. Minimize time out of incubator (max 10 mins). Brown eggs are harder to candle; may need to wait longer.</p>
                 </div>
-                <div> <!-- This div will get card styling from CSS -->
+                <div>
                     <h3>B. Interpreting Air Cell Development</h3>
                     <p>The air cell (at the broad end) enlarges as moisture evaporates. Its size indicates if humidity is correct.</p>
                     <ul class="list-disc list-inside mt-2 space-y-1">
@@ -444,22 +411,22 @@
                 </div>
             </div>
 
-            <div class="mt-6"> <!-- This div will get card styling from CSS -->
+            <div class="mt-6">
                 <h3>C. Candling Timeline & Observations</h3>
                 <p class="mb-4">Click on a stage to see typical observations. Note: Timings are general; refer to species-specific data for precise days.</p>
                 <div class="flex flex-wrap gap-2 mb-4">
-                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="early">Early Development (First Week)</button>
-                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="mid">Mid-Incubation</button>
-                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="late">Late Incubation / Pre-Lockdown</button>
+                    <button class="candling-stage-btn" data-stage="early">Early Development (First Week)</button>
+                    <button class="candling-stage-btn" data-stage="mid">Mid-Incubation</button>
+                    <button class="candling-stage-btn" data-stage="late">Late Incubation / Pre-Lockdown</button>
                 </div>
-                <div id="candling-details" class="p-4 border bg-stone-50 min-h-[150px]"> <!-- This inner div might need adjustment if parent has card styling -->
+                <div id="candling-details" class="p-4 min-h-[150px]">
                     <p>Select a stage to view details.</p>
                 </div>
             </div>
             
-            <div id="candling-visuals-container" class="mt-6"> <!-- This div will get card styling from CSS -->
+            <div id="candling-visuals-container" class="mt-6">
                  <h4>Visual Guide (Simplified)</h4>
-                 <div class="flex flex-nowrap justify-center items-start gap-4 overflow-x-auto">
+                 <div class="flex flex-nowrap justify-center items-start gap-4 overflow-x-auto p-2">
                     <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Infertile (Clear)</p>
                         <div class="w-20 h-28 border-2 border-neutral-400 rounded-full mx-auto bg-yellow-100 flex items-center justify-center">
@@ -482,19 +449,17 @@
                     </div>
                      <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Late Stage (Pre-Lockdown)</p>
-                        <div class="flex items-center justify-center mt-1 gap-2">
-                            <div class="w-20 h-28 border-2 border-neutral-600 rounded-full bg-neutral-200 flex flex-col items-center justify-start p-1 shrink-0">
-                                <div class="w-full h-1/3 bg-sky-200 opacity-70 rounded-t-full"></div>
-                                <div class="flex-grow w-full bg-neutral-500 rounded-b-full"></div>
-                            </div>
-                            <p class="text-xs text-neutral-500 ml-2">Large air cell, dark embryo</p>
+                        <div class="w-20 h-28 border-2 border-neutral-600 rounded-full mx-auto bg-neutral-200 flex flex-col items-center justify-start p-1">
+                            <div class="w-full h-1/3 bg-sky-200 opacity-70 rounded-t-full"></div>
+                            <div class="flex-grow w-full bg-neutral-500 rounded-b-full"></div>
                         </div>
+                         <p class="text-xs text-neutral-500 mt-1">Large air cell, dark embryo</p>
                     </div>
                  </div>
                  <p class="text-xs text-neutral-500 mt-4 text-center">Note: These are highly simplified representations. Actual candling appearance varies.</p>
             </div>
 
-            <div class="mt-6"> <!-- This div will get card styling from CSS -->
+            <div class="mt-6">
                 <h3>D. Identifying Non-Viable Eggs</h3>
                 <ul class="list-disc list-inside space-y-1">
                     <li><strong>Clears (Infertile):</strong> Translucent, only yolk shadow visible. No blood vessels. Remove.</li>
@@ -504,19 +469,19 @@
             </div>
             
             <div class="mt-6">
-                 <h3 class="text-xl font-semibold mb-3">E. General Candling Timeline Table (Summary)</h3>
-                 <div class="overflow-x-auto rounded-lg shadow"> <!-- This div has card styling from CSS -->
-                    <table class="min-w-full divide-y divide-stone-200">
-                        <thead class="bg-stone-50">
+                 <h3 class="mb-3">E. General Candling Timeline Table (Summary)</h3>
+                 <div class="overflow-x-auto">
+                    <table>
+                        <thead>
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Species</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">First Candling (Day)</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Mid-Incubation (Day(s))</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Late/Pre-Lockdown (Day(s))</th>
+                                <th>Species</th>
+                                <th>First Candling (Day)</th>
+                                <th>Mid-Incubation (Day(s))</th>
+                                <th>Late/Pre-Lockdown (Day(s))</th>
                             </tr>
                         </thead>
-                        <tbody id="candling-table-body" class="divide-y divide-stone-200 text-sm">
-                            </tbody>
+                        <tbody id="candling-table-body">
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -524,10 +489,10 @@
 
         <section id="cooling" class="content-section">
             <h2>IV. Cooling and Misting Eggs</h2>
-            <p class="mb-6">Cooling and misting are essential for waterfowl (ducks, geese) and not standard for other poultry like chickens, turkeys, or quail. These practices mimic natural behaviors and address the unique physiology of waterfowl eggs.</p>
+            <p>Cooling and misting are essential for waterfowl (ducks, geese) and not standard for other poultry like chickens, turkeys, or quail. These practices mimic natural behaviors and address the unique physiology of waterfowl eggs.</p>
 
             <div class="space-y-4">
-                <div> <!-- This div will get card styling from CSS -->
+                <div>
                     <h3>A. Rationale for Waterfowl</h3>
                     <ul class="list-disc list-inside space-y-2">
                         <li><strong>Mimics Natural Behavior:</strong> Mother bird leaves nest, returns with damp feathers.</li>
@@ -540,7 +505,7 @@
                     <p class="mt-2 text-sm text-amber-700">Proper cooling/misting can improve waterfowl hatchability significantly.</p>
                 </div>
 
-                <div> <!-- This div will get card styling from CSS -->
+                <div>
                     <h3>B. General Protocols (Ducks & Geese)</h3>
                     <p>Refer to specific species data for precise start days and durations, but general steps include:</p>
                     <ul class="list-disc list-inside space-y-2">
@@ -557,7 +522,7 @@
                         <li><strong>Cessation:</strong> Stop cooling and misting at lockdown (2-4 days before hatch).</li>
                     </ul>
                 </div>
-                 <div> <!-- This div will get card styling from CSS -->
+                 <div>
                     <h3>C. Muscovy Duck Specifics</h3>
                     <p>Muscovies generally benefit from cooling/misting. Start misting around Day 7, cooling around Day 10, daily for ~30 mins (cool to ~30<sup>°</sup>C), until lockdown (Day 31-32). An alternative "dry hatch" with a "baggie method" at hatch exists but is less common.</p>
                 </div>
@@ -566,18 +531,18 @@
 
         <section id="troubleshooting" class="content-section">
             <h2>V. Troubleshooting Common Incubation Problems</h2>
-            <p class="mb-6">Even with care, issues can arise. This section lists common problems, their probable causes, and corrective measures. Accurate record-keeping and candling are key to diagnosis.</p>
-            <div class="overflow-x-auto rounded-lg shadow"> <!-- This div has card styling from CSS -->
-                <table class="min-w-full divide-y divide-stone-200">
-                    <thead class="bg-stone-50">
+            <p>Even with care, issues can arise. This section lists common problems, their probable causes, and corrective measures. Accurate record-keeping and candling are key to diagnosis.</p>
+            <div class="overflow-x-auto">
+                <table>
+                    <thead>
                         <tr>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Symptom</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Probable Cause(s)</th>
-                            <th class="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider">Corrective Measure(s)</th>
+                            <th>Symptom</th>
+                            <th>Probable Cause(s)</th>
+                            <th>Corrective Measure(s)</th>
                         </tr>
                     </thead>
-                    <tbody id="troubleshooting-table-body" class="divide-y divide-stone-200 text-sm">
-                        </tbody>
+                    <tbody id="troubleshooting-table-body">
+                    </tbody>
                 </table>
             </div>
         </section>
@@ -708,41 +673,39 @@
             const candlingTableBody = document.getElementById('candling-table-body');
             const troubleshootingTableBody = document.getElementById('troubleshooting-table-body');
 
+            if (!speciesSelect || !speciesInfoDiv || !candlingDetailsDiv || !candlingTableBody || !troubleshootingTableBody) {
+                console.error("One or more essential elements for the How-To Guide are missing from the DOM.");
+                return;
+            }
 
             // Populate species select
-            if (speciesSelect) {
-                for (const speciesName in speciesData) {
-                    const option = document.createElement('option');
-                    option.value = speciesName;
-                    option.textContent = speciesName;
-                    speciesSelect.appendChild(option);
-                }
+            for (const speciesName in speciesData) {
+                const option = document.createElement('option');
+                option.value = speciesName;
+                option.textContent = speciesName;
+                speciesSelect.appendChild(option);
             }
             
             // Populate candling table
-            if (candlingTableBody) {
-                candlingTimelineTableData.forEach(item => {
-                    const row = candlingTableBody.insertRow();
-                    row.innerHTML = `
-                        <td class="whitespace-nowrap">${item.species}</td>
-                        <td>${item.first}</td>
-                        <td>${item.mid}</td>
-                        <td>${item.late}</td>
-                    `;
-                });
-            }
+            candlingTimelineTableData.forEach(item => {
+                const row = candlingTableBody.insertRow();
+                row.innerHTML = `
+                    <td class="whitespace-nowrap">${item.species}</td>
+                    <td>${item.first}</td>
+                    <td>${item.mid}</td>
+                    <td>${item.late}</td>
+                `;
+            });
 
             // Populate troubleshooting table
-            if (troubleshootingTableBody) {
-                troubleshootingData.forEach(item => {
-                    const row = troubleshootingTableBody.insertRow();
-                    row.innerHTML = `
-                        <td>${item.symptom}</td>
-                        <td>${item.causes}</td>
-                        <td>${item.measures}</td>
-                    `;
-                });
-            }
+            troubleshootingData.forEach(item => {
+                const row = troubleshootingTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${item.symptom}</td>
+                    <td>${item.causes}</td>
+                    <td>${item.measures}</td>
+                `;
+            });
 
             // Tab navigation
             tabs.forEach(tab => {
@@ -760,32 +723,30 @@
             });
 
             // Species selection
-            if (speciesSelect && speciesInfoDiv) {
-                speciesSelect.addEventListener('change', (event) => {
-                    const selectedSpecies = event.target.value;
-                    if (selectedSpecies && speciesData[selectedSpecies]) {
-                        const data = speciesData[selectedSpecies];
-                        speciesInfoDiv.innerHTML = `
-                            <h3 class="text-xl font-bold mb-3">${selectedSpecies}</h3>
-                            <div class="grid md:grid-cols-2 gap-4">
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${data.stillAirTempC}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${data.settingHumidity}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${data.lockdownHumidity}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
-                                <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
-                            </div>
-                            <div class="mt-4 bg-amber-100 p-3 rounded-md text-amber-800 text-sm">
-                                <strong>Key Notes:</strong> ${data.notes}
-                            </div>
-                        `;
-                    } else {
-                        speciesInfoDiv.innerHTML = '<p class="text-center">Select a species to see its incubation details.</p>';
-                    }
-                });
-            }
+            speciesSelect.addEventListener('change', (event) => {
+                const selectedSpecies = event.target.value;
+                if (selectedSpecies && speciesData[selectedSpecies]) {
+                    const data = speciesData[selectedSpecies];
+                    speciesInfoDiv.innerHTML = `
+                        <h3 class="text-xl font-bold mb-3">${selectedSpecies}</h3>
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${data.stillAirTempC}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${data.settingHumidity}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${data.lockdownHumidity}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
+                            <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
+                        </div>
+                        <div class="mt-4 bg-amber-100 p-3 rounded-md text-amber-800 text-sm">
+                            <strong>Key Notes:</strong> ${data.notes}
+                        </div>
+                    `;
+                } else {
+                    speciesInfoDiv.innerHTML = '<p class="text-center">Select a species to see its incubation details.</p>';
+                }
+            });
 
             // Candling stage details
             const candlingContent = {
@@ -793,54 +754,52 @@
                 mid: `Embryo significantly larger, movement often visible. Well-established blood vessel network (chorioallantoic membrane). Eyes may appear as large dark spots.`,
                 late: `Embryo fills most of egg, appearing as dark mass. Air cell is the only clear area (large end). Movement may be subtle. Bill may be seen in air sac for ducks/geese (internal pip).`
             };
-            if (candlingStageButtons.length > 0 && candlingDetailsDiv) {
-                candlingStageButtons.forEach(button => {
-                    button.addEventListener('click', () => {
-                        candlingStageButtons.forEach(btn => btn.classList.remove('active-stage'));
-                        button.classList.add('active-stage');
-
-                        const stage = button.getAttribute('data-stage');
-                        candlingDetailsDiv.innerHTML = candlingContent[stage] || '<p>Details for this stage.</p>';
-                    });
+            candlingStageButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    candlingStageButtons.forEach(btn => btn.classList.remove('active-stage'));
+                    button.classList.add('active-stage');
+                    const stage = button.getAttribute('data-stage');
+                    candlingDetailsDiv.innerHTML = candlingContent[stage] || '<p>Details for this stage.</p>';
                 });
-            }
+            });
             
             // Accordion functionality for <details>
-            accordionSummaries.forEach(summary => {
+             accordionSummaries.forEach(summary => {
                 const detailElement = summary.parentElement;
-                if (detailElement) {
-                    summary.addEventListener('click', (event) => {
-                        // Let the browser handle the 'open' attribute toggle by default for summary clicks
-                        // We just manage the max-height for animation
-                        if (!detailElement.open) { // If it's about to open
-                            // setTimeout to allow the 'open' attribute to be set by browser
-                            setTimeout(() => {
-                                const content = detailElement.querySelector('.accordion-content');
-                                if (content) content.style.maxHeight = content.scrollHeight + "px";
-                            }, 0);
-                        } else { // If it's about to close
-                            const content = detailElement.querySelector('.accordion-content');
-                            if (content) content.style.maxHeight = null;
-                        }
-                    });
-
-                    // Ensure max-height is correctly set if details is closed by other means (e.g. another details opening)
-                     detailElement.addEventListener('toggle', () => {
+                summary.addEventListener('click', (event) => {
+                    // We want to let the default <details> open/close behavior work
+                    // but we need to set max-height for the transition.
+                    // If it's closing, the 'toggle' event will handle max-height.
+                    // If it's opening, we set max-height.
+                    if (!detailElement.open) { // about to open
                         const content = detailElement.querySelector('.accordion-content');
                         if (content) {
-                            if (detailElement.open) {
+                            // Temporarily set to auto to get the scrollHeight, then set it.
+                            // This needs to be done after the 'open' attribute is set.
+                             requestAnimationFrame(() => {
                                 content.style.maxHeight = content.scrollHeight + "px";
-                            } else {
-                                content.style.maxHeight = null;
-                            }
+                            });
                         }
-                    });
-                }
+                    }
+                });
+
+                detailElement.addEventListener('toggle', () => {
+                    const content = detailElement.querySelector('.accordion-content');
+                    if (content) {
+                        if (detailElement.open) {
+                            content.style.maxHeight = content.scrollHeight + "px";
+                        } else {
+                            content.style.maxHeight = null; // Collapses
+                        }
+                    }
+                });
             });
-             // Set initial max-height for already open details elements (e.g. if user navigates back)
+            // Set initial max-height for already open details elements
             document.querySelectorAll('details[open]').forEach(detailElement => {
                 const content = detailElement.querySelector('.accordion-content');
-                if (content) content.style.maxHeight = content.scrollHeight + "px";
+                if (content) {
+                    content.style.maxHeight = content.scrollHeight + "px";
+                }
             });
 
 
@@ -854,16 +813,15 @@
                     return daysMatch ? parseInt(daysMatch[1]) : 0;
                 });
 
-                 const chartColorValues = [
-                    getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#3B82F6', // Fallback
-                    getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#F97316', // Fallback
-                    'hsl(173, 58%, 39%)', 
-                    'hsl(197, 37%, 24%)', 
-                    'hsl(43, 74%, 66%)',  
-                    'hsl(27, 87%, 67%)',  
-                    'hsl(12, 76%, 61%)'   
+                const chartColorValues = [
+                    getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || 'rgba(59, 130, 246, 0.7)', // blue-500 like
+                    getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || 'rgba(249, 115, 22, 0.7)', // orange-500 like
+                    'rgba(16, 185, 129, 0.7)', /* emerald-500 like */
+                    'rgba(239, 68, 68, 0.7)',  /* red-500 like */
+                    'rgba(139, 92, 246, 0.7)', /* violet-500 like */
+                    'rgba(236, 72, 153, 0.7)', /* pink-500 like */
+                    'rgba(217, 70, 239, 0.7)'  /* fuchsia-500 like */
                 ];
-
 
                 new Chart(chartCanvas, {
                     type: 'bar',
@@ -873,7 +831,7 @@
                             label: 'Typical Incubation Period (Days)',
                             data: incubationDays,
                             backgroundColor: speciesNames.map((_, i) => chartColorValues[i % chartColorValues.length]),
-                            borderColor: speciesNames.map((_, i) => chartColorValues[i % chartColorValues.length]),
+                            borderColor: speciesNames.map((_, i) => chartColorValues[i % chartColorValues.length].replace('0.7', '1')), // Solid border
                             borderWidth: 1
                         }]
                     },
@@ -883,25 +841,25 @@
                         scales: {
                             y: {
                                 beginAtZero: true,
-                                title: { display: true, text: 'Days', color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg').trim() || '#333' },
-                                grid: { color: 'hsl(var(--border-color) / 0.3)' }, // Lighter grid lines
-                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg').trim() || '#333' }
+                                title: { display: true, text: 'Days', color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg').trim() },
+                                grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() },
+                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg').trim() }
                             },
                             x: {
                                 ticks: {
                                     autoSkip: false,
                                     maxRotation: 45,
                                     minRotation: 45,
-                                    color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg').trim() || '#333',
-                                    callback: function(value, index, values) {
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg').trim(),
+                                    callback: function(value) {
                                         let label = this.getLabelForValue(value);
-                                        if (label.length > 10) { 
-                                            return label.match(/.{1,10}/g); 
+                                        if (label.length > 10) {
+                                            return label.match(/.{1,10}/g);
                                         }
                                         return label;
                                     }
                                 },
-                                 grid: { color: 'hsl(var(--border-color) / 0.3)' } // Lighter grid lines
+                                 grid: { color: getComputedStyle(document.documentElement).getPropertyValue('--border-color').trim() }
                             }
                         },
                         plugins: {
@@ -916,6 +874,8 @@
                         }
                     }
                 });
+            } else {
+                 console.error("Chart canvas element 'incubationPeriodsChart' not found.");
             }
         });
     </script>
