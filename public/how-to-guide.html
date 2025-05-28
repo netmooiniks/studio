@@ -21,8 +21,8 @@
             --accent-fg: hsl(0 0% 100%); /* White */
             --header-bg: hsl(220 70% 22%); /* Deep Sapphire for header */
             --header-fg: hsl(220 20% 90%); /* Light text for header */
-            --nav-bg: hsl(220 60% 30%); /* Lighter Sapphire for nav */
-            --nav-fg: hsl(220 20% 95%); /* Light text for nav */
+            --nav-bg: hsl(220 70% 22%); /* Deep Sapphire for nav - updated to match header as per last working */
+            --nav-fg: hsl(220 20% 90%); /* Light text for nav - updated to match header as per last working */
             --link-color: hsl(210 100% 50%);
         }
         body {
@@ -36,7 +36,8 @@
             -ms-user-select: none; /* IE10+ */
         }
         /* General styling for elements that should use card background/foreground */
-        .content-section > div, .content-section > .overflow-x-auto, /* Target table container */
+        .content-section > div:not(.grid):not(.flex), /* Exclude direct grid/flex containers if they should not have card styling */
+        .content-section > .overflow-x-auto,
         #species-info, .chart-container, #candling-details, #candling-visuals-container,
         details {
             background-color: var(--card-bg);
@@ -47,13 +48,19 @@
             box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1); /* shadow / shadow-lg */
             margin-bottom: 1.5rem; /* mb-6 */
         }
+        #candling-visuals-container { /* Candling visuals container needs specific padding if it's a card */
+             padding: 1.25rem;
+        }
         /* Ensure direct p, ul, ol, h3, h4 children get the card-fg */
-        .content-section > div > p, .content-section > div > ul, .content-section > div > ol, .content-section > div > h3, .content-section > div > h4,
+        .content-section > div:not(.grid):not(.flex) > p, 
+        .content-section > div:not(.grid):not(.flex) > ul, 
+        .content-section > div:not(.grid):not(.flex) > ol, 
+        .content-section > div:not(.grid):not(.flex) > h3, 
+        .content-section > div:not(.grid):not(.flex) > h4,
         #species-info > p, #species-info > div > div > strong, #species-info h3,
-        #candling-details > p, #candling-details h3, #candling-details h4,
+        #candling-details > p,
         details > div > p, details > div > ul, details > div > h3, details > div > h4,
-        #candling-visuals-container h4,
-        .bg-white > p, .bg-white > ul, .bg-white > ol, .bg-white h3, .bg-white h4 { /* Keep .bg-white for legacy if any exist */
+        #candling-visuals-container h4 {
              color: var(--card-fg);
         }
         /* Target table text color */
@@ -90,7 +97,7 @@
             text-align: center;
         }
         nav.top-nav {
-            background-color: var(--nav-bg);
+            background-color: var(--nav-bg); /* Uses Deep Sapphire */
             padding: 1rem; /* p-4 */
             position: sticky;
             top: 0;
@@ -106,7 +113,7 @@
             margin:0; padding:0;
         }
         nav.top-nav .tab-button {
-            background-color: hsl(220, 50%, 40%); /* Slightly lighter than nav-bg to be distinct */
+            background-color: hsl(220, 60%, 30%); /* Lighter Sapphire for distinct inactive tabs */
             color: var(--nav-fg); 
             padding: 0.5rem 0.75rem; 
             border-radius: 0.375rem; 
@@ -132,6 +139,26 @@
             border-color: var(--primary); 
         }
 
+        .candling-stage-btn {
+            background-color: hsl(220, 60%, 30%); /* Default inactive, matches top nav inactive */
+            color: var(--nav-fg);
+            padding: 0.5rem 1rem; /* py-2 px-4 */
+            border-radius: 0.375rem; /* rounded-md */
+            font-weight: 500;
+            border: 1px solid transparent;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        .candling-stage-btn:hover {
+            background-color: var(--primary);
+            color: var(--primary-fg);
+            border-color: var(--primary);
+        }
+        .candling-stage-btn.active-stage {
+            background-color: var(--primary);
+            color: var(--primary-fg);
+            border-color: var(--primary);
+        }
+
         .content-section { display: none; margin-top: 1.5rem; }
         .content-section.active { display: block; }
         .content-section h2 {
@@ -146,6 +173,12 @@
             color: hsl(var(--card-fg) / 0.9);
             margin-bottom: 0.75rem; /* mb-3 */
         }
+         /* Ensure h4 within #candling-visuals-container is styled by its parent card theme */
+        #candling-visuals-container h4 {
+            font-size: 1.125rem; /* text-lg */
+            font-weight: 600; /* font-semibold */
+            margin-bottom: 0.5rem; /* mb-2 */
+        }
         .content-section p, .content-section ul, .content-section ol {
             margin-bottom: 1rem; /* mb-4 or space-y-2 */
             line-height: 1.6;
@@ -158,6 +191,9 @@
         }
         .content-section .text-amber-700 { color: var(--accent) !important; } /* Themed accent */
         .content-section .text-red-600 { color: hsl(var(--destructive)) !important; } /* Themed destructive */
+        #species-info .bg-amber-100 { background-color: hsl(var(--accent) / 0.1) !important; }
+        #species-info .text-amber-800 { color: hsl(var(--accent) / 0.9) !important; }
+
 
         .chart-container {
             position: relative;
@@ -273,14 +309,28 @@
         #candling-visuals-container .mt-1 { margin-top: 0.25rem !important; }
         #candling-visuals-container .font-medium { font-weight: 500 !important; }
         #candling-visuals-container .mb-2 { margin-bottom: 0.5rem !important; }
-        #candling-visuals-container .flex-wrap { flex-wrap: wrap !important; }
-        #candling-visuals-container .justify-around { justify-content: space-around !important; }
-        #candling-visuals-container .gap-4 { gap: 1rem !important; }
+        /* Ensure this is flex-nowrap and centered */
+        #candling-visuals-container > .flex {
+             display: flex !important;
+             flex-wrap: nowrap !important; /* Changed from wrap */
+             justify-content: center !important; /* Changed from around for better control with gap */
+             align-items: flex-start !important; /* Changed from center for consistent top alignment */
+             gap: 1rem !important;
+             overflow-x: auto !important; /* Allow horizontal scroll if needed */
+        }
         #candling-visuals-container .text-center { text-align: center !important; }
         #candling-visuals-container .mt-4 { margin-top: 1rem !important; }
+
+        /* Make body text non-selectable */
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
     </style>
 </head>
-<body class="text-text-color select-none"> <!-- Ensure this class is applied if needed, or remove if body style handles it -->
+<body class="text-text-color">
     <header class="main-header">
         <h1>Interactive Poultry Incubation Guide</h1>
     </header>
@@ -304,7 +354,7 @@
                 <details class="group">
                     <summary class="flex justify-between items-center group details-marker">
                         A. Core Environmental Factors: Temperature, Humidity, Ventilation, Turning
-                        <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
+                        <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content space-y-2">
                         <p><strong>Temperature:</strong> The most critical factor. Optimal temperature varies by species and incubator type. Consistently high temperatures are more damaging than low ones, leading to early, weak hatches or mortality. Low temperatures cause late hatches and weak chicks. Target ranges are typically 37.2-37.5<sup>°</sup>C for forced-air and 37.8-38.9<sup>°</sup>C for still-air incubators for many species.</p>
@@ -318,7 +368,7 @@
                 <details class="group">
                     <summary class="flex justify-between items-center group details-marker">
                         B. Incubator Types: Forced-Air vs. Still-Air
-                         <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
+                         <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content space-y-2">
                         <p><strong>Forced-Air Incubators:</strong> Use a fan for uniform temperature and humidity. Generally operate at slightly lower temperatures (e.g., 37.2-37.5<sup>°</sup>C). Easier to manage.</p>
@@ -329,7 +379,7 @@
                 <details class="group">
                     <summary class="flex justify-between items-center group details-marker">
                         C. Egg Selection, Storage, and Handling
-                         <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
+                         <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content space-y-2">
                         <p><strong>Selection:</strong> Choose clean, well-shaped eggs of typical size. Avoid cracked, double-yolked, or misshapen eggs. Generally, do not wash eggs to preserve the protective bloom.</p>
@@ -341,7 +391,7 @@
                 <details class="group">
                     <summary class="flex justify-between items-center group details-marker">
                         D. Biosecurity in the Hatchery Environment
-                         <span class="text-teal-600 group-open:rotate-90 transform transition-transform duration-300"></span>
+                         <span class="group-open:rotate-90 transform transition-transform duration-300"></span>
                     </summary>
                     <div class="accordion-content space-y-2">
                         <p>Crucial to prevent disease. Clean and disinfect incubators and equipment between hatches. Source eggs from healthy flocks. Wash hands before handling eggs. Avoid setting dirty or cracked eggs. Do not mix waterfowl eggs with other poultry eggs in the same incubator due to differing pathogen risks.</p>
@@ -356,7 +406,7 @@
             
             <div class="mb-6">
                 <label for="species-select" class="block text-lg font-medium mb-2">Select Species:</label>
-                <select id="species-select" class="w-full max-w-md p-3 border border-stone-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500 bg-white">
+                <select id="species-select" class="w-full max-w-md p-3 border-stone-300 rounded-lg shadow-sm focus:ring-teal-500 focus:border-teal-500 bg-white">
                     <option value="">-- Select a Species --</option>
                 </select>
             </div>
@@ -379,11 +429,11 @@
             <p class="mb-6">Egg candling involves shining a light through the egg to observe internal development. It's vital for checking fertility, monitoring embryo growth, assessing air cell size (an indicator of humidity), and removing non-viable eggs. This section guides you through the process.</p>
 
             <div class="grid md:grid-cols-2 gap-6">
-                <div>
+                <div> <!-- This div will get card styling from CSS -->
                     <h3>A. Candling Equipment and Basic Technique</h3>
                     <p>Use a bright LED flashlight or a commercial egg candler. Perform candling in a darkened room. Hold the light against the large end of the egg. Gently rotate to view contents. Minimize time out of incubator (max 10 mins). Brown eggs are harder to candle; may need to wait longer.</p>
                 </div>
-                <div>
+                <div> <!-- This div will get card styling from CSS -->
                     <h3>B. Interpreting Air Cell Development</h3>
                     <p>The air cell (at the broad end) enlarges as moisture evaporates. Its size indicates if humidity is correct.</p>
                     <ul class="list-disc list-inside mt-2 space-y-1">
@@ -394,20 +444,20 @@
                 </div>
             </div>
 
-            <div class="mt-6">
+            <div class="mt-6"> <!-- This div will get card styling from CSS -->
                 <h3>C. Candling Timeline & Observations</h3>
                 <p class="mb-4">Click on a stage to see typical observations. Note: Timings are general; refer to species-specific data for precise days.</p>
                 <div class="flex flex-wrap gap-2 mb-4">
-                    <button class="candling-stage-btn bg-accent hover:opacity-80 text-accent-fg py-2 px-4 rounded-md" data-stage="early">Early Development (First Week)</button>
-                    <button class="candling-stage-btn bg-accent hover:opacity-80 text-accent-fg py-2 px-4 rounded-md" data-stage="mid">Mid-Incubation</button>
-                    <button class="candling-stage-btn bg-accent hover:opacity-80 text-accent-fg py-2 px-4 rounded-md" data-stage="late">Late Incubation / Pre-Lockdown</button>
+                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="early">Early Development (First Week)</button>
+                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="mid">Mid-Incubation</button>
+                    <button class="candling-stage-btn py-2 px-4 rounded-md" data-stage="late">Late Incubation / Pre-Lockdown</button>
                 </div>
-                <div id="candling-details" class="p-4 border border-stone-200 rounded-md bg-stone-50 min-h-[150px]">
+                <div id="candling-details" class="p-4 border bg-stone-50 min-h-[150px]"> <!-- This inner div might need adjustment if parent has card styling -->
                     <p>Select a stage to view details.</p>
                 </div>
             </div>
             
-            <div id="candling-visuals-container" class="mt-6">
+            <div id="candling-visuals-container" class="mt-6"> <!-- This div will get card styling from CSS -->
                  <h4>Visual Guide (Simplified)</h4>
                  <div class="flex flex-nowrap justify-center items-start gap-4 overflow-x-auto">
                     <div class="text-center">
@@ -433,18 +483,18 @@
                      <div class="text-center">
                         <p class="font-medium text-neutral-600 mb-1">Late Stage (Pre-Lockdown)</p>
                         <div class="flex items-center justify-center mt-1 gap-2">
-                            <div class="w-20 h-28 border-2 border-neutral-600 rounded-full bg-neutral-200 flex flex-col items-center justify-start p-1">
+                            <div class="w-20 h-28 border-2 border-neutral-600 rounded-full bg-neutral-200 flex flex-col items-center justify-start p-1 shrink-0">
                                 <div class="w-full h-1/3 bg-sky-200 opacity-70 rounded-t-full"></div>
                                 <div class="flex-grow w-full bg-neutral-500 rounded-b-full"></div>
                             </div>
-                            <p class="text-xs text-neutral-500">Large air cell, dark embryo</p>
+                            <p class="text-xs text-neutral-500 ml-2">Large air cell, dark embryo</p>
                         </div>
                     </div>
                  </div>
                  <p class="text-xs text-neutral-500 mt-4 text-center">Note: These are highly simplified representations. Actual candling appearance varies.</p>
             </div>
 
-            <div class="mt-6">
+            <div class="mt-6"> <!-- This div will get card styling from CSS -->
                 <h3>D. Identifying Non-Viable Eggs</h3>
                 <ul class="list-disc list-inside space-y-1">
                     <li><strong>Clears (Infertile):</strong> Translucent, only yolk shadow visible. No blood vessels. Remove.</li>
@@ -455,7 +505,7 @@
             
             <div class="mt-6">
                  <h3 class="text-xl font-semibold mb-3">E. General Candling Timeline Table (Summary)</h3>
-                 <div class="overflow-x-auto rounded-lg shadow">
+                 <div class="overflow-x-auto rounded-lg shadow"> <!-- This div has card styling from CSS -->
                     <table class="min-w-full divide-y divide-stone-200">
                         <thead class="bg-stone-50">
                             <tr>
@@ -477,7 +527,7 @@
             <p class="mb-6">Cooling and misting are essential for waterfowl (ducks, geese) and not standard for other poultry like chickens, turkeys, or quail. These practices mimic natural behaviors and address the unique physiology of waterfowl eggs.</p>
 
             <div class="space-y-4">
-                <div>
+                <div> <!-- This div will get card styling from CSS -->
                     <h3>A. Rationale for Waterfowl</h3>
                     <ul class="list-disc list-inside space-y-2">
                         <li><strong>Mimics Natural Behavior:</strong> Mother bird leaves nest, returns with damp feathers.</li>
@@ -490,7 +540,7 @@
                     <p class="mt-2 text-sm text-amber-700">Proper cooling/misting can improve waterfowl hatchability significantly.</p>
                 </div>
 
-                <div>
+                <div> <!-- This div will get card styling from CSS -->
                     <h3>B. General Protocols (Ducks & Geese)</h3>
                     <p>Refer to specific species data for precise start days and durations, but general steps include:</p>
                     <ul class="list-disc list-inside space-y-2">
@@ -507,7 +557,7 @@
                         <li><strong>Cessation:</strong> Stop cooling and misting at lockdown (2-4 days before hatch).</li>
                     </ul>
                 </div>
-                 <div>
+                 <div> <!-- This div will get card styling from CSS -->
                     <h3>C. Muscovy Duck Specifics</h3>
                     <p>Muscovies generally benefit from cooling/misting. Start misting around Day 7, cooling around Day 10, daily for ~30 mins (cool to ~30<sup>°</sup>C), until lockdown (Day 31-32). An alternative "dry hatch" with a "baggie method" at hatch exists but is less common.</p>
                 </div>
@@ -517,7 +567,7 @@
         <section id="troubleshooting" class="content-section">
             <h2>V. Troubleshooting Common Incubation Problems</h2>
             <p class="mb-6">Even with care, issues can arise. This section lists common problems, their probable causes, and corrective measures. Accurate record-keeping and candling are key to diagnosis.</p>
-            <div class="overflow-x-auto rounded-lg shadow">
+            <div class="overflow-x-auto rounded-lg shadow"> <!-- This div has card styling from CSS -->
                 <table class="min-w-full divide-y divide-stone-200">
                     <thead class="bg-stone-50">
                         <tr>
@@ -534,7 +584,7 @@
     </main>
 
     <footer class="main-footer">
-        <p>&copy; 2025 Interactive Incubation Guide. Compiled by NetMooiNiks. <a href="https://www.netmooiniks.com" target="_blank" rel="noopener noreferrer" class="underline hover:text-opacity-80">www.netmooiniks.com</a>.<br/>Content adapted from "A Comprehensive Guide to Artificial Egg Incubation".</p>
+        <p>&copy; 2025 Interactive Incubation Guide. Compiled by NetMooiNiks. <a href="https://www.netmooiniks.com" target="_blank" rel="noopener noreferrer">www.netmooiniks.com</a>.<br/>Content adapted from "A Comprehensive Guide to Artificial Egg Incubation".</p>
         <p>This guide is for informational purposes. Always consult multiple sources and adapt to your specific equipment and conditions.</p>
     </footer>
 
@@ -648,219 +698,226 @@
         ];
 
         document.addEventListener('DOMContentLoaded', () => {
-            try {
-                const tabs = document.querySelectorAll('.tab-button');
-                const contentSections = document.querySelectorAll('.content-section');
-                const speciesSelect = document.getElementById('species-select');
-                const speciesInfoDiv = document.getElementById('species-info');
-                const candlingStageButtons = document.querySelectorAll('.candling-stage-btn');
-                const candlingDetailsDiv = document.getElementById('candling-details');
-                // Accordion summaries are handled by browser native <details> or slightly enhanced below.
-                const candlingTableBody = document.getElementById('candling-table-body');
-                const troubleshootingTableBody = document.getElementById('troubleshooting-table-body');
-                const incubationChartCanvas = document.getElementById('incubationPeriodsChart');
+            const tabs = document.querySelectorAll('.tab-button');
+            const contentSections = document.querySelectorAll('.content-section');
+            const speciesSelect = document.getElementById('species-select');
+            const speciesInfoDiv = document.getElementById('species-info');
+            const candlingStageButtons = document.querySelectorAll('.candling-stage-btn');
+            const candlingDetailsDiv = document.getElementById('candling-details');
+            const accordionSummaries = document.querySelectorAll('details > summary');
+            const candlingTableBody = document.getElementById('candling-table-body');
+            const troubleshootingTableBody = document.getElementById('troubleshooting-table-body');
 
-                if (speciesSelect && speciesInfoDiv) {
-                    for (const speciesName in speciesData) {
-                        const option = document.createElement('option');
-                        option.value = speciesName;
-                        option.textContent = speciesName;
-                        speciesSelect.appendChild(option);
-                    }
-                    speciesSelect.addEventListener('change', (event) => {
-                        const selectedSpecies = event.target.value;
-                        if (selectedSpecies && speciesData[selectedSpecies]) {
-                            const data = speciesData[selectedSpecies];
-                            speciesInfoDiv.innerHTML = `
-                                <h3 class="text-xl font-bold mb-3">${selectedSpecies}</h3>
-                                <div class="grid md:grid-cols-2 gap-4">
-                                    <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
-                                    <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC}</div>
-                                    <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${data.stillAirTempC}</div>
-                                    <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${data.settingHumidity}</div>
-                                    <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${data.lockdownHumidity}</div>
-                                    <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
-                                    <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
-                                    <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
-                                </div>
-                                <div class="mt-4 bg-amber-100 p-3 rounded-md text-amber-800 text-sm">
-                                    <strong>Key Notes:</strong> ${data.notes}
-                                </div>`;
-                        } else {
-                            speciesInfoDiv.innerHTML = '<p class="text-center">Select a species to see its incubation details.</p>';
-                        }
-                    });
+
+            // Populate species select
+            if (speciesSelect) {
+                for (const speciesName in speciesData) {
+                    const option = document.createElement('option');
+                    option.value = speciesName;
+                    option.textContent = speciesName;
+                    speciesSelect.appendChild(option);
                 }
-
-                if (candlingTableBody) {
-                    candlingTimelineTableData.forEach(item => {
-                        const row = candlingTableBody.insertRow();
-                        row.innerHTML = `
-                            <td class="whitespace-nowrap">${item.species}</td>
-                            <td>${item.first}</td>
-                            <td>${item.mid}</td>
-                            <td>${item.late}</td>`;
-                    });
-                }
-
-                if (troubleshootingTableBody) {
-                    troubleshootingData.forEach(item => {
-                        const row = troubleshootingTableBody.insertRow();
-                        row.innerHTML = `
-                            <td>${item.symptom}</td>
-                            <td>${item.causes}</td>
-                            <td>${item.measures}</td>`;
-                    });
-                }
-
-                if (tabs.length && contentSections.length) {
-                    tabs.forEach(tab => {
-                        tab.addEventListener('click', () => {
-                            tabs.forEach(t => t.classList.remove('active'));
-                            tab.classList.add('active');
-                            const targetTab = tab.getAttribute('data-tab');
-                            contentSections.forEach(section => {
-                                section.classList.remove('active');
-                                if (section.id === targetTab) {
-                                    section.classList.add('active');
-                                }
-                            });
-                        });
-                    });
-                }
-
-                const candlingContent = {
-                    early: `<strong>Fertile Egg:</strong> Small dark spot (embryo) with radiating blood vessels ("spider"). Beating heart may be visible depending on species/day. <br><strong>Infertile:</strong> Clear, only yolk shadow. <br><strong>Blood Ring:</strong> Embryo died very early. Remove infertile and blood rings.`,
-                    mid: `Embryo significantly larger, movement often visible. Well-established blood vessel network (chorioallantoic membrane). Eyes may appear as large dark spots.`,
-                    late: `Embryo fills most of egg, appearing as dark mass. Air cell is the only clear area (large end). Movement may be subtle. Bill may be seen in air sac for ducks/geese (internal pip).`
-                };
-                if (candlingStageButtons.length && candlingDetailsDiv) {
-                    candlingStageButtons.forEach(button => {
-                        button.addEventListener('click', () => {
-                            candlingStageButtons.forEach(btn => {
-                                btn.style.backgroundColor = 'var(--accent)';
-                                btn.style.color = 'var(--accent-fg)';
-                            });
-                            button.style.backgroundColor = 'var(--primary)';
-                            button.style.color = 'var(--primary-fg)';
-
-                            const stage = button.getAttribute('data-stage');
-                            candlingDetailsDiv.innerHTML = candlingContent[stage] || '<p>Details for this stage.</p>';
-                        });
-                    });
-                }
+            }
             
-                document.querySelectorAll('details').forEach(detailElement => {
-                    const summary = detailElement.querySelector('summary');
-                    const content = detailElement.querySelector('.accordion-content');
-                    if (summary && content) {
-                         summary.addEventListener('click', (event) => {
-                            // Native <details> toggles 'open' attribute before click event sometimes
-                            // If we preventDefault, we need to manage 'open' ourselves
-                            if (detailElement.hasAttribute('open') && event.target === summary) {
-                                // It's about to close OR was already open and user clicked summary again
-                                // Let native behavior close it, then our toggle listener will set maxHeight = null
-                            } else if (!detailElement.hasAttribute('open')) {
-                                // It's about to open
-                                // requestAnimationFrame ensures 'open' is set before scrollHeight is read
-                                requestAnimationFrame(() => {
-                                    content.style.maxHeight = content.scrollHeight + "px";
-                                });
-                            }
-                        });
-                        detailElement.addEventListener('toggle', () => {
-                            if (!detailElement.open) {
-                                content.style.maxHeight = null;
-                                summary.classList.remove('details-open');
-                            } else {
-                                content.style.maxHeight = content.scrollHeight + "px";
-                                summary.classList.add('details-open');
-                            }
-                        });
-                        // Initial state for already open details
-                        if (detailElement.open) {
-                            content.style.maxHeight = content.scrollHeight + "px";
-                            summary.classList.add('details-open');
+            // Populate candling table
+            if (candlingTableBody) {
+                candlingTimelineTableData.forEach(item => {
+                    const row = candlingTableBody.insertRow();
+                    row.innerHTML = `
+                        <td class="whitespace-nowrap">${item.species}</td>
+                        <td>${item.first}</td>
+                        <td>${item.mid}</td>
+                        <td>${item.late}</td>
+                    `;
+                });
+            }
+
+            // Populate troubleshooting table
+            if (troubleshootingTableBody) {
+                troubleshootingData.forEach(item => {
+                    const row = troubleshootingTableBody.insertRow();
+                    row.innerHTML = `
+                        <td>${item.symptom}</td>
+                        <td>${item.causes}</td>
+                        <td>${item.measures}</td>
+                    `;
+                });
+            }
+
+            // Tab navigation
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const targetTab = tab.getAttribute('data-tab');
+                    contentSections.forEach(section => {
+                        section.classList.remove('active');
+                        if (section.id === targetTab) {
+                            section.classList.add('active');
                         }
+                    });
+                });
+            });
+
+            // Species selection
+            if (speciesSelect && speciesInfoDiv) {
+                speciesSelect.addEventListener('change', (event) => {
+                    const selectedSpecies = event.target.value;
+                    if (selectedSpecies && speciesData[selectedSpecies]) {
+                        const data = speciesData[selectedSpecies];
+                        speciesInfoDiv.innerHTML = `
+                            <h3 class="text-xl font-bold mb-3">${selectedSpecies}</h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Incubation Period:</strong> ${data.period}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Forced-Air Temp:</strong> ${data.forcedAirTempC}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Still-Air Temp:</strong> ${data.stillAirTempC}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Setting Humidity:</strong> ${data.settingHumidity}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Lockdown Humidity:</strong> ${data.lockdownHumidity}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Stop Turning Day:</strong> ${data.turnStopDay}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm"><strong>Cooling/Misting:</strong> ${data.coolingMistingStart}</div>
+                                <div class="bg-stone-50 p-3 rounded-md shadow-sm md:col-span-2"><strong>Candling Notes:</strong> ${data.candlingDays}</div>
+                            </div>
+                            <div class="mt-4 bg-amber-100 p-3 rounded-md text-amber-800 text-sm">
+                                <strong>Key Notes:</strong> ${data.notes}
+                            </div>
+                        `;
+                    } else {
+                        speciesInfoDiv.innerHTML = '<p class="text-center">Select a species to see its incubation details.</p>';
                     }
                 });
+            }
 
-                if (incubationChartCanvas) {
-                    const speciesNames = Object.keys(speciesData);
-                    const incubationDays = speciesNames.map(name => {
-                        const period = speciesData[name].period;
-                        const daysMatch = period.match(/(\d+)/);
-                        return daysMatch ? parseInt(daysMatch[1]) : 0;
+            // Candling stage details
+            const candlingContent = {
+                early: `<strong>Fertile Egg:</strong> Small dark spot (embryo) with radiating blood vessels ("spider"). Beating heart may be visible depending on species/day. <br><strong>Infertile:</strong> Clear, only yolk shadow. <br><strong>Blood Ring:</strong> Embryo died very early. Remove infertile and blood rings.`,
+                mid: `Embryo significantly larger, movement often visible. Well-established blood vessel network (chorioallantoic membrane). Eyes may appear as large dark spots.`,
+                late: `Embryo fills most of egg, appearing as dark mass. Air cell is the only clear area (large end). Movement may be subtle. Bill may be seen in air sac for ducks/geese (internal pip).`
+            };
+            if (candlingStageButtons.length > 0 && candlingDetailsDiv) {
+                candlingStageButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        candlingStageButtons.forEach(btn => btn.classList.remove('active-stage'));
+                        button.classList.add('active-stage');
+
+                        const stage = button.getAttribute('data-stage');
+                        candlingDetailsDiv.innerHTML = candlingContent[stage] || '<p>Details for this stage.</p>';
+                    });
+                });
+            }
+            
+            // Accordion functionality for <details>
+            accordionSummaries.forEach(summary => {
+                const detailElement = summary.parentElement;
+                if (detailElement) {
+                    summary.addEventListener('click', (event) => {
+                        // Let the browser handle the 'open' attribute toggle by default for summary clicks
+                        // We just manage the max-height for animation
+                        if (!detailElement.open) { // If it's about to open
+                            // setTimeout to allow the 'open' attribute to be set by browser
+                            setTimeout(() => {
+                                const content = detailElement.querySelector('.accordion-content');
+                                if (content) content.style.maxHeight = content.scrollHeight + "px";
+                            }, 0);
+                        } else { // If it's about to close
+                            const content = detailElement.querySelector('.accordion-content');
+                            if (content) content.style.maxHeight = null;
+                        }
                     });
 
-                    const chartColorValues = [
-                        getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || 'blue',
-                        getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || 'orange',
-                        'hsl(173, 58%, 39%)', 
-                        'hsl(197, 37%, 24%)', 
-                        'hsl(43, 74%, 66%)',  
-                        'hsl(27, 87%, 67%)',  
-                        'hsl(12, 76%, 61%)'   
-                    ];
+                    // Ensure max-height is correctly set if details is closed by other means (e.g. another details opening)
+                     detailElement.addEventListener('toggle', () => {
+                        const content = detailElement.querySelector('.accordion-content');
+                        if (content) {
+                            if (detailElement.open) {
+                                content.style.maxHeight = content.scrollHeight + "px";
+                            } else {
+                                content.style.maxHeight = null;
+                            }
+                        }
+                    });
+                }
+            });
+             // Set initial max-height for already open details elements (e.g. if user navigates back)
+            document.querySelectorAll('details[open]').forEach(detailElement => {
+                const content = detailElement.querySelector('.accordion-content');
+                if (content) content.style.maxHeight = content.scrollHeight + "px";
+            });
 
-                    new Chart(incubationChartCanvas, {
-                        type: 'bar',
-                        data: {
-                            labels: speciesNames,
-                            datasets: [{
-                                label: 'Typical Incubation Period (Days)',
-                                data: incubationDays,
-                                backgroundColor: speciesNames.map((_, i) => chartColorValues[i % chartColorValues.length]),
-                                borderColor: speciesNames.map((_, i) => chartColorValues[i % chartColorValues.length]),
-                                borderWidth: 1
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    title: { display: true, text: 'Days', color: 'hsl(var(--card-fg))' },
-                                    grid: { color: 'hsl(var(--border-color) / 0.5)' },
-                                    ticks: { color: 'hsl(var(--card-fg))' }
-                                },
-                                x: {
-                                    ticks: {
-                                        autoSkip: false,
-                                        maxRotation: 45,
-                                        minRotation: 45,
-                                        color: 'hsl(var(--card-fg))',
-                                        callback: function(value, index, values) {
-                                            let label = this.getLabelForValue(value);
-                                            if (label.length > 10) { 
-                                                return label.match(/.{1,10}/g); 
-                                            }
-                                            return label;
-                                        }
-                                    },
-                                    grid: { color: 'hsl(var(--border-color) / 0.5)' }
-                                }
+
+            // Incubation Periods Chart
+            const chartCanvas = document.getElementById('incubationPeriodsChart');
+            if (chartCanvas) {
+                const speciesNames = Object.keys(speciesData);
+                const incubationDays = speciesNames.map(name => {
+                    const period = speciesData[name].period;
+                    const daysMatch = period.match(/(\d+)/);
+                    return daysMatch ? parseInt(daysMatch[1]) : 0;
+                });
+
+                 const chartColorValues = [
+                    getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#3B82F6', // Fallback
+                    getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#F97316', // Fallback
+                    'hsl(173, 58%, 39%)', 
+                    'hsl(197, 37%, 24%)', 
+                    'hsl(43, 74%, 66%)',  
+                    'hsl(27, 87%, 67%)',  
+                    'hsl(12, 76%, 61%)'   
+                ];
+
+
+                new Chart(chartCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: speciesNames,
+                        datasets: [{
+                            label: 'Typical Incubation Period (Days)',
+                            data: incubationDays,
+                            backgroundColor: speciesNames.map((_, i) => chartColorValues[i % chartColorValues.length]),
+                            borderColor: speciesNames.map((_, i) => chartColorValues[i % chartColorValues.length]),
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'Days', color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg').trim() || '#333' },
+                                grid: { color: 'hsl(var(--border-color) / 0.3)' }, // Lighter grid lines
+                                ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg').trim() || '#333' }
                             },
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    callbacks: {
-                                        label: function(context) {
-                                            return `${context.dataset.label}: ${context.raw} days (${speciesData[context.label].period})`;
+                            x: {
+                                ticks: {
+                                    autoSkip: false,
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    color: getComputedStyle(document.documentElement).getPropertyValue('--card-fg').trim() || '#333',
+                                    callback: function(value, index, values) {
+                                        let label = this.getLabelForValue(value);
+                                        if (label.length > 10) { 
+                                            return label.match(/.{1,10}/g); 
                                         }
+                                        return label;
+                                    }
+                                },
+                                 grid: { color: 'hsl(var(--border-color) / 0.3)' } // Lighter grid lines
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.dataset.label}: ${context.raw} days (${speciesData[context.label].period})`;
                                     }
                                 }
                             }
                         }
-                    });
-                }
-            } catch (error) {
-                console.error("Error initializing guide interactive elements:", error);
+                    }
+                });
             }
         });
     </script>
 </body>
 </html>
-
-    
