@@ -8,12 +8,12 @@ import { getAnalytics } from "firebase/analytics"; // Added for Firebase Analyti
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyDmhvQMfLgHA-ViWROE3XVlbJVGmjQBlC4",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "hatchwise.firebaseapp.com",
   projectId: "hatchwise",
   storageBucket: "hatchwise.firebasestorage.app",
-  messagingSenderId: "288005574631",
-  appId: "1:288005574631:web:150517f4aa707de5777742",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
   measurementId: process.env.NEXT_PUBLIC_GA_ID // Use environment variable
 };
 
@@ -38,4 +38,3 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GA_ID) {
 
 export { app, analytics }; // Export app and analytics
 export default app;
-
