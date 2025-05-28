@@ -1,9 +1,9 @@
 
 // Import the functions you need from the SDKs you need
-import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app"; // Added FirebaseApp type
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
-import { getAnalytics } from "firebase/analytics"; // Added for Firebase Analytics
+import { getAnalytics } from "firebase/analytics";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -13,11 +13,11 @@ const firebaseConfig = {
   storageBucket: "hatchwise.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_GA_ID // Use environment variable
+  measurementId: process.env.NEXT_PUBLIC_GA_ID
 };
 
 // Initialize Firebase
-let app: FirebaseApp; // Explicitly typed app
+let app: FirebaseApp;
 
 if (!getApps().length) {
   // Check if all required config values are present, especially the API key
@@ -33,20 +33,20 @@ if (!getApps().length) {
     console.error("Error initializing Firebase app:", error);
     // If initialization fails (e.g., due to truly malformed config beyond just API key),
     // rethrow or handle gracefully so `getAuth` isn't called on an undefined `app`.
-    throw error; // Rethrow to make it clear initialization failed
+    throw error; 
   }
 } else {
   app = getApp();
 }
 
 export const auth = getAuth(app);
-export const db = getFirestore(app); // Initialize Firestore
+export const db = getFirestore(app);
 
 // Initialize Firebase Analytics if in a browser environment
 let analytics;
 // Check if window is defined (i.e., we're in a browser environment)
-// and if NEXT_PUBLIC_GA_ID is present
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GA_ID && app) { // Check if app is initialized before using it
+// and if NEXT_PUBLIC_GA_ID is present and app is initialized
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GA_ID && app) { 
   try {
     analytics = getAnalytics(app);
   } catch (error) {
@@ -54,5 +54,5 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_GA_ID && app) { // 
   }
 }
 
-export { app, analytics }; // Export app and analytics
+export { app, analytics };
 export default app;
