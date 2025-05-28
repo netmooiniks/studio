@@ -39,8 +39,8 @@ function AppContent({ children }: { children: ReactNode }) {
 // To edit the ad, change the imageUrl, linkUrl, and altText here.
 // Set enabled to false to hide the banner.
 const adConfig = {
-  imageUrl: 'https://placehold.co/1200x100.png?text=Your+Ad+Here', // Example: 1200px wide, 100px tall placeholder
-  linkUrl: 'https://example.com/your-advertisement-target', // Replace with your desired ad link
+  imageUrl: 'https://placehold.co/1200x100.png', // Using placeholder image
+  linkUrl: 'https://www.netmooiniks.com', // Link where the ad navigates
   altText: 'Advertisement - Click to learn more!',
   enabled: true, // Set to false to hide the banner
   imageHint: 'advertisement banner' // data-ai-hint for placeholder
@@ -122,7 +122,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="outline" size="icon" className="rounded-full w-8 h-8 sm:w-10 sm:h-10 shadow-lg bg-background hover:bg-muted">
-                    <Info className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <Info className="h-4 w-4 sm:h-5 sm-5 text-primary" />
                     <span className="sr-only">Disclaimer Information</span>
                   </Button>
                 </TooltipTrigger>
@@ -139,5 +139,3 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     </DataProvider>
   );
 }
-
-    
