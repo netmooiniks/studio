@@ -190,7 +190,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           candlingResults: (batchDataFromDoc.candlingResults || []).map((cr: CandlingResult) => ({
             ...cr, 
             id: cr.id || `candling-${cr.day}-${Math.random().toString(36).substring(2,9)}` // Ensure ID exists for older data
-          })).sort((a,b) => a.day - b.day),
+          })).sort((a: CandlingResult, b: CandlingResult) => a.day - b.day),
           tasks: (batchDataFromDoc.tasks || []).map((task: Task) => ({...task, batchName: batchDataFromDoc.name})), 
           incubatorType: batchDataFromDoc.incubatorType || 'manual',
           customCandlingDays: batchDataFromDoc.customCandlingDays || [], 
@@ -248,7 +248,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       let tasksForUpdate = batchData.tasks || []; 
       const newBatchName = batchData.name;
-      // const oldBatchName = existingBatchFromState?.name;
 
       const shouldRegenerateTasks = existingBatchFromState && (
           existingBatchFromState.startDate !== batchData.startDate ||
@@ -267,20 +266,20 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               customCandlingDays: batchData.customCandlingDays, 
           });
       } else {
-          // Ensure all existing tasks have the current batch name
           tasksForUpdate = (existingBatchFromState?.tasks || []).map(t => ({
               ...t,
-              batchName: newBatchName,
+              batchName: newBatchName, // Only update batchName if not regenerating all tasks
+              // Description will be generic and not include batch name
           }));
       }
       
       const finalBatchDoc = {
         ...batchData, 
         tasks: tasksForUpdate, 
-        candlingResults: (batchData.candlingResults || []).map(cr => ({ // Ensure IDs for new results during update
+        candlingResults: (batchData.candlingResults || []).map((cr: CandlingResult) => ({
             ...cr,
             id: cr.id || `candling-${cr.day}-${Math.random().toString(36).substring(2,9)}`
-        })).sort((a,b) => a.day - b.day), 
+        })).sort((a: CandlingResult, b: CandlingResult) => a.day - b.day), 
         customCandlingDays: batchData.customCandlingDays || [], 
       };
       
@@ -353,12 +352,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (!targetBatch) throw new Error("Batch not found for candling result.");
 
       const newResult: CandlingResult = { 
-        id: `candling-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, // Generate unique ID
+        id: `candling-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`, 
         day, 
         fertile, 
         notes: notes || '' 
       }; 
-      const newResults = [...(targetBatch.candlingResults || []), newResult].sort((a,b) => a.day - b.day);
+      const newResults = [...(targetBatch.candlingResults || []), newResult].sort((a: CandlingResult, b: CandlingResult) => a.day - b.day);
       
       await updateDoc(batchRef, { candlingResults: newResults });
     } catch (error) {
@@ -430,3 +429,6 @@ export const useData = (): DataContextType => {
   }
   return context;
 };
+
+
+    
